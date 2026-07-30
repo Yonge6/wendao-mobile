@@ -53,6 +53,8 @@ See `src/mobile/COMPONENTS.md` for the full component and gesture contract.
 - Keep the AI composer visually quiet and fixed above the safe area or simulated keyboard. Hide it whenever a phone-scoped bottom sheet is open.
 - Keep the top reading controls fixed while the scripture scrolls. When the reader moves down the text, lower the AI composer's opacity until it is hovered or focused.
 - Display small tone-marked Hanyu Pinyin above every Chinese character in the original scripture text; do not add pinyin to translations or the English reading mode.
+- Never present a chapter excerpt as the chapter's original text. Every chapter screen must show the complete selected-edition text, identify whether it is a literal witness or an edited collation, and keep a visible full-text line count.
+- For Chapter 8, follow the user-supplied comparison book's edited main reading: `上善如水，水善利万物而有静……夫唯不争，故无尤。` Keep the Silk A, Silk B, and Wang Bi opening variants explicit rather than silently mixing them.
 - Mawangdui silk text is primary; Wang Bi and other versions are comparative notes. Human Design is presented only as a personalized “native pattern” result, never as a bodygraph and never as a deterministic verdict.
 - The product philosophy is “真实自己，流动人生 / True to yourself. Flow with life.” Personalization should widen choices rather than prescribe them.
 

@@ -19,6 +19,8 @@
 - Colors and tokens: deep teal, antique gold, ivory paper, and ink-mountain tones remain consistent with the source.
 - Image quality: the generated xuan-paper and ink-mountain background remains sharp at the 393 × 852 target viewport with no stretching or visible seams.
 - Copy and content: Pinyin appears only on Chinese original scripture; explanations, personalized guidance, and English mode remain unchanged.
+- Textual completeness: all three prototype chapters now display the complete selected-edition text rather than a leading excerpt, with a visible `全文 · N句` marker. Chapter 8 contains all nine displayed lines through `夫唯不争，故无尤。`.
+- Edition labeling: the primary reading is identified as a silk-text collation. Chapter 8 follows the supplied comparison book's `上善如水 / 有静` reading, while the Silk A, Silk B, and Wang Bi opening variants are stated separately.
 - Interaction state: after scrolling 44 px, the composer transitions to 50% opacity and returns to full opacity on hover or focus. The top action area remains fixed and usable.
 - Accessibility: controls retain semantic button labels, Chinese and English modes preserve language attributes, and no content is hidden by the fixed header or composer.
 - Browser console: no errors or warnings.
@@ -26,6 +28,7 @@
 ## Focused Region Evidence
 
 - Original scripture region: every Han character in the four visible lines has a matching tone-marked syllable directly above it.
+- Full-text invariant: the three prototype readings contain 9, 5, and 8 lines respectively; module startup validation rejects a verse whose Pinyin line or Han-character count is incomplete.
 - Fixed header region: the header viewport top remains unchanged while the reading container reaches `scrollTop: 560`.
 - Composer region: computed opacity is `0.5` while scrolled, with `:hover` and `:focus-within` restoring opacity to `1`.
 

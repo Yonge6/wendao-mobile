@@ -42,16 +42,31 @@ const chapters: Chapter[] = [
     id: 8,
     silkOrder: "44",
     zh: {
-      eyebrow: "帛书甲本 · 对应今本第八章",
-      title: "上善治水",
-      verse: ["上善治水。", "水善利万物而有静，", "居众之所恶，", "故几于道矣。"],
-      pinyin: [
-        ["shàng", "shàn", "zhì", "shuǐ"],
-        ["shuǐ", "shàn", "lì", "wàn", "wù", "ér", "yǒu", "jìng"],
-        ["jū", "zhòng", "zhī", "suǒ", "wù"],
-        ["gù", "jī", "yú", "dào", "yǐ"],
+      eyebrow: "帛书校订本 · 对应今本第八章",
+      title: "上善如水",
+      verse: [
+        "上善如水，",
+        "水善利万物而有静。",
+        "居众人之所恶，",
+        "故几于道矣。",
+        "居善地，心善渊，",
+        "予善天，言善信，",
+        "政善治，事善能，",
+        "动善时。",
+        "夫唯不争，故无尤。",
       ],
-      variant: "甲本“治 / 有静” · 王弼本“若 / 不争”",
+      pinyin: [
+        ["shàng", "shàn", "rú", "shuǐ"],
+        ["shuǐ", "shàn", "lì", "wàn", "wù", "ér", "yǒu", "jìng"],
+        ["jū", "zhòng", "rén", "zhī", "suǒ", "wù"],
+        ["gù", "jī", "yú", "dào", "yǐ"],
+        ["jū", "shàn", "dì", "xīn", "shàn", "yuān"],
+        ["yǔ", "shàn", "tiān", "yán", "shàn", "xìn"],
+        ["zhèng", "shàn", "zhì", "shì", "shàn", "néng"],
+        ["dòng", "shàn", "shí"],
+        ["fū", "wéi", "bù", "zhēng", "gù", "wú", "yóu"],
+      ],
+      variant: "本页据所附校订本作“如水 / 有静 / 所恶” · 甲本“治水” · 乙本“如水” · 王弼本“若水”",
       explanation: [
         "最接近道的善，像水。它滋养万物，却不与万物争先；它总是流向低处，安静地停在人们不愿停留的位置。",
         "水不急着证明自己，却因顺势、包容与持续，拥有改变坚硬之物的力量。所谓上善，不是退让，而是清醒地选择自己的方向。",
@@ -80,12 +95,17 @@ const chapters: Chapter[] = [
       eyebrow: "Mawangdui Silk Text A · Received Chapter 8",
       title: "The Highest Good Is Like Water",
       verse: [
-        "The highest good follows water.",
-        "Water benefits all things and rests in stillness;",
-        "it dwells where others do not wish to stay,",
+        "The highest good is like water.",
+        "Water benefits all things and remains still.",
+        "It dwells where people do not wish to stay,",
         "and so comes close to the Way.",
+        "In dwelling, it favors low ground; in heart, depth.",
+        "In giving, it follows Heaven; in speech, trust.",
+        "In governance, order; in affairs, ability.",
+        "In movement, the right time.",
+        "Because it does not contend, it incurs no blame.",
       ],
-      variant: "Silk A: “follows / stillness” · Wang Bi: “is like / does not contend”",
+      variant: "Edited silk reading shown in full · Silk A: “govern water” · Silk B: “like water” · Wang Bi: “as water”",
       explanation: [
         "The goodness closest to the Way behaves like water. It nourishes everything without racing to be first, and quietly settles in the low places others avoid.",
         "Water does not hurry to prove itself. Through timing, openness, and persistence, it changes even what seems hard. This is not passive retreat; it is choosing your direction with clarity.",
@@ -115,16 +135,23 @@ const chapters: Chapter[] = [
     id: 9,
     silkOrder: "45",
     zh: {
-      eyebrow: "帛书甲本 · 对应今本第九章",
+      eyebrow: "帛书校订本 · 对应今本第九章",
       title: "持而盈之",
-      verse: ["持而盈之，不若其已。", "揣而锐之，不可长保也。", "金玉盈室，莫之能守也。", "功遂身退，天之道也。"],
+      verse: [
+        "持而盈之，不若其已。",
+        "揣而锐之，不可长保也。",
+        "金玉盈室，莫之能守也。",
+        "富贵而骄，自遗其咎也。",
+        "功遂身退，天之道也。",
+      ],
       pinyin: [
         ["chí", "ér", "yíng", "zhī", "bù", "ruò", "qí", "yǐ"],
         ["chuǎi", "ér", "ruì", "zhī", "bù", "kě", "cháng", "bǎo", "yě"],
         ["jīn", "yù", "yíng", "shì", "mò", "zhī", "néng", "shǒu", "yě"],
+        ["fù", "guì", "ér", "jiāo", "zì", "yí", "qí", "jiù", "yě"],
         ["gōng", "suì", "shēn", "tuì", "tiān", "zhī", "dào", "yě"],
       ],
-      variant: "帛书本与王弼本在个别用字、句读上有异",
+      variant: "帛书乙本作“植 / 锻而允 / 长葆 / 贵富” · 王弼本作“持 / 揣而锐 / 长保 / 富贵”",
       explanation: [
         "已经满了还要继续加，锋芒已经很盛还要反复磨砺，都难以长久。老子提醒的不是拒绝成就，而是识别“够了”的时刻。",
         "完成之后懂得退一步，是给成果留下生长的空间，也是让自己免于被成功反过来占有。",
@@ -156,6 +183,7 @@ const chapters: Chapter[] = [
         "Hold and fill it—better to stop.",
         "Temper an edge too sharp—it cannot last.",
         "Gold and jade fill the hall; no one can guard it.",
+        "Wealth and rank joined with pride leave their own blame.",
         "The work complete, step back: this is the Way of Heaven.",
       ],
       variant: "The silk and Wang Bi texts differ in several characters and pauses",
@@ -188,16 +216,29 @@ const chapters: Chapter[] = [
     id: 1,
     silkOrder: "1",
     zh: {
-      eyebrow: "帛书甲本 · 对应今本第一章",
+      eyebrow: "帛书甲乙本校订 · 对应今本第一章",
       title: "道可道也",
-      verse: ["道可道也，非恒道也。", "名可名也，非恒名也。", "无名，万物之始也；", "有名，万物之母也。"],
+      verse: [
+        "道可道也，非恒道也。",
+        "名可名也，非恒名也。",
+        "无名万物之始也；",
+        "有名万物之母也。",
+        "故恒无欲也，以观其妙；",
+        "恒有欲也，以观其所徼。",
+        "两者同出，异名同谓。",
+        "玄之又玄，众妙之门。",
+      ],
       pinyin: [
         ["dào", "kě", "dào", "yě", "fēi", "héng", "dào", "yě"],
         ["míng", "kě", "míng", "yě", "fēi", "héng", "míng", "yě"],
         ["wú", "míng", "wàn", "wù", "zhī", "shǐ", "yě"],
         ["yǒu", "míng", "wàn", "wù", "zhī", "mǔ", "yě"],
+        ["gù", "héng", "wú", "yù", "yě", "yǐ", "guān", "qí", "miào"],
+        ["héng", "yǒu", "yù", "yě", "yǐ", "guān", "qí", "suǒ", "jiào"],
+        ["liǎng", "zhě", "tóng", "chū", "yì", "míng", "tóng", "wèi"],
+        ["xuán", "zhī", "yòu", "xuán", "zhòng", "miào", "zhī", "mén"],
       ],
-      variant: "帛书作“恒” · 王弼本作“常”",
+      variant: "帛书作“恒 / 也 / 所徼” · 王弼本作“常”，并省去部分“也”字",
       explanation: [
         "能够被说清楚的道理，都只是此刻的一个切面；能够被命名的身份，也不能涵盖一个生命的全部。",
         "名字帮助我们理解世界，却也容易把世界固定。保留一点“不急着定义”的空间，变化才有可能被看见。",
@@ -228,8 +269,12 @@ const chapters: Chapter[] = [
       verse: [
         "A way that can be spoken is not the enduring Way.",
         "A name that can be named is not the enduring name.",
-        "Without name: the beginning of all things.",
-        "With name: the mother of all things.",
+        "The unnamed is the beginning of all things.",
+        "The named is the mother of all things.",
+        "Thus, enduringly without desire, observe its subtlety.",
+        "Enduringly with desire, observe its boundary.",
+        "The two arise together and differ only in name.",
+        "Mystery within mystery: the gate of all subtleties.",
       ],
       variant: "The silk text uses “enduring”; Wang Bi’s received text uses “constant”",
       explanation: [
@@ -258,6 +303,26 @@ const chapters: Chapter[] = [
     },
   },
 ];
+
+function validatePinyinReadings() {
+  for (const chapter of chapters) {
+    const { verse, pinyin } = chapter.zh;
+    if (!pinyin || verse.length !== pinyin.length) {
+      throw new Error(`Chapter ${chapter.id}: verse and Pinyin line counts do not match.`);
+    }
+
+    verse.forEach((line, lineIndex) => {
+      const hanziCount = Array.from(line).filter((character) => /\p{Script=Han}/u.test(character)).length;
+      if (hanziCount !== pinyin[lineIndex].length) {
+        throw new Error(
+          `Chapter ${chapter.id}, line ${lineIndex + 1}: ${hanziCount} Han characters but ${pinyin[lineIndex].length} Pinyin syllables.`,
+        );
+      }
+    });
+  }
+}
+
+validatePinyinReadings();
 
 function reorderFrom(id: number) {
   const index = chapters.findIndex((chapter) => chapter.id === id);
@@ -415,7 +480,12 @@ export default function Prototype() {
                       <span className="rail-line rail-fill" />
                     </aside>
                     <div className="section-copy">
-                      <p className="chapter-eyebrow">{copy.eyebrow}</p>
+                      <div className="chapter-meta">
+                        <p className="chapter-eyebrow">{copy.eyebrow}</p>
+                        <span className="chapter-completeness">
+                          {isZh ? `全文 · ${copy.verse.length}句` : `Full text · ${copy.verse.length} lines`}
+                        </span>
+                      </div>
                       <h1 id={`chapter-${chapter.id}-${language}`}>{copy.title}</h1>
                       <div className="verse">
                         {copy.verse.map((line, lineIndex) => (
