@@ -9,14 +9,14 @@
       body {
         margin: 0;
         min-height: 100vh;
-        padding: 34px;
+        padding: 24px;
         background: #e8e4dc;
         color: #173f48;
         font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
       }
       h1 { margin: 0 0 8px; font-family: serif; font-size: 22px; }
       p { margin: 0 0 24px; color: #52656a; font-size: 12px; }
-      main { display: flex; align-items: flex-start; gap: 28px; }
+      main { display: flex; align-items: flex-start; gap: 18px; }
       figure {
         margin: 0;
         padding: 12px;
@@ -34,8 +34,8 @@
       small { color: #9b782f; }
       img {
         display: block;
-        width: 273px;
-        height: 592px;
+        width: 393px;
+        height: 852px;
         object-fit: cover;
         border-radius: 4px;
       }
@@ -43,15 +43,19 @@
   </head>
   <body>
     <h1>方案 1 · 雾金宣纸 / Implementation QA</h1>
-    <p>同一视口：273 × 592 px。左为选定视觉稿，右为真实可交互实现首屏。</p>
+    <p>同一视口：393 × 852 px。左为选定视觉稿，中为新增拼音后的首屏，右为固定操作区与低透明度聊天框的滚动状态。</p>
     <main>
       <figure>
         <figcaption><span>Selected source</span><small>视觉方向</small></figcaption>
-        <img src="./qa-source.png" alt="选定视觉稿" />
+        <img src="./qa-source-pinyin.png" alt="选定视觉稿" />
       </figure>
       <figure>
         <figcaption><span>Implementation</span><small>实际界面</small></figcaption>
-        <img src="./qa-implementation.png" alt="实际实现" />
+        <img src="./qa-implementation-pinyin.png" alt="实际实现" />
+      </figure>
+      <figure>
+        <figcaption><span>Scrolled state</span><small>阅读状态</small></figcaption>
+        <img src="./qa-implementation-pinyin-scrolled.png" alt="滚动阅读状态" />
       </figure>
     </main>
   </body>

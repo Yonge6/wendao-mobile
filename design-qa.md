@@ -1,36 +1,48 @@
 # 问道移动端设计 QA
 
-对照文件：`qa-comparison.png`
-视口：273 × 592 px（选定视觉稿与实现截图已归一化）
+## Evidence
 
-## 结论
+- Source visual truth: `/Users/yongyuan/Documents/道德经/最终方向/方案1最终精修-目录版.png`
+- Implementation, chapter top: `qa-implementation-pinyin.png`
+- Implementation, scrolled reading state: `qa-implementation-pinyin-scrolled.png`
+- Combined comparison: `qa-comparison.png`
+- CSS viewport: `393 × 852`
+- Source normalization: `854 × 1828` downsampled and center-cropped to `393 × 852`
+- Implementation capture: `393 × 852`, device scale factor `1`, `[data-testid="device-screen"]` measured at exactly `393 × 852`
+- States: Chinese chapter top; Chinese content scrolled 560 px
+
+## Findings
+
+- No actionable P0, P1, or P2 findings remain.
+- Typography: Noto Serif SC continues to match the selected literati reading style. Tone-marked Pinyin is set in Noto Sans SC at 8 px, aligned above each Han character without competing with the scripture.
+- Spacing and layout: the fixed reading controls preserve the source header proportions. Extra vertical space introduced by Pinyin is consistent and keeps the original text dominant.
+- Colors and tokens: deep teal, antique gold, ivory paper, and ink-mountain tones remain consistent with the source.
+- Image quality: the generated xuan-paper and ink-mountain background remains sharp at the 393 × 852 target viewport with no stretching or visible seams.
+- Copy and content: Pinyin appears only on Chinese original scripture; explanations, personalized guidance, and English mode remain unchanged.
+- Interaction state: after scrolling 44 px, the composer transitions to 50% opacity and returns to full opacity on hover or focus. The top action area remains fixed and usable.
+- Accessibility: controls retain semantic button labels, Chinese and English modes preserve language attributes, and no content is hidden by the fixed header or composer.
+- Browser console: no errors or warnings.
+
+## Focused Region Evidence
+
+- Original scripture region: every Han character in the four visible lines has a matching tone-marked syllable directly above it.
+- Fixed header region: the header viewport top remains unchanged while the reading container reaches `scrollTop: 560`.
+- Composer region: computed opacity is `0.5` while scrolled, with `:hover` and `:focus-within` restoring opacity to `1`.
+
+## Comparison History
+
+1. Initial build had a scrolling header, no Pinyin, and a fully opaque composer at every reading depth.
+2. The header was moved outside `MobileScroll`, a scroll-state listener was added, and character-level Pinyin was introduced for all Chinese scripture lines in the three prototype chapters.
+3. Visual review found the first 7 px Pinyin treatment too faint at device scale. It was increased to 8 px and its ink opacity was raised from 0.70 to 0.78.
+4. Post-fix evidence in `qa-comparison.png` shows a stable fixed header, readable but subordinate Pinyin, and the lower-interference composer state.
+
+## Primary Interactions Tested
+
+- Scroll scripture while the top action area remains fixed.
+- Open the directory from the fixed header after scrolling.
+- Select a chapter and return to the chapter top.
+- Confirm the composer fades after scrolling and restores at the top.
+- Switch to English and confirm Pinyin is removed.
+- Switch back to Chinese and confirm all Pinyin returns.
 
 final result: passed
-
-## 评分
-
-- 视觉方向还原：94/100
-- 版式与信息层级：93/100
-- 字体、颜色与材质：95/100
-- 移动端可读性：92/100
-- 核心交互完整度：94/100
-
-## 已核验
-
-- 雾金宣纸、淡墨山水、青黛正文、古金细线均与方案 1 一致。
-- 首页仍以原典阅读为绝对主角；AI 输入框保持低位、轻量和随时可用。
-- `01 原文 → 02 解释 → 03 与你有关` 的纵向阅读轨道已在真实滚动中实现。
-- 目录为手机底部面板，选择章节后回到该章开头。
-- 中英文整页切换、偶遇一章、连续下一章阅读均可操作。
-- AI 输入、虚拟键盘联动、发送后个性化回应面板均可操作。
-
-## 偏差说明
-
-- 视觉稿将长页内容压缩在一张展示图中；真实实现按用户要求增加了解释和“与你有关”的内容，因此首屏只展示到第三部分开头，后续内容通过自然滚动阅读。这是有意的产品差异。
-- 真实实现保留系统状态栏、安全区和底部手势区，故上下边距较视觉稿更符合手机运行环境。
-
-## 缺陷处理
-
-- P0：无。
-- P1：已修复目录打开时 AI 输入框覆盖目录的问题；已修复英文页头过长的问题；已修复 02/03 章节轨道与正文段落错位的问题。
-- P2：无未解决项。

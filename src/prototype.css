@@ -23,7 +23,7 @@ input {
 
 .reading-shell {
   min-height: 100%;
-  padding: 42px 24px calc(var(--mobile-safe-area-height) + 118px);
+  padding: 107px 24px calc(var(--mobile-safe-area-height) + 118px);
   background-color: var(--paper);
   background-image: url("/assets/wendao/paper-mist-background.png");
   background-repeat: repeat-y;
@@ -37,6 +37,33 @@ input {
   align-items: center;
   min-height: 52px;
   gap: 13px;
+}
+
+.reading-header-fixed {
+  position: absolute;
+  z-index: 12;
+  top: 0;
+  right: 0;
+  left: 0;
+  box-sizing: border-box;
+  min-height: 101px;
+  padding: 42px 24px 7px;
+  border-bottom: 1px solid transparent;
+  background-color: rgba(247, 241, 230, 0.94);
+  background-image: url("/assets/wendao/paper-mist-background.png");
+  background-position: center top;
+  background-size: 100% auto;
+  backdrop-filter: blur(14px);
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease;
+}
+
+.reading-header-fixed.is-scrolled {
+  border-bottom-color: rgba(174, 127, 43, 0.22);
+  background-color: rgba(247, 241, 230, 0.97);
+  box-shadow: 0 8px 22px rgba(53, 47, 35, 0.08);
 }
 
 .reading-header button {
@@ -101,7 +128,7 @@ input {
 }
 
 .philosophy-line {
-  margin: 5px 0 41px 70px;
+  margin: 8px 0 41px 70px;
   color: rgba(18, 63, 73, 0.54);
   font-family: var(--sans);
   font-size: 9px;
@@ -200,12 +227,48 @@ input {
   margin: 0;
 }
 
-.verse p {
+.verse-line {
   margin: 0;
   font-size: 24px;
   font-weight: 400;
   letter-spacing: 0.075em;
   line-height: 1.72;
+}
+
+.verse-line-ruby {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  column-gap: 0.02em;
+  padding-top: 7px;
+  line-height: 1.55;
+}
+
+.verse-line-ruby ruby {
+  display: inline-flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  min-width: 1em;
+  vertical-align: bottom;
+  ruby-position: over;
+}
+
+.verse-line-ruby rt {
+  display: block;
+  min-height: 11px;
+  margin-bottom: 1px;
+  color: rgba(49, 89, 101, 0.78);
+  font-family: var(--sans);
+  font-size: 8px;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.verse-punctuation {
+  align-self: flex-end;
+  margin-left: -0.1em;
 }
 
 .variant-note {
@@ -335,7 +398,24 @@ input {
   background: rgba(249, 245, 236, 0.94);
   box-shadow: 0 9px 25px rgba(51, 43, 27, 0.13), inset 0 1px 0 rgba(255, 255, 255, 0.86);
   backdrop-filter: blur(12px);
-  transition: bottom 180ms ease;
+  transition:
+    bottom 180ms ease,
+    opacity 220ms ease,
+    background-color 220ms ease,
+    box-shadow 220ms ease;
+}
+
+.ai-composer.is-reading {
+  opacity: 0.5;
+  background-color: rgba(249, 245, 236, 0.62);
+  box-shadow: 0 5px 16px rgba(51, 43, 27, 0.08);
+}
+
+.ai-composer.is-reading:hover,
+.ai-composer.is-reading:focus-within {
+  opacity: 1;
+  background-color: rgba(249, 245, 236, 0.96);
+  box-shadow: 0 9px 25px rgba(51, 43, 27, 0.13), inset 0 1px 0 rgba(255, 255, 255, 0.86);
 }
 
 .composer-spark {
@@ -520,15 +600,15 @@ input {
   letter-spacing: 0.01em;
 }
 
-[lang="en"] .reading-header {
+.reading-header[lang="en"] {
   gap: 9px;
 }
 
-[lang="en"] .wordmark {
+.reading-header[lang="en"] .wordmark {
   font-size: 24px;
 }
 
-[lang="en"] .header-action {
+.reading-header[lang="en"] .header-action {
   font-size: 10px;
 }
 
@@ -562,7 +642,7 @@ input {
     font-size: 26px;
   }
 
-  .verse p {
+  .verse-line {
     font-size: 21px;
   }
 }

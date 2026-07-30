@@ -1,4 +1,4 @@
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { PaperPlaneIcon } from "@radix-ui/react-icons";
 import "@fontsource/noto-sans-sc/400.css";
 import "@fontsource/noto-sans-sc/500.css";
@@ -23,6 +23,7 @@ type ChapterCopy = {
   eyebrow: string;
   title: string;
   verse: string[];
+  pinyin?: string[][];
   variant: string;
   explanation: string[];
   related: RelatedItem[];
@@ -44,6 +45,12 @@ const chapters: Chapter[] = [
       eyebrow: "帛书甲本 · 对应今本第八章",
       title: "上善治水",
       verse: ["上善治水。", "水善利万物而有静，", "居众之所恶，", "故几于道矣。"],
+      pinyin: [
+        ["shàng", "shàn", "zhì", "shuǐ"],
+        ["shuǐ", "shàn", "lì", "wàn", "wù", "ér", "yǒu", "jìng"],
+        ["jū", "zhòng", "zhī", "suǒ", "wù"],
+        ["gù", "jī", "yú", "dào", "yǐ"],
+      ],
       variant: "甲本“治 / 有静” · 王弼本“若 / 不争”",
       explanation: [
         "最接近道的善，像水。它滋养万物，却不与万物争先；它总是流向低处，安静地停在人们不愿停留的位置。",
@@ -111,6 +118,12 @@ const chapters: Chapter[] = [
       eyebrow: "帛书甲本 · 对应今本第九章",
       title: "持而盈之",
       verse: ["持而盈之，不若其已。", "揣而锐之，不可长保也。", "金玉盈室，莫之能守也。", "功遂身退，天之道也。"],
+      pinyin: [
+        ["chí", "ér", "yíng", "zhī", "bù", "ruò", "qí", "yǐ"],
+        ["chuǎi", "ér", "ruì", "zhī", "bù", "kě", "cháng", "bǎo", "yě"],
+        ["jīn", "yù", "yíng", "shì", "mò", "zhī", "néng", "shǒu", "yě"],
+        ["gōng", "suì", "shēn", "tuì", "tiān", "zhī", "dào", "yě"],
+      ],
       variant: "帛书本与王弼本在个别用字、句读上有异",
       explanation: [
         "已经满了还要继续加，锋芒已经很盛还要反复磨砺，都难以长久。老子提醒的不是拒绝成就，而是识别“够了”的时刻。",
@@ -178,6 +191,12 @@ const chapters: Chapter[] = [
       eyebrow: "帛书甲本 · 对应今本第一章",
       title: "道可道也",
       verse: ["道可道也，非恒道也。", "名可名也，非恒名也。", "无名，万物之始也；", "有名，万物之母也。"],
+      pinyin: [
+        ["dào", "kě", "dào", "yě", "fēi", "héng", "dào", "yě"],
+        ["míng", "kě", "míng", "yě", "fēi", "héng", "míng", "yě"],
+        ["wú", "míng", "wàn", "wù", "zhī", "shǐ", "yě"],
+        ["yǒu", "míng", "wàn", "wù", "zhī", "mǔ", "yě"],
+      ],
       variant: "帛书作“恒” · 王弼本作“常”",
       explanation: [
         "能够被说清楚的道理，都只是此刻的一个切面；能够被命名的身份，也不能涵盖一个生命的全部。",
@@ -247,10 +266,29 @@ function reorderFrom(id: number) {
 
 function scrollReadingToTop() {
   window.requestAnimationFrame(() => {
-    document.querySelector("[data-reading-top]")?.scrollIntoView({
+    document.querySelector<HTMLElement>("[data-testid='mobile-scroll']")?.scrollTo({
+      top: 0,
       behavior: "smooth",
-      block: "start",
     });
+  });
+}
+
+function renderPinyinLine(text: string, pinyin: string[]) {
+  let syllableIndex = 0;
+
+  return Array.from(text).map((character, characterIndex) => {
+    if (/\p{Script=Han}/u.test(character)) {
+      const syllable = pinyin[syllableIndex] ?? "";
+      syllableIndex += 1;
+      return (
+        <ruby key={`${character}-${characterIndex}`}>
+          {character}
+          <rt>{syllable}</rt>
+        </ruby>
+      );
+    }
+
+    return <span className="verse-punctuation" key={`${character}-${characterIndex}`}>{character}</span>;
   });
 }
 
@@ -261,11 +299,22 @@ export default function Prototype() {
   const [insightOpen, setInsightOpen] = useState(false);
   const [question, setQuestion] = useState("");
   const [submittedQuestion, setSubmittedQuestion] = useState("");
+  const [isReadingScrolled, setIsReadingScrolled] = useState(false);
   const keyboard = useKeyboard();
   const { bottomInset } = useKeyboardInsets();
   const orderedChapters = useMemo(() => reorderFrom(chapterId), [chapterId]);
   const isZh = language === "zh";
   const activeCopy = chapters.find((chapter) => chapter.id === chapterId)?.[language] ?? chapters[0][language];
+
+  useEffect(() => {
+    const scroll = document.querySelector<HTMLElement>("[data-testid='mobile-scroll']");
+    if (!scroll) return;
+
+    const updateReadingState = () => setIsReadingScrolled(scroll.scrollTop > 44);
+    updateReadingState();
+    scroll.addEventListener("scroll", updateReadingState, { passive: true });
+    return () => scroll.removeEventListener("scroll", updateReadingState);
+  }, []);
 
   const selectChapter = (id: number) => {
     setChapterId(id);
@@ -291,6 +340,43 @@ export default function Prototype() {
 
   return (
     <>
+      <header
+        className={`reading-header reading-header-fixed ${isReadingScrolled ? "is-scrolled" : ""}`}
+        aria-label={isZh ? "阅读工具" : "Reading tools"}
+        lang={isZh ? "zh-CN" : "en"}
+      >
+        <button className="wordmark" type="button" onClick={scrollReadingToTop}>
+          {isZh ? "问道" : "Wendao"}
+        </button>
+        <span className="header-rule" aria-hidden="true" />
+        <button className="header-action directory-action" type="button" onClick={() => setDirectoryOpen(true)}>
+          {isZh ? "目录" : "Contents"}
+        </button>
+        <div className="header-spacer" />
+        <button className="header-action encounter-action" type="button" onClick={meetAChapter}>
+          {isZh ? "偶遇一章" : "Chance"}
+        </button>
+        <div className="language-switch" aria-label={isZh ? "语言切换" : "Language"}>
+          <button
+            type="button"
+            className={isZh ? "is-active" : undefined}
+            aria-pressed={isZh}
+            onClick={() => setLanguage("zh")}
+          >
+            中
+          </button>
+          <span aria-hidden="true">|</span>
+          <button
+            type="button"
+            className={!isZh ? "is-active" : undefined}
+            aria-pressed={!isZh}
+            onClick={() => setLanguage("en")}
+          >
+            EN
+          </button>
+        </div>
+      </header>
+
       <MobileScroll className="app-screen">
         <main
           className="reading-shell"
@@ -298,39 +384,6 @@ export default function Prototype() {
           data-reading-top
           lang={isZh ? "zh-CN" : "en"}
         >
-          <header className="reading-header" aria-label={isZh ? "阅读工具" : "Reading tools"}>
-            <button className="wordmark" type="button" onClick={scrollReadingToTop}>
-              {isZh ? "问道" : "Wendao"}
-            </button>
-            <span className="header-rule" aria-hidden="true" />
-            <button className="header-action directory-action" type="button" onClick={() => setDirectoryOpen(true)}>
-              {isZh ? "目录" : "Contents"}
-            </button>
-            <div className="header-spacer" />
-            <button className="header-action encounter-action" type="button" onClick={meetAChapter}>
-              {isZh ? "偶遇一章" : "Chance"}
-            </button>
-            <div className="language-switch" aria-label={isZh ? "语言切换" : "Language"}>
-              <button
-                type="button"
-                className={isZh ? "is-active" : undefined}
-                aria-pressed={isZh}
-                onClick={() => setLanguage("zh")}
-              >
-                中
-              </button>
-              <span aria-hidden="true">|</span>
-              <button
-                type="button"
-                className={!isZh ? "is-active" : undefined}
-                aria-pressed={!isZh}
-                onClick={() => setLanguage("en")}
-              >
-                EN
-              </button>
-            </div>
-          </header>
-
           <p className="philosophy-line">
             {isZh ? "真实自己，流动人生" : "True to yourself. Flow with life."}
           </p>
@@ -365,7 +418,13 @@ export default function Prototype() {
                       <p className="chapter-eyebrow">{copy.eyebrow}</p>
                       <h1 id={`chapter-${chapter.id}-${language}`}>{copy.title}</h1>
                       <div className="verse">
-                        {copy.verse.map((line) => <p key={line}>{line}</p>)}
+                        {copy.verse.map((line, lineIndex) => (
+                          <p className={isZh ? "verse-line verse-line-ruby" : "verse-line"} key={line}>
+                            {isZh && copy.pinyin
+                              ? renderPinyinLine(line, copy.pinyin[lineIndex])
+                              : line}
+                          </p>
+                        ))}
                       </div>
                       <p className="variant-note">{copy.variant}</p>
                     </div>
@@ -419,7 +478,7 @@ export default function Prototype() {
 
       {!directoryOpen && !insightOpen ? (
         <form
-          className="ai-composer"
+          className={`ai-composer ${isReadingScrolled ? "is-reading" : ""}`}
           style={{ bottom: bottomInset + 10 }}
           onSubmit={submitQuestion}
           data-scroll-drag="ignore"
