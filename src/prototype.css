@@ -1,0 +1,568 @@
+/* App-specific styling. The mobile runtime remains template-owned. */
+
+:root {
+  --ink: #123f49;
+  --ink-soft: #315965;
+  --gold: #ae7f2b;
+  --gold-light: rgba(174, 127, 43, 0.5);
+  --paper: #f7f1e6;
+  --paper-deep: #eee3d1;
+  --serif: "Noto Serif SC", "Songti SC", "STSong", serif;
+  --sans: "Noto Sans SC", "PingFang SC", sans-serif;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+.app-screen {
+  background-color: var(--paper);
+  color: var(--ink);
+}
+
+.reading-shell {
+  min-height: 100%;
+  padding: 42px 24px calc(var(--mobile-safe-area-height) + 118px);
+  background-color: var(--paper);
+  background-image: url("/assets/wendao/paper-mist-background.png");
+  background-repeat: repeat-y;
+  background-position: center top;
+  background-size: 100% auto;
+  font-family: var(--serif);
+}
+
+.reading-header {
+  display: flex;
+  align-items: center;
+  min-height: 52px;
+  gap: 13px;
+}
+
+.reading-header button {
+  appearance: none;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  padding: 7px 0;
+  cursor: pointer;
+}
+
+.wordmark {
+  font-family: var(--serif);
+  font-size: 27px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  line-height: 1;
+}
+
+.header-rule {
+  width: 1px;
+  height: 27px;
+  background: var(--gold);
+  opacity: 0.72;
+}
+
+.header-action {
+  font-family: var(--serif);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.header-spacer {
+  flex: 1;
+}
+
+.encounter-action {
+  color: var(--ink-soft) !important;
+}
+
+.language-switch {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--sans);
+  color: rgba(18, 63, 73, 0.42);
+  font-size: 11px;
+}
+
+.language-switch button {
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 400;
+  color: rgba(18, 63, 73, 0.48);
+}
+
+.language-switch button.is-active {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.philosophy-line {
+  margin: 5px 0 41px 70px;
+  color: rgba(18, 63, 73, 0.54);
+  font-family: var(--sans);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+}
+
+.chapter {
+  position: relative;
+}
+
+.section-layout {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  column-gap: 14px;
+}
+
+.section-marker {
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+  align-items: center;
+  color: var(--ink);
+}
+
+.rail-dot,
+.divider-dot {
+  display: block;
+  flex: 0 0 auto;
+  width: 9px;
+  height: 9px;
+  border: 1.4px solid var(--gold);
+  border-radius: 999px;
+  background: var(--paper);
+}
+
+.rail-line {
+  width: 1px;
+  min-height: 22px;
+  background: var(--gold-light);
+}
+
+.rail-before-label {
+  height: 46px;
+}
+
+.rail-fill {
+  flex: 1;
+}
+
+.rail-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 9px 0;
+  text-align: center;
+  flex: 0 0 auto;
+  background: rgba(247, 241, 230, 0.58);
+}
+
+.rail-label span {
+  font-size: 18px;
+  line-height: 1.05;
+}
+
+.rail-label small {
+  margin-top: 4px;
+  font-family: var(--serif);
+  font-size: 10px;
+  line-height: 1.25;
+  letter-spacing: 0.05em;
+}
+
+.section-copy {
+  min-width: 0;
+}
+
+.chapter-eyebrow {
+  margin: 0 0 17px;
+  color: var(--ink-soft);
+  font-family: var(--sans);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+}
+
+.original-section h1 {
+  margin: 0 0 11px;
+  color: var(--ink);
+  font-size: 29px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  line-height: 1.35;
+}
+
+.verse {
+  margin: 0;
+}
+
+.verse p {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 400;
+  letter-spacing: 0.075em;
+  line-height: 1.72;
+}
+
+.variant-note {
+  margin: 19px 0 29px;
+  color: var(--ink-soft);
+  font-family: var(--sans);
+  font-size: 9px;
+  line-height: 1.7;
+  letter-spacing: 0.03em;
+}
+
+.explanation-section {
+  margin-bottom: 28px;
+}
+
+.explanation-section p,
+.related-item p {
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 2;
+  letter-spacing: 0.045em;
+}
+
+.explanation-section p {
+  margin: 0 0 16px;
+}
+
+.related-section {
+  padding-bottom: 13px;
+}
+
+.related-item {
+  margin-bottom: 21px;
+}
+
+.related-item h2 {
+  margin: 0 0 4px;
+  color: var(--gold);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.related-item p {
+  margin: 0;
+}
+
+.practice-card {
+  margin: 27px 0 4px;
+  padding: 16px 17px 17px;
+  border-top: 1px solid var(--gold-light);
+  border-bottom: 1px solid var(--gold-light);
+  color: var(--gold);
+}
+
+.practice-kicker {
+  display: block;
+  margin-bottom: 8px;
+  font-family: var(--sans);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+}
+
+.practice-card p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.85;
+  letter-spacing: 0.06em;
+}
+
+.next-chapter-divider {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin: 38px 0 29px 24px;
+}
+
+.divider-dot {
+  flex: 0 0 auto;
+}
+
+.divider-line {
+  height: 1px;
+  flex: 1;
+  background: var(--gold-light);
+}
+
+.chapter-continuation .original-section h1 {
+  font-size: 26px;
+}
+
+.chapter-continuation .verse p {
+  font-size: 21px;
+}
+
+.reading-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin: 54px 0 26px;
+  color: rgba(18, 63, 73, 0.62);
+  font-family: var(--sans);
+  font-size: 10px;
+  letter-spacing: 0.17em;
+}
+
+.reading-footer small {
+  color: rgba(174, 127, 43, 0.7);
+  font-size: 8px;
+  letter-spacing: 0.12em;
+}
+
+.ai-composer {
+  position: absolute;
+  z-index: 35;
+  left: 18px;
+  right: 18px;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) 37px;
+  align-items: center;
+  min-height: 53px;
+  padding: 5px 6px 5px 15px;
+  border: 1px solid rgba(174, 127, 43, 0.6);
+  border-radius: 27px;
+  background: rgba(249, 245, 236, 0.94);
+  box-shadow: 0 9px 25px rgba(51, 43, 27, 0.13), inset 0 1px 0 rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(12px);
+  transition: bottom 180ms ease;
+}
+
+.composer-spark {
+  color: var(--gold);
+  font-size: 15px;
+}
+
+.ai-composer input {
+  width: 100%;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 12px;
+  letter-spacing: 0.03em;
+}
+
+.ai-composer input::placeholder {
+  color: rgba(18, 63, 73, 0.55);
+}
+
+.ai-composer > button {
+  display: grid;
+  width: 37px;
+  height: 37px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: var(--ink);
+  color: #f9f3e7;
+  cursor: pointer;
+}
+
+.ai-composer > button svg {
+  width: 16px;
+  height: 16px;
+  transform: translate(-1px, 1px) rotate(-8deg);
+}
+
+.bottom-sheet {
+  border: 1px solid rgba(174, 127, 43, 0.27);
+  background-color: #f8f2e7;
+  background-image: url("/assets/wendao/paper-mist-background.png");
+  background-size: 100% auto;
+  color: var(--ink);
+  font-family: var(--serif);
+}
+
+.sheet-overlay {
+  background: rgba(17, 35, 38, 0.28);
+  backdrop-filter: blur(2px);
+}
+
+.sheet-handle {
+  background: rgba(174, 127, 43, 0.48);
+}
+
+.sheet-title {
+  color: var(--ink);
+  font-family: var(--serif);
+}
+
+.sheet-description {
+  color: var(--ink-soft);
+  font-family: var(--sans);
+}
+
+.directory-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: 22px;
+}
+
+.directory-item {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) 25px;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  padding: 14px 8px;
+  border: 0;
+  border-bottom: 1px solid rgba(174, 127, 43, 0.18);
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.directory-item.is-current {
+  background: rgba(174, 127, 43, 0.075);
+}
+
+.directory-number {
+  color: var(--gold);
+  font-family: var(--sans);
+  font-size: 11px;
+  letter-spacing: 0.09em;
+}
+
+.directory-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.directory-copy strong {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
+.directory-copy small {
+  color: var(--ink-soft);
+  font-family: var(--sans);
+  font-size: 9px;
+}
+
+.directory-arrow {
+  color: var(--gold);
+  font-family: var(--sans);
+}
+
+.ai-response {
+  padding-bottom: 30px;
+}
+
+.ai-response p {
+  margin: 0 0 18px;
+  font-size: 13px;
+  line-height: 1.9;
+  letter-spacing: 0.04em;
+}
+
+.ai-response-lead {
+  color: var(--ink-soft);
+}
+
+.ai-guidance {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin: 8px 0 20px;
+  padding: 18px;
+  border-left: 2px solid var(--gold);
+  background: rgba(255, 252, 246, 0.58);
+}
+
+.ai-guidance span,
+.source-disclosure span {
+  color: var(--gold);
+  font-family: var(--sans);
+  font-size: 9px;
+  letter-spacing: 0.13em;
+}
+
+.ai-guidance strong {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.8;
+}
+
+.source-disclosure {
+  margin-top: 26px;
+  padding-top: 13px;
+  border-top: 1px solid rgba(174, 127, 43, 0.35);
+}
+
+.source-disclosure p {
+  margin-top: 8px;
+  color: rgba(18, 63, 73, 0.62);
+  font-family: var(--sans);
+  font-size: 9px;
+  line-height: 1.6;
+}
+
+[lang="en"] .wordmark,
+[lang="en"] .original-section h1,
+[lang="en"] .verse p,
+[lang="en"] .related-item h2 {
+  letter-spacing: 0.01em;
+}
+
+[lang="en"] .reading-header {
+  gap: 9px;
+}
+
+[lang="en"] .wordmark {
+  font-size: 24px;
+}
+
+[lang="en"] .header-action {
+  font-size: 10px;
+}
+
+[lang="en"] .verse p {
+  font-size: 20px;
+  line-height: 1.58;
+}
+
+[lang="en"] .explanation-section p,
+[lang="en"] .related-item p {
+  letter-spacing: 0.01em;
+  line-height: 1.75;
+}
+
+@media (max-width: 374px) {
+  .reading-shell {
+    padding-left: 19px;
+    padding-right: 19px;
+  }
+
+  .section-layout {
+    grid-template-columns: 50px minmax(0, 1fr);
+    column-gap: 10px;
+  }
+
+  .encounter-action {
+    font-size: 11px;
+  }
+
+  .original-section h1 {
+    font-size: 26px;
+  }
+
+  .verse p {
+    font-size: 21px;
+  }
+}

@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>问道 · 视觉对照</title>
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        padding: 34px;
+        background: #e8e4dc;
+        color: #173f48;
+        font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+      }
+      h1 { margin: 0 0 8px; font-family: serif; font-size: 22px; }
+      p { margin: 0 0 24px; color: #52656a; font-size: 12px; }
+      main { display: flex; align-items: flex-start; gap: 28px; }
+      figure {
+        margin: 0;
+        padding: 12px;
+        border: 1px solid rgba(30, 66, 73, 0.16);
+        border-radius: 10px;
+        background: #f8f5ee;
+        box-shadow: 0 9px 28px rgba(26, 44, 47, 0.1);
+      }
+      figcaption {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        font-size: 11px;
+      }
+      small { color: #9b782f; }
+      img {
+        display: block;
+        width: 273px;
+        height: 592px;
+        object-fit: cover;
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>方案 1 · 雾金宣纸 / Implementation QA</h1>
+    <p>同一视口：273 × 592 px。左为选定视觉稿，右为真实可交互实现首屏。</p>
+    <main>
+      <figure>
+        <figcaption><span>Selected source</span><small>视觉方向</small></figcaption>
+        <img src="./qa-source.png" alt="选定视觉稿" />
+      </figure>
+      <figure>
+        <figcaption><span>Implementation</span><small>实际界面</small></figcaption>
+        <img src="./qa-implementation.png" alt="实际实现" />
+      </figure>
+    </main>
+  </body>
+</html>
