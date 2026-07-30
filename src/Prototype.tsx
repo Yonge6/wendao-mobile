@@ -4,13 +4,6 @@ import "@fontsource/noto-sans-sc/400.css";
 import "@fontsource/noto-sans-sc/500.css";
 import "@fontsource/noto-serif-sc/400.css";
 import "@fontsource/noto-serif-sc/600.css";
-import {
-  BottomSheet,
-  KeyboardInput,
-  MobileScroll,
-  useKeyboard,
-  useKeyboardInsets,
-} from "./mobile";
 
 type Language = "zh" | "en";
 
@@ -69,24 +62,38 @@ const chapters: Chapter[] = [
       variant: "本页据所附校订本作“如水 / 有静 / 所恶” · 甲本“治水” · 乙本“如水” · 王弼本“若水”",
       explanation: [
         "最接近道的善，像水。它滋养万物，却不与万物争先；它总是流向低处，安静地停在人们不愿停留的位置。",
-        "水不急着证明自己，却因顺势、包容与持续，拥有改变坚硬之物的力量。所谓上善，不是退让，而是清醒地选择自己的方向。",
+        "为什么用水来讲“道”？水没有固定形状，却始终保有自己的性质；它能顺着环境改变路径，也能用漫长而持续的力量改变环境。柔软在这里不是脆弱，而是一种不被单一姿态困住的能力。",
+        "“居、心、予、言、政、事、动”把水的品性展开到生活的七个面向：所处的位置、内心的深度、给予的尺度、说话的可信、处理秩序的能力、做事的效能，以及行动的时机。道不只是一种观念，它最终要落实在这些具体选择里。",
+        "“不争”也不是放弃立场。水不与万物争夺同一种形状，却始终朝自己的方向流动；它减少无谓对抗，把力量留给真正重要的事。因此“不争”带来的不是被动，而是更少怨尤、更少内耗。",
       ],
       related: [
         {
-          title: "关系",
-          body: "你不必立刻赢得关系。先让局面重新流动，再决定靠近或离开。真正的柔软，不是委屈自己，而是不把一时的对抗变成永久的僵局。",
+          title: "焦虑｜先回到低处",
+          body: "当焦虑催你立刻向上、向前、向别人证明时，先回到身体和眼前这一步。低处不是失败的位置，而是重新蓄水、看清方向的地方。",
         },
         {
-          title: "焦虑",
-          body: "焦虑催你向上争抢，水却提醒你：低处也能积蓄力量，慢并不等于停下。先把今天能做的一件小事做完，让身体重新感觉到确定。",
+          title: "关系｜柔而不僵",
+          body: "你不必立刻赢得关系。先让局面重新流动，再决定靠近或离开。柔软不是委屈自己，而是不把一时的对抗变成永久的僵局。",
         },
         {
-          title: "选择",
-          body: "当两条路都难，不妨选择更少消耗、更能长久滋养你与他人的那一条。好的选择不一定喧闹，却常让内心渐渐变得宽阔。",
+          title: "行动｜让价值流出去",
+          body: "水的力量不靠占有来证明，而在于它让生命得到滋养。今天可以问：我做的这件事，除了让我被看见，还让谁真正受益？",
+        },
+        {
+          title: "选择｜变形，不变心",
+          body: "适应不是没有原则。水可以成为溪流、雨雾或湖泊，改变的是路径和形态，不变的是它持续流动的本性。形式走不通时，换一种走法。",
+        },
+        {
+          title: "边界｜不争不是退缩",
+          body: "不必参与每一场比较，也不必回应每一种挑衅；但涉及核心价值和真实边界时，你仍可以清楚表达。省下争胜的力气，用来守住真正重要的东西。",
+        },
+        {
+          title: "时机｜等水势形成",
+          body: "有些行动太早会耗散，太晚会错过。先观察局面是否已经具备条件：信息够不够、身体是否准备好、关系里是否出现了可以流动的缝隙。",
         },
         {
           title: "你的出厂设置",
-          body: "你习惯先回应世界，再照顾自己。今天试着把一小部分注意力留给内心真正的水位：我是在顺势而行，还是只因害怕失去而勉强坚持？",
+          body: "你习惯先回应世界，再照顾自己。把一小部分注意力留给内心真正的水位：此刻的顺应来自清醒，还是来自害怕失去？个性化结果会帮助你辨认两者，而不会替你做决定。",
         },
       ],
       action: "慢三次呼吸，再回应。把答案放慢一点，让真实的自己先出现。",
@@ -108,24 +115,38 @@ const chapters: Chapter[] = [
       variant: "Edited silk reading shown in full · Silk A: “govern water” · Silk B: “like water” · Wang Bi: “as water”",
       explanation: [
         "The goodness closest to the Way behaves like water. It nourishes everything without racing to be first, and quietly settles in the low places others avoid.",
-        "Water does not hurry to prove itself. Through timing, openness, and persistence, it changes even what seems hard. This is not passive retreat; it is choosing your direction with clarity.",
+        "Why does water illuminate the Way? It has no fixed shape, yet never loses its nature. It changes course with its surroundings and, through patient continuity, also changes those surroundings. Here, softness means freedom from being trapped in a single posture.",
+        "Dwelling, heart, giving, speech, governance, affairs, and movement extend water's qualities into seven areas of life: where you stand, how deeply you listen, what you offer, whether your word can be trusted, how you create order, how capably you act, and whether the time is right.",
+        "Not contending does not mean having no position. Water does not compete to hold one shape, yet it keeps moving in its own direction. It spends less strength on needless resistance and keeps more for what matters.",
       ],
       related: [
         {
-          title: "Relationships",
-          body: "You do not have to win the relationship today. Let the situation move again before deciding whether to come closer or step away. Softness can protect truth without hardening conflict.",
+          title: "Anxiety · Return to low ground",
+          body: "When anxiety pushes you upward, faster, and toward proving yourself, return to your body and the next visible step. Low ground can be where strength gathers and direction becomes clear.",
         },
         {
-          title: "Anxiety",
-          body: "Anxiety urges you upward and faster. Water reminds you that strength can also gather in low places. Finish one small thing you can influence today, and let your body rediscover certainty.",
+          title: "Relationships · Soft, not rigid",
+          body: "You do not have to win the relationship today. Let the situation move again before deciding whether to come closer or step away. Softness is not self-erasure; it keeps a temporary conflict from becoming permanent.",
         },
         {
-          title: "Choice",
-          body: "When both roads are difficult, consider the one that consumes less of you and can nourish life for longer. A good decision may be quiet, yet leave more room inside.",
+          title: "Action · Let value flow outward",
+          body: "Water does not prove its power by possessing. Its strength appears in what it nourishes. Ask: beyond making me visible, who genuinely benefits from what I am doing?",
+        },
+        {
+          title: "Choice · Change form, keep your nature",
+          body: "Adaptation is not the absence of principle. Water may become stream, mist, or lake; the route and form change while its living movement remains. When one form fails, find another way through.",
+        },
+        {
+          title: "Boundaries · Non-contention is not retreat",
+          body: "You need not enter every comparison or answer every provocation. You can still speak clearly when a core value or real boundary is involved. Save the energy of winning for protecting what matters.",
+        },
+        {
+          title: "Timing · Let the current gather",
+          body: "Acting too early can scatter energy; acting too late can miss the opening. Notice whether the information, your body, and the relationship have formed enough of a channel for movement.",
         },
         {
           title: "Your native pattern",
-          body: "You may respond to the world before checking on yourself. Keep a little attention for your inner waterline: am I moving with life, or holding on only because I fear losing something?",
+          body: "You may respond to the world before checking on yourself. Keep attention on your inner waterline: is this adaptation coming from clarity, or fear of loss? Personalization can help you distinguish them without deciding for you.",
         },
       ],
       action: "Take three slow breaths before replying. Let your truest response arrive first.",
@@ -357,6 +378,54 @@ function renderPinyinLine(text: string, pinyin: string[]) {
   });
 }
 
+type WebSheetProps = {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
+  description?: string;
+  children: React.ReactNode;
+};
+
+function WebSheet({ open, onOpenChange, title, description, children }: WebSheetProps) {
+  useEffect(() => {
+    if (!open) return;
+
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onOpenChange(false);
+    };
+
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [onOpenChange, open]);
+
+  if (!open) return null;
+
+  return (
+    <div className="web-sheet-layer">
+      <button
+        type="button"
+        className="web-sheet-backdrop"
+        aria-label="关闭"
+        onClick={() => onOpenChange(false)}
+      />
+      <section className="bottom-sheet web-sheet" role="dialog" aria-modal="true" aria-labelledby="web-sheet-title">
+        <button
+          type="button"
+          className="web-sheet-close"
+          aria-label="关闭"
+          onClick={() => onOpenChange(false)}
+        >
+          ×
+        </button>
+        <span className="sheet-handle" aria-hidden="true" />
+        <h2 className="sheet-title" id="web-sheet-title">{title}</h2>
+        {description ? <p className="sheet-description">{description}</p> : null}
+        <div className="web-sheet-content">{children}</div>
+      </section>
+    </div>
+  );
+}
+
 export default function Prototype() {
   const [language, setLanguage] = useState<Language>("zh");
   const [chapterId, setChapterId] = useState(8);
@@ -365,8 +434,6 @@ export default function Prototype() {
   const [question, setQuestion] = useState("");
   const [submittedQuestion, setSubmittedQuestion] = useState("");
   const [isReadingScrolled, setIsReadingScrolled] = useState(false);
-  const keyboard = useKeyboard();
-  const { bottomInset } = useKeyboardInsets();
   const orderedChapters = useMemo(() => reorderFrom(chapterId), [chapterId]);
   const isZh = language === "zh";
   const activeCopy = chapters.find((chapter) => chapter.id === chapterId)?.[language] ?? chapters[0][language];
@@ -400,7 +467,6 @@ export default function Prototype() {
     if (!nextQuestion) return;
     setSubmittedQuestion(nextQuestion);
     setInsightOpen(true);
-    keyboard.hide();
   };
 
   return (
@@ -442,7 +508,7 @@ export default function Prototype() {
         </div>
       </header>
 
-      <MobileScroll className="app-screen">
+      <div className="app-screen" data-testid="mobile-scroll">
         <main
           className="reading-shell"
           data-testid="reading-screen"
@@ -544,17 +610,15 @@ export default function Prototype() {
             <small>{isZh ? "帛书为主 · 多版本互校" : "Silk text first · Versions compared"}</small>
           </footer>
         </main>
-      </MobileScroll>
+      </div>
 
       {!directoryOpen && !insightOpen ? (
         <form
           className={`ai-composer ${isReadingScrolled ? "is-reading" : ""}`}
-          style={{ bottom: bottomInset + 10 }}
           onSubmit={submitQuestion}
-          data-scroll-drag="ignore"
         >
           <span className="composer-spark" aria-hidden="true">✦</span>
-          <KeyboardInput
+          <input
             value={question}
             onChange={(event) => setQuestion(event.target.value)}
             placeholder={isZh ? "问问这一章与你的关系…" : "Ask how this chapter relates to you…"}
@@ -566,12 +630,11 @@ export default function Prototype() {
         </form>
       ) : null}
 
-      <BottomSheet
+      <WebSheet
         open={directoryOpen}
         onOpenChange={setDirectoryOpen}
         title={isZh ? "目录" : "Contents"}
         description={isZh ? "帛书次序为主，括号内为今本章次" : "Silk-text order first; received chapter in parentheses"}
-        snap={0.62}
       >
         <div className="directory-list">
           {chapters.map((chapter) => {
@@ -593,14 +656,13 @@ export default function Prototype() {
             );
           })}
         </div>
-      </BottomSheet>
+      </WebSheet>
 
-      <BottomSheet
+      <WebSheet
         open={insightOpen}
         onOpenChange={setInsightOpen}
         title={isZh ? "与你有关" : "For you"}
         description={submittedQuestion}
-        snap={0.66}
       >
         <div className="ai-response">
           <p className="ai-response-lead">
@@ -626,7 +688,7 @@ export default function Prototype() {
             <p>{isZh ? "本章原典 · 你的提问 · 已完成的出厂设置信息" : "This chapter · Your question · Your completed native-pattern profile"}</p>
           </div>
         </div>
-      </BottomSheet>
+      </WebSheet>
     </>
   );
 }

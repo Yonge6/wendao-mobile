@@ -11,19 +11,32 @@
   --sans: "Noto Sans SC", "PingFang SC", sans-serif;
 }
 
+body {
+  background: var(--paper);
+}
+
 button,
 input {
   font: inherit;
 }
 
 .app-screen {
+  position: relative;
+  width: 100%;
+  max-width: 720px;
+  height: 100dvh;
+  margin: 0 auto;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
   background-color: var(--paper);
   color: var(--ink);
 }
 
 .reading-shell {
   min-height: 100%;
-  padding: 107px 24px calc(var(--mobile-safe-area-height) + 118px);
+  padding: calc(env(safe-area-inset-top, 0px) + 91px) 24px calc(env(safe-area-inset-bottom, 0px) + 118px);
   background-color: var(--paper);
   background-image: url("/assets/wendao/paper-mist-background.png");
   background-repeat: repeat-y;
@@ -40,14 +53,15 @@ input {
 }
 
 .reading-header-fixed {
-  position: absolute;
+  position: fixed;
   z-index: 12;
   top: 0;
-  right: 0;
-  left: 0;
+  left: 50%;
+  width: min(100%, 720px);
+  transform: translateX(-50%);
   box-sizing: border-box;
-  min-height: 101px;
-  padding: 42px 24px 7px;
+  min-height: calc(env(safe-area-inset-top, 0px) + 76px);
+  padding: calc(env(safe-area-inset-top, 0px) + 14px) 24px 10px;
   border-bottom: 1px solid transparent;
   background-color: rgba(247, 241, 230, 0.94);
   background-image: url("/assets/wendao/paper-mist-background.png");
@@ -400,10 +414,13 @@ input {
 }
 
 .ai-composer {
-  position: absolute;
+  position: fixed;
   z-index: 35;
-  left: 18px;
-  right: 18px;
+  right: auto;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
+  left: 50%;
+  width: min(calc(100% - 36px), 684px);
+  transform: translateX(-50%);
   display: grid;
   grid-template-columns: 22px minmax(0, 1fr) 37px;
   align-items: center;
@@ -479,6 +496,74 @@ input {
   background-size: 100% auto;
   color: var(--ink);
   font-family: var(--serif);
+}
+
+.web-sheet-layer {
+  position: fixed;
+  z-index: 80;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.web-sheet-backdrop {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  border: 0;
+  background: rgba(17, 35, 38, 0.28);
+  backdrop-filter: blur(2px);
+}
+
+.web-sheet {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 720px);
+  max-height: min(74dvh, 680px);
+  padding: 14px 24px calc(env(safe-area-inset-bottom, 0px) + 22px);
+  overflow: hidden;
+  border-radius: 24px 24px 0 0;
+  box-shadow: 0 -18px 50px rgba(17, 35, 38, 0.16);
+}
+
+.web-sheet-content {
+  max-height: calc(min(74dvh, 680px) - 112px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.web-sheet-close {
+  position: absolute;
+  top: 13px;
+  right: 20px;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  background: transparent;
+  color: var(--ink-soft);
+  font-family: var(--sans);
+  font-size: 25px;
+  font-weight: 300;
+}
+
+.web-sheet .sheet-handle {
+  display: block;
+  width: 38px;
+  height: 4px;
+  margin: 0 auto 13px;
+  border-radius: 999px;
+}
+
+.web-sheet .sheet-title {
+  margin: 0 44px 5px 0;
+  font-size: 24px;
+}
+
+.web-sheet .sheet-description {
+  margin: 0 44px 15px 0;
+  font-size: 11px;
+  line-height: 1.6;
 }
 
 .sheet-overlay {
@@ -660,5 +745,12 @@ input {
 
   .verse-line {
     font-size: 21px;
+  }
+}
+
+@media (min-width: 721px) {
+  .app-screen,
+  .reading-header-fixed {
+    box-shadow: 0 0 0 1px rgba(174, 127, 43, 0.12), 0 24px 80px rgba(53, 47, 35, 0.08);
   }
 }
