@@ -526,13 +526,14 @@ textarea {
 }
 
 .ai-composer input {
+  min-width: 0;
   width: 100%;
   border: 0;
   outline: none;
   background: transparent;
   color: var(--ink);
   font-family: var(--serif);
-  font-size: 12px;
+  font-size: 16px;
   letter-spacing: 0.03em;
 }
 
@@ -550,12 +551,15 @@ textarea {
   background: var(--ink);
   color: var(--paper);
   cursor: pointer;
+  line-height: 0;
+  padding: 0;
 }
 
 .ai-composer > button svg {
   width: 16px;
   height: 16px;
-  transform: translate(-1px, 1px) rotate(-8deg);
+  display: block;
+  transform: none;
 }
 
 .bottom-sheet {
@@ -941,6 +945,11 @@ textarea {
   color: var(--paper);
 }
 
+.drawer-primary:disabled {
+  cursor: wait;
+  opacity: 0.58;
+}
+
 .drawer-secondary {
   margin-top: 8px;
   border: 1px solid color-mix(in srgb, var(--gold) 42%, transparent);
@@ -1065,7 +1074,10 @@ textarea {
 }
 
 .drawer-form input,
+.drawer-feedback input,
 .drawer-feedback textarea {
+  box-sizing: border-box;
+  min-width: 0;
   width: 100%;
   border: 1px solid color-mix(in srgb, var(--gold) 28%, transparent);
   border-radius: 12px;
@@ -1073,11 +1085,12 @@ textarea {
   background: var(--field-surface);
   color: var(--ink);
   font-family: var(--sans);
-  font-size: 13px;
+  font-size: 16px;
   letter-spacing: normal;
 }
 
-.drawer-form input {
+.drawer-form input,
+.drawer-feedback input {
   height: 46px;
   padding: 0 13px;
 }
@@ -1090,6 +1103,7 @@ textarea {
 }
 
 .drawer-form input:focus,
+.drawer-feedback input:focus,
 .drawer-feedback textarea:focus {
   border-color: var(--gold);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--gold) 10%, transparent);
@@ -1097,7 +1111,7 @@ textarea {
 
 .drawer-form-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 10px;
 }
 
@@ -1111,10 +1125,6 @@ textarea {
 
 .drawer-save {
   margin-top: 4px;
-}
-
-.drawer-reading-link {
-  margin-top: -7px;
 }
 
 .drawer-prose p {
@@ -1155,10 +1165,9 @@ textarea {
   margin-top: 3px;
 }
 
-.feedback-submit.is-disabled {
+.feedback-submit:disabled {
   cursor: not-allowed;
   opacity: 0.42;
-  pointer-events: none;
 }
 
 .feedback-note {
@@ -1166,6 +1175,501 @@ textarea {
   font-family: var(--sans);
   font-size: 9px;
   text-align: center;
+}
+
+.form-message {
+  margin: 0;
+  font-family: var(--sans);
+  font-size: 11px;
+  line-height: 1.65;
+}
+
+.form-message.is-error {
+  color: #a64c3f;
+}
+
+.profile-result {
+  margin-top: 5px;
+  padding: 18px;
+  border: 1px solid color-mix(in srgb, var(--gold) 28%, transparent);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 95% 4%, color-mix(in srgb, var(--gold) 12%, transparent), transparent 38%),
+    var(--field-surface);
+}
+
+.profile-result-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--gold);
+  font-family: var(--sans);
+}
+
+.profile-result-heading span {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+}
+
+.profile-result-heading small {
+  font-size: 8px;
+}
+
+.profile-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  margin: 17px 0;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--gold) 17%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--gold) 17%, transparent);
+}
+
+.profile-facts div {
+  min-width: 0;
+  padding: 11px;
+  background: var(--card-surface);
+}
+
+.profile-facts dt {
+  color: var(--ink-soft);
+  font-family: var(--sans);
+  font-size: 8px;
+}
+
+.profile-facts dd {
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+}
+
+.profile-result > p {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 12px;
+  line-height: 1.9;
+}
+
+.profile-cross {
+  display: block;
+  margin-top: 13px;
+  color: color-mix(in srgb, var(--ink-soft) 76%, transparent);
+  font-family: var(--sans);
+  font-size: 8px;
+  line-height: 1.55;
+}
+
+.contact-section {
+  margin-top: 34px;
+}
+
+.contact-list {
+  margin-top: 12px;
+  border-top: 1px solid color-mix(in srgb, var(--gold) 18%, transparent);
+}
+
+.contact-list a,
+.contact-list button {
+  display: grid;
+  grid-template-columns: 82px minmax(0, 1fr) 16px;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 49px;
+  padding: 10px 2px;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--gold) 14%, transparent);
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--sans);
+  text-align: left;
+  text-decoration: none;
+}
+
+.contact-list span {
+  color: var(--ink-soft);
+  font-size: 10px;
+}
+
+.contact-list strong {
+  overflow: hidden;
+  font-size: 11px;
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-entry {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 26px;
+  padding: 11px;
+  border: 1px solid color-mix(in srgb, var(--gold) 24%, transparent);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-soft);
+  font-family: var(--sans);
+  font-size: 10px;
+}
+
+.image-modal {
+  position: fixed;
+  z-index: 120;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.image-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  border: 0;
+  background: rgba(8, 20, 23, 0.66);
+  backdrop-filter: blur(8px);
+}
+
+.image-modal figure {
+  position: relative;
+  width: min(100%, 390px);
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--gold) 34%, transparent);
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.28);
+}
+
+.image-modal figure > button {
+  position: absolute;
+  z-index: 1;
+  top: 10px;
+  right: 10px;
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(18, 63, 73, 0.85);
+  color: #fff;
+  font-size: 24px;
+}
+
+.image-modal img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.image-modal figcaption {
+  padding: 13px;
+  color: #123f49;
+  font-family: var(--sans);
+  font-size: 11px;
+  text-align: center;
+}
+
+.admin-console {
+  position: fixed;
+  z-index: 130;
+  inset: 0;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  width: 100%;
+  height: 100dvh;
+  background:
+    linear-gradient(color-mix(in srgb, var(--paper) 94%, transparent), color-mix(in srgb, var(--paper) 98%, transparent)),
+    url("/assets/wendao/paper-mist-background.png") center / cover no-repeat;
+  color: var(--ink);
+  font-family: var(--serif);
+}
+
+.admin-console > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: calc(env(safe-area-inset-top, 0px) + 18px) 20px 14px;
+  border-bottom: 1px solid color-mix(in srgb, var(--gold) 20%, transparent);
+}
+
+.admin-console > header span {
+  color: var(--gold);
+  font-family: var(--sans);
+  font-size: 8px;
+  letter-spacing: 0.16em;
+}
+
+.admin-console > header h2 {
+  margin: 3px 0 0;
+  font-size: 23px;
+}
+
+.admin-console > header button {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--gold) 8%, transparent);
+  color: var(--ink);
+  font-size: 28px;
+}
+
+.admin-login {
+  grid-row: 2 / -1;
+  align-self: start;
+  display: flex;
+  width: min(calc(100% - 40px), 420px);
+  box-sizing: border-box;
+  flex-direction: column;
+  align-items: center;
+  gap: 13px;
+  margin: 12vh auto 0;
+  padding: 28px;
+  border: 1px solid color-mix(in srgb, var(--gold) 26%, transparent);
+  border-radius: 22px;
+  background: var(--field-surface);
+  text-align: center;
+}
+
+.admin-login > svg {
+  width: 25px;
+  height: 25px;
+  color: var(--gold);
+}
+
+.admin-login h3,
+.admin-login p {
+  margin: 0;
+}
+
+.admin-login p {
+  color: var(--ink-soft);
+  font-family: var(--sans);
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+.admin-login input {
+  box-sizing: border-box;
+  width: 100%;
+  height: 48px;
+  padding: 0 14px;
+  border: 1px solid color-mix(in srgb, var(--gold) 30%, transparent);
+  border-radius: 12px;
+  outline: 0;
+  background: var(--card-surface);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 16px;
+}
+
+.admin-login > button {
+  width: 100%;
+  min-height: 46px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--sans);
+}
+
+.admin-tabs {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  padding: 10px 16px;
+  border-bottom: 1px solid color-mix(in srgb, var(--gold) 15%, transparent);
+  scrollbar-width: none;
+}
+
+.admin-tabs button {
+  flex: 1 0 auto;
+  min-height: 34px;
+  padding: 7px 11px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-soft);
+  font-family: var(--sans);
+  font-size: 10px;
+}
+
+.admin-tabs button.is-active {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.admin-scroll {
+  overflow-y: auto;
+  padding: 18px;
+}
+
+.admin-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.admin-summary article {
+  padding: 17px;
+  border: 1px solid color-mix(in srgb, var(--gold) 22%, transparent);
+  border-radius: 17px;
+  background: var(--field-surface);
+}
+
+.admin-summary strong,
+.admin-summary span {
+  display: block;
+}
+
+.admin-summary strong {
+  font-size: 28px;
+  font-weight: 400;
+}
+
+.admin-summary span {
+  margin-top: 4px;
+  color: var(--ink-soft);
+  font-family: var(--sans);
+  font-size: 9px;
+}
+
+.admin-panel {
+  margin-top: 15px;
+  padding: 18px;
+  border-left: 2px solid var(--gold);
+  background: var(--field-surface);
+}
+
+.admin-panel h3 {
+  margin: 0 0 8px;
+}
+
+.admin-panel p,
+.admin-empty {
+  margin: 0;
+  color: var(--ink-soft);
+  font-family: var(--sans);
+  font-size: 11px;
+  line-height: 1.8;
+}
+
+.admin-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.admin-list article {
+  padding: 15px;
+  border: 1px solid color-mix(in srgb, var(--gold) 20%, transparent);
+  border-radius: 15px;
+  background: var(--field-surface);
+}
+
+.admin-list article > div:first-child {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.admin-list strong {
+  font-size: 13px;
+}
+
+.admin-list time,
+.admin-list small {
+  color: var(--ink-soft);
+  font-family: var(--sans);
+  font-size: 8px;
+}
+
+.admin-list p {
+  margin: 9px 0 6px;
+  overflow-wrap: anywhere;
+  color: var(--ink-soft);
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+.admin-list small {
+  display: block;
+  overflow-wrap: anywhere;
+  line-height: 1.65;
+}
+
+.status-actions {
+  display: flex !important;
+  justify-content: flex-start !important;
+  gap: 6px !important;
+  margin-top: 12px;
+}
+
+.status-actions button {
+  padding: 6px 9px;
+  border: 1px solid color-mix(in srgb, var(--gold) 25%, transparent);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-soft);
+  font-family: var(--sans);
+  font-size: 8px;
+}
+
+.status-actions button.is-active {
+  background: var(--gold);
+  color: var(--paper);
+}
+
+.event-list {
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--gold) 20%, transparent);
+  border-radius: 16px;
+}
+
+.event-list div {
+  display: flex;
+  justify-content: space-between;
+  padding: 13px 15px;
+  border-bottom: 1px solid color-mix(in srgb, var(--gold) 14%, transparent);
+  background: var(--field-surface);
+  font-family: var(--sans);
+  font-size: 10px;
+}
+
+.event-list div:last-child {
+  border-bottom: 0;
+}
+
+.admin-footer {
+  display: flex;
+  gap: 10px;
+  padding: 12px 18px calc(env(safe-area-inset-bottom, 0px) + 14px);
+  border-top: 1px solid color-mix(in srgb, var(--gold) 18%, transparent);
+  background: var(--header-surface);
+}
+
+.admin-footer button {
+  flex: 1;
+  min-height: 40px;
+  border: 1px solid color-mix(in srgb, var(--gold) 28%, transparent);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 10px;
 }
 
 .drawer-footer {

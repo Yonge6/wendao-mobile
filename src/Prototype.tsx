@@ -1,14 +1,23 @@
-import { FormEvent, type ReactNode, useEffect, useMemo, useState } from "react";
+import {
+  FormEvent,
+  type Dispatch,
+  type ReactNode,
+  type SetStateAction,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   ArrowLeftIcon,
+  ArrowRightIcon,
   ChatBubbleIcon,
   CheckIcon,
   ChevronRightIcon,
-  ExternalLinkIcon,
   HamburgerMenuIcon,
   InfoCircledIcon,
+  LockClosedIcon,
   MoonIcon,
-  PaperPlaneIcon,
   PersonIcon,
   SunIcon,
 } from "@radix-ui/react-icons";
@@ -26,6 +35,37 @@ type LifeProfile = {
   birthDate: string;
   birthTime: string;
   birthPlace: string;
+  timezone: string;
+};
+
+type ChartSnapshot = {
+  schemaVersion: string;
+  chartHash: string;
+  verificationStatus: string;
+  core: {
+    type: string;
+    strategy: string;
+    authority: string;
+    profile: string;
+    definition: string;
+    incarnationCross: string;
+  };
+  structure: {
+    definedCenters: string[];
+    channels: number[][];
+    variables: Record<string, string>;
+  };
+};
+
+type SaveState = "idle" | "saving" | "saved" | "error";
+type AdminTab = "overview" | "profiles" | "conversations" | "feedback" | "events";
+
+type AdminOverview = {
+  summary: { profiles: number; feedback: number; conversations: number; events: number };
+  profiles: Array<Record<string, unknown>>;
+  feedback: Array<Record<string, unknown>>;
+  conversations: Array<Record<string, unknown>>;
+  eventBreakdown: Record<string, number>;
 };
 
 type RelatedItem = {
@@ -51,10 +91,23 @@ type Chapter = {
   en: ChapterCopy;
 };
 
-const HUMAN_DESIGN_URL = "https://human-design.wonderelian.com/";
+const API_BASE = "https://pluto-human-design-api.vercel.app";
 const PROFILE_STORAGE_KEY = "wendao-life-profile";
+const CHART_STORAGE_KEY = "wendao-chart-snapshot";
 const THEME_STORAGE_KEY = "wendao-theme";
-const emptyProfile: LifeProfile = { name: "", birthDate: "", birthTime: "", birthPlace: "" };
+const CLIENT_ID_KEY = "wendao-client-id";
+const ADMIN_TOKEN_KEY = "wendao-admin-token";
+const APP_VERSION = "2026.07.31";
+const browserTimezone = typeof Intl === "undefined"
+  ? "Asia/Shanghai"
+  : Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Shanghai";
+const emptyProfile: LifeProfile = {
+  name: "",
+  birthDate: "",
+  birthTime: "",
+  birthPlace: "",
+  timezone: browserTimezone,
+};
 
 function loadProfile(): LifeProfile {
   if (typeof window === "undefined") return emptyProfile;
@@ -65,6 +118,103 @@ function loadProfile(): LifeProfile {
   } catch {
     return emptyProfile;
   }
+}
+
+function loadChart(): ChartSnapshot | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const stored = window.localStorage.getItem(CHART_STORAGE_KEY);
+    return stored ? JSON.parse(stored) as ChartSnapshot : null;
+  } catch {
+    return null;
+  }
+}
+
+function stableId(storageKey: string) {
+  if (typeof window === "undefined") return "00000000-0000-4000-8000-000000000000";
+  const stored = window.localStorage.getItem(storageKey);
+  if (stored) return stored;
+  const id = window.crypto.randomUUID();
+  window.localStorage.setItem(storageKey, id);
+  return id;
+}
+
+async function apiRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const response = await fetch(`${API_BASE}${path}`, {
+    ...init,
+    headers: {
+      "Content-Type": "application/json",
+      ...init.headers,
+    },
+  });
+  const payload = await response.json() as { data: T | null; error?: { message?: string } | null };
+  if (!response.ok || !payload.data) {
+    throw new Error(payload.error?.message || "服务暂时不可用，请稍后再试。");
+  }
+  return payload.data;
+}
+
+const humanDesignLabels: Record<string, { zh: string; en: string }> = {
+  Generator: { zh: "生产者", en: "Generator" },
+  "Manifesting Generator": { zh: "显示生产者", en: "Manifesting Generator" },
+  Projector: { zh: "投射者", en: "Projector" },
+  Manifestor: { zh: "显示者", en: "Manifestor" },
+  Reflector: { zh: "反映者", en: "Reflector" },
+  "To Respond": { zh: "等待回应", en: "Wait to respond" },
+  "Wait for the Invitation": { zh: "等待邀请", en: "Wait for the invitation" },
+  "To Inform": { zh: "告知后行动", en: "Inform before acting" },
+  "Wait a Lunar Cycle": { zh: "等待月亮周期", en: "Wait a lunar cycle" },
+  "Emotional - Solar Plexus": { zh: "情绪权威", en: "Emotional authority" },
+  Sacral: { zh: "荐骨权威", en: "Sacral authority" },
+  Splenic: { zh: "脾脏权威", en: "Splenic authority" },
+  "Ego - Manifested": { zh: "意志力权威", en: "Ego authority" },
+  "Ego - Projected": { zh: "意志力权威", en: "Ego authority" },
+  "Self-Projected": { zh: "自我投射权威", en: "Self-projected authority" },
+  "Mental - Environmental": { zh: "环境权威", en: "Environmental authority" },
+  Lunar: { zh: "月亮权威", en: "Lunar authority" },
+  "Single Definition": { zh: "一分人", en: "Single definition" },
+  "Split Definition": { zh: "二分人", en: "Split definition" },
+  "Triple Split Definition": { zh: "三分人", en: "Triple-split definition" },
+  "Quadruple Split Definition": { zh: "四分人", en: "Quadruple-split definition" },
+  "No Definition": { zh: "无定义", en: "No definition" },
+};
+
+function hdLabel(value: string, language: Language) {
+  return humanDesignLabels[value]?.[language] ?? value;
+}
+
+function isLifeManualItem(item: RelatedItem) {
+  return item.title === "你的人生说明书" || item.title === "Your life manual";
+}
+
+function personalizedAdvice(chapterId: number, chart: ChartSnapshot, language: Language) {
+  const type = hdLabel(chart.core.type, language);
+  const strategy = hdLabel(chart.core.strategy, language);
+  const authority = hdLabel(chart.core.authority, language);
+  if (language === "en") {
+    const chapterThought = chapterId === 8
+      ? "Water suggests that flexibility can be strength: let the situation reach you before deciding how to move."
+      : chapterId === 9
+        ? "Knowing when enough is enough protects your energy from being spent only to prove yourself."
+        : "Before naming the situation too quickly, notice what your own response is already showing you.";
+    return `Your chart describes you as a ${type}, with ${strategy} as your strategy and ${authority} as your decision-making authority. ${chapterThought} This is a lens for reflection, not a verdict: use it to notice your timing, then make the choice that remains true after the immediate pressure passes.`;
+  }
+  const chapterThought = chapterId === 8
+    ? "水提醒你：柔软不是退让，而是先让局面来到你这里，再辨认自己真正愿意流向哪里。"
+    : chapterId === 9
+      ? "“持而盈之”提醒你留意那个已经足够的时刻，不必为了证明自己继续消耗。"
+      : "在急着命名局面之前，先听见身体已经给出的回应，让真实经验走在标签前面。";
+  return `你的人类图类型是${type}，策略是“${strategy}”，做重要决定时可参考${authority}。${chapterThought}这不是对你的判定，而是一面观察自己的镜子：先辨认节奏与感受，再由你决定怎样行动。`;
+}
+
+function questionResponse(question: string, chapter: ChapterCopy, chart: ChartSnapshot, language: Language) {
+  const type = hdLabel(chart.core.type, language);
+  const strategy = hdLabel(chart.core.strategy, language);
+  const authority = hdLabel(chart.core.authority, language);
+  if (language === "en") {
+    return `In “${chapter.title}”, the useful move is not to force an immediate answer to “${question}”. As a ${type}, your experiment is ${strategy}; with ${authority}, give the decision enough space to become clear. Notice which option lets the situation move without asking you to abandon yourself.`;
+  }
+  return `面对“${question}”，《${chapter.title}》给你的不是一个替你决定的答案。作为${type}，你可以先实践“${strategy}”；结合${authority}，给重要决定留出澄清的空间。观察哪一个选择既让事情重新流动，也不要求你背离真实的自己。`;
 }
 
 function loadTheme(): Theme {
@@ -480,11 +630,21 @@ type SideDrawerProps = {
   onThemeChange: (theme: Theme) => void;
   profile: LifeProfile;
   profileDraft: LifeProfile;
-  onProfileDraftChange: (profile: LifeProfile) => void;
+  onProfileDraftChange: Dispatch<SetStateAction<LifeProfile>>;
   onProfileSave: (event: FormEvent) => void;
-  profileSaved: boolean;
+  profileState: SaveState;
+  profileError: string;
+  chart: ChartSnapshot | null;
   feedback: string;
   onFeedbackChange: (feedback: string) => void;
+  feedbackContact: string;
+  onFeedbackContactChange: (contact: string) => void;
+  feedbackState: SaveState;
+  feedbackError: string;
+  onFeedbackSubmit: (event: FormEvent) => void;
+  onContactClick: (target: string) => void;
+  onVideoChannelOpen: () => void;
+  onAdminOpen: () => void;
 };
 
 function SideDrawer({
@@ -499,12 +659,22 @@ function SideDrawer({
   profileDraft,
   onProfileDraftChange,
   onProfileSave,
-  profileSaved,
+  profileState,
+  profileError,
+  chart,
   feedback,
   onFeedbackChange,
+  feedbackContact,
+  onFeedbackContactChange,
+  feedbackState,
+  feedbackError,
+  onFeedbackSubmit,
+  onContactClick,
+  onVideoChannelOpen,
+  onAdminOpen,
 }: SideDrawerProps) {
   const isZh = language === "zh";
-  const profileComplete = Boolean(profile.name && profile.birthDate && profile.birthTime && profile.birthPlace);
+  const profileComplete = Boolean(chart?.chartHash);
 
   useEffect(() => {
     if (!open) return;
@@ -525,9 +695,15 @@ function SideDrawer({
         ? (isZh ? "关于问道" : "About Wendao")
         : (isZh ? "意见反馈" : "Feedback");
 
-  const feedbackUrl = `https://github.com/Yonge6/wendao-mobile/issues/new?title=${encodeURIComponent(
-    isZh ? "问道产品反馈" : "Wendao feedback",
-  )}&body=${encodeURIComponent(feedback)}`;
+  const contacts = [
+    { label: isZh ? "邮箱" : "Email", value: "hustyy986@gmail.com", href: "mailto:hustyy986@gmail.com" },
+    { label: isZh ? "微博" : "Weibo", value: "@1228222295", href: "https://weibo.com/u/1228222295" },
+    { label: isZh ? "小红书" : "RED", value: isZh ? "打开主页" : "Open profile", href: "https://xhslink.cn/m/3OF5qu7Peui" },
+    { label: isZh ? "抖音" : "Douyin", value: isZh ? "打开主页" : "Open profile", href: "https://v.douyin.com/d9L1thkye0Y/" },
+    { label: "X", value: "@yongyuan1", href: "https://x.com/yongyuan1?s=11" },
+    { label: "TikTok", value: "@wonderelian", href: "https://www.tiktok.com/@wonderelian?_r=1&_t=ZP-98Tvaldfrpe" },
+    { label: "Facebook", value: isZh ? "打开主页" : "Open profile", href: "https://www.facebook.com/share/1Gga69WThA/?mibextid=wwXIfr" },
+  ];
 
   return (
     <div className="drawer-layer">
@@ -570,26 +746,22 @@ function SideDrawer({
                 <span className="drawer-kicker">{isZh ? "你的人生说明书" : "Your life manual"}</span>
                 <h3>
                   {profileComplete
-                    ? (isZh ? `${profile.name}，资料已保存` : `${profile.name}, your details are saved`)
+                    ? (isZh ? `${profile.name || "你"}，说明书已生成` : `${profile.name || "Your"} manual is ready`)
                     : (isZh ? "从认识自己的起点开始" : "Begin with the facts of your birth")}
                 </h3>
                 <p>
                   {profileComplete
-                    ? `${profile.birthDate} · ${profile.birthTime} · ${profile.birthPlace}`
+                    ? `${hdLabel(chart!.core.type, language)} · ${chart!.core.profile} · ${hdLabel(chart!.core.authority, language)}`
                     : (isZh
-                      ? "出生日期、准确时间和地点，会成为个性化解读的基础。"
+                      ? "出生日期、准确时间和地点，会成为个性化阅读的基础；问道不绘制人类图。"
                       : "Birth date, exact time, and place form the basis of your personal reading.")}
                 </p>
                 <button type="button" className="drawer-primary" onClick={() => onViewChange("profile")}>
                   <PersonIcon />
                   {profileComplete
-                    ? (isZh ? "查看与修改资料" : "Review and edit")
+                    ? (isZh ? "查看人生说明书" : "View life manual")
                     : (isZh ? "录入出生信息" : "Enter birth details")}
                 </button>
-                <a className="drawer-secondary" href={HUMAN_DESIGN_URL} target="_blank" rel="noreferrer">
-                  {isZh ? "生成并查看详细解读" : "Generate a detailed reading"}
-                  <ExternalLinkIcon />
-                </a>
               </section>
 
               <nav className="drawer-nav" aria-label={isZh ? "更多功能" : "More features"}>
@@ -601,14 +773,6 @@ function SideDrawer({
                   </span>
                   <ChevronRightIcon />
                 </button>
-                <a href={HUMAN_DESIGN_URL} target="_blank" rel="noreferrer">
-                  <span className="drawer-nav-icon"><ExternalLinkIcon /></span>
-                  <span>
-                    <strong>{isZh ? "人类图详细解读" : "Human Design reading"}</strong>
-                    <small>human-design.wonderelian.com</small>
-                  </span>
-                  <ChevronRightIcon />
-                </a>
                 <div className="drawer-nav-row">
                   <span className="drawer-nav-icon">{theme === "dark" ? <MoonIcon /> : <SunIcon />}</span>
                   <span>
@@ -650,15 +814,15 @@ function SideDrawer({
             <form className="drawer-form" onSubmit={onProfileSave}>
               <p className="drawer-intro">
                 {isZh
-                  ? "这些信息保存在当前浏览器中，用于构建与你有关的阅读语境。真正的人类图计算和详细解读会在 Pluto 人生使用说明书中完成。"
-                  : "These details stay in this browser and shape your reading context. Chart calculation and the full interpretation happen in Pluto Life Manual."}
+                  ? "问道会在产品内完成计算，只呈现类型、策略、权威等结果，不绘制人类图。出生时间越准确，解读越可靠。"
+                  : "Wendao calculates your result here and shows only the useful reading—never a BodyGraph. A precise birth time gives a more reliable result."}
               </p>
               <label>
                 <span>{isZh ? "姓名或称呼" : "Name"}</span>
                 <input
                   required
                   value={profileDraft.name}
-                  onChange={(event) => onProfileDraftChange({ ...profileDraft, name: event.target.value })}
+                  onChange={(event) => onProfileDraftChange((current) => ({ ...current, name: event.target.value }))}
                   placeholder={isZh ? "我们该如何称呼你" : "How should we address you?"}
                 />
               </label>
@@ -669,7 +833,7 @@ function SideDrawer({
                     required
                     type="date"
                     value={profileDraft.birthDate}
-                    onChange={(event) => onProfileDraftChange({ ...profileDraft, birthDate: event.target.value })}
+                    onChange={(event) => onProfileDraftChange((current) => ({ ...current, birthDate: event.target.value }))}
                   />
                 </label>
                 <label>
@@ -678,7 +842,7 @@ function SideDrawer({
                     required
                     type="time"
                     value={profileDraft.birthTime}
-                    onChange={(event) => onProfileDraftChange({ ...profileDraft, birthTime: event.target.value })}
+                    onChange={(event) => onProfileDraftChange((current) => ({ ...current, birthTime: event.target.value }))}
                   />
                 </label>
               </div>
@@ -687,23 +851,52 @@ function SideDrawer({
                 <input
                   required
                   value={profileDraft.birthPlace}
-                  onChange={(event) => onProfileDraftChange({ ...profileDraft, birthPlace: event.target.value })}
+                  onChange={(event) => onProfileDraftChange((current) => ({ ...current, birthPlace: event.target.value }))}
                   placeholder={isZh ? "城市、区县或地区" : "City, district, or region"}
+                />
+              </label>
+              <label>
+                <span>{isZh ? "出生地时区" : "Birth-place time zone"}</span>
+                <input
+                  required
+                  value={profileDraft.timezone}
+                  onChange={(event) => onProfileDraftChange((current) => ({ ...current, timezone: event.target.value }))}
+                  placeholder="Asia/Shanghai"
+                  autoCapitalize="none"
+                  spellCheck={false}
                 />
               </label>
               <p className="privacy-note">
                 {isZh
-                  ? "隐私说明：问道当前只在你的浏览器里保存这份资料，不会在提交时上传。"
-                  : "Privacy: Wendao currently stores these details only in your browser and does not upload them on save."}
+                  ? "隐私说明：提交即同意将出生资料安全传送至问道服务，用于计算、保存你的人生说明书和改善产品；不会公开，也不会绘制人类图。"
+                  : "Privacy: submitting securely sends these details to Wendao to calculate and save your life manual and improve the product. They are not public, and no BodyGraph is rendered."}
               </p>
-              <button type="submit" className="drawer-primary drawer-save">
-                {profileSaved ? <CheckIcon /> : <PersonIcon />}
-                {profileSaved ? (isZh ? "已保存" : "Saved") : (isZh ? "保存人生资料" : "Save details")}
+              <button type="submit" className="drawer-primary drawer-save" disabled={profileState === "saving"}>
+                {profileState === "saved" ? <CheckIcon /> : <PersonIcon />}
+                {profileState === "saving"
+                  ? (isZh ? "正在计算…" : "Calculating…")
+                  : profileState === "saved"
+                    ? (isZh ? "说明书已更新" : "Manual updated")
+                    : (isZh ? "生成我的人生说明书" : "Create my life manual")}
               </button>
-              <a className="drawer-secondary drawer-reading-link" href={HUMAN_DESIGN_URL} target="_blank" rel="noreferrer">
-                {isZh ? "前往 Pluto 生成基础与详细解读" : "Open Pluto for basic and detailed readings"}
-                <ExternalLinkIcon />
-              </a>
+              {profileError ? <p className="form-message is-error">{profileError}</p> : null}
+              {chart ? (
+                <section className="profile-result" aria-label={isZh ? "人类图解读结果" : "Human Design result"}>
+                  <div className="profile-result-heading">
+                    <span>{isZh ? "计算结果" : "Your result"}</span>
+                    <small>{isZh ? "不出图，只呈现与你有关的信息" : "Insight without the diagram"}</small>
+                  </div>
+                  <dl className="profile-facts">
+                    <div><dt>{isZh ? "类型" : "Type"}</dt><dd>{hdLabel(chart.core.type, language)}</dd></div>
+                    <div><dt>{isZh ? "策略" : "Strategy"}</dt><dd>{hdLabel(chart.core.strategy, language)}</dd></div>
+                    <div><dt>{isZh ? "权威" : "Authority"}</dt><dd>{hdLabel(chart.core.authority, language)}</dd></div>
+                    <div><dt>{isZh ? "人生角色" : "Profile"}</dt><dd>{chart.core.profile}</dd></div>
+                    <div><dt>{isZh ? "定义" : "Definition"}</dt><dd>{hdLabel(chart.core.definition, language)}</dd></div>
+                  </dl>
+                  <p>{personalizedAdvice(8, chart, language)}</p>
+                  <small className="profile-cross">{isZh ? "轮回交叉" : "Incarnation cross"} · {chart.core.incarnationCross}</small>
+                </section>
+              ) : null}
             </form>
           ) : null}
 
@@ -726,11 +919,38 @@ function SideDrawer({
                 <span>02</span><p>{isZh ? "解释清楚但不简化思想" : "Clarity without flattening the thought"}</p>
                 <span>03</span><p>{isZh ? "启发行动但不制造依赖" : "Actionable guidance without dependence"}</p>
               </div>
+              <div className="contact-section">
+                <span className="drawer-kicker">{isZh ? "联系我们" : "Contact"}</span>
+                <div className="contact-list">
+                  {contacts.map((contact) => (
+                    <a
+                      key={contact.label}
+                      href={contact.href}
+                      target={contact.href.startsWith("mailto:") ? undefined : "_blank"}
+                      rel={contact.href.startsWith("mailto:") ? undefined : "noreferrer"}
+                      onClick={() => onContactClick(contact.label)}
+                    >
+                      <span>{contact.label}</span>
+                      <strong>{contact.value}</strong>
+                      <ArrowRightIcon />
+                    </a>
+                  ))}
+                  <button type="button" onClick={onVideoChannelOpen}>
+                    <span>{isZh ? "视频号" : "WeChat Channels"}</span>
+                    <strong>{isZh ? "查看二维码" : "View QR code"}</strong>
+                    <ArrowRightIcon />
+                  </button>
+                </div>
+              </div>
+              <button type="button" className="admin-entry" onClick={onAdminOpen}>
+                <LockClosedIcon />
+                {isZh ? "数据后台" : "Admin"}
+              </button>
             </section>
           ) : null}
 
           {view === "feedback" ? (
-            <section className="drawer-feedback">
+            <form className="drawer-feedback" onSubmit={onFeedbackSubmit}>
               <p className="drawer-intro">
                 {isZh
                   ? "可以告诉我们原文、拼音、解释、设计或使用体验中任何不准确、不舒服的地方。"
@@ -745,20 +965,31 @@ function SideDrawer({
                   placeholder={isZh ? "请写下你看到的问题，或希望增加的内容…" : "Describe the issue or what you would like to see…"}
                 />
               </label>
-              <a
-                className={`drawer-primary feedback-submit ${feedback.trim() ? "" : "is-disabled"}`}
-                href={feedback.trim() ? feedbackUrl : undefined}
-                target="_blank"
-                rel="noreferrer"
-                aria-disabled={!feedback.trim()}
+              <label>
+                <span>{isZh ? "联系方式（选填）" : "Contact (optional)"}</span>
+                <input
+                  value={feedbackContact}
+                  onChange={(event) => onFeedbackContactChange(event.target.value)}
+                  placeholder={isZh ? "邮箱、微信或其他联系方式" : "Email or another way to reach you"}
+                />
+              </label>
+              <button
+                type="submit"
+                className="drawer-primary feedback-submit"
+                disabled={!feedback.trim() || feedbackState === "saving"}
               >
                 <ChatBubbleIcon />
-                {isZh ? "提交到项目反馈" : "Open project feedback"}
-              </a>
+                {feedbackState === "saving"
+                  ? (isZh ? "正在提交…" : "Submitting…")
+                  : feedbackState === "saved"
+                    ? (isZh ? "已收到，谢谢你" : "Received. Thank you.")
+                    : (isZh ? "提交反馈" : "Submit feedback")}
+              </button>
               <small className="feedback-note">
-                {isZh ? "将打开 GitHub 反馈页，并自动带入你写的内容。" : "This opens GitHub with your message pre-filled."}
+                {isZh ? "反馈会直接进入问道后台，不会跳转到其他网站。" : "Your feedback goes directly to Wendao. No external site opens."}
               </small>
-            </section>
+              {feedbackError ? <p className="form-message is-error">{feedbackError}</p> : null}
+            </form>
           ) : null}
         </div>
 
@@ -767,6 +998,229 @@ function SideDrawer({
         </footer>
       </aside>
     </div>
+  );
+}
+
+function VideoChannelModal({ open, onClose, language }: { open: boolean; onClose: () => void; language: Language }) {
+  if (!open) return null;
+  return (
+    <div className="image-modal" role="dialog" aria-modal="true" aria-label={language === "zh" ? "视频号二维码" : "WeChat Channels QR code"}>
+      <button type="button" className="image-modal-backdrop" aria-label={language === "zh" ? "关闭" : "Close"} onClick={onClose} />
+      <figure>
+        <button type="button" aria-label={language === "zh" ? "关闭" : "Close"} onClick={onClose}>×</button>
+        <img src="/assets/wendao/video-channel.jpg" alt={language === "zh" ? "问道视频号二维码" : "Wendao WeChat Channels QR code"} />
+        <figcaption>{language === "zh" ? "扫码关注视频号" : "Scan to follow on WeChat Channels"}</figcaption>
+      </figure>
+    </div>
+  );
+}
+
+function formatDate(value: unknown, language: Language) {
+  if (typeof value !== "string") return "—";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat(language === "zh" ? "zh-CN" : "en", {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
+
+type AdminConsoleProps = {
+  open: boolean;
+  onClose: () => void;
+  language: Language;
+};
+
+function AdminConsole({ open, onClose, language }: AdminConsoleProps) {
+  const isZh = language === "zh";
+  const [password, setPassword] = useState("");
+  const [token, setToken] = useState(() => window.sessionStorage.getItem(ADMIN_TOKEN_KEY) || "");
+  const [overview, setOverview] = useState<AdminOverview | null>(null);
+  const [tab, setTab] = useState<AdminTab>("overview");
+  const [state, setState] = useState<SaveState>("idle");
+  const [error, setError] = useState("");
+
+  const loadOverview = async (nextToken: string) => {
+    setState("saving");
+    try {
+      const data = await apiRequest<AdminOverview>("/v1/admin/overview", {
+        headers: { Authorization: `Bearer ${nextToken}` },
+      });
+      setOverview(data);
+      setError("");
+      setState("saved");
+    } catch (nextError) {
+      window.sessionStorage.removeItem(ADMIN_TOKEN_KEY);
+      setToken("");
+      setOverview(null);
+      setError(nextError instanceof Error ? nextError.message : "读取失败");
+      setState("error");
+    }
+  };
+
+  useEffect(() => {
+    if (open && token && !overview && state !== "saving") void loadOverview(token);
+  }, [open, token]);
+
+  if (!open) return null;
+
+  const login = async (event: FormEvent) => {
+    event.preventDefault();
+    setState("saving");
+    try {
+      const data = await apiRequest<{ token: string }>("/v1/admin/login", {
+        method: "POST",
+        body: JSON.stringify({ password }),
+      });
+      window.sessionStorage.setItem(ADMIN_TOKEN_KEY, data.token);
+      setToken(data.token);
+      setPassword("");
+      await loadOverview(data.token);
+    } catch (nextError) {
+      setError(nextError instanceof Error ? nextError.message : "登录失败");
+      setState("error");
+    }
+  };
+
+  const logout = () => {
+    window.sessionStorage.removeItem(ADMIN_TOKEN_KEY);
+    setToken("");
+    setOverview(null);
+    setState("idle");
+  };
+
+  const updateFeedback = async (id: string, status: string) => {
+    try {
+      await apiRequest<{ saved: boolean }>("/v1/admin/feedback-status", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ id, status }),
+      });
+      await loadOverview(token);
+    } catch (nextError) {
+      setError(nextError instanceof Error ? nextError.message : "更新失败");
+    }
+  };
+
+  return (
+    <section className="admin-console" role="dialog" aria-modal="true" aria-labelledby="admin-title">
+      <header>
+        <div>
+          <span>问道 · WENDAO</span>
+          <h2 id="admin-title">{isZh ? "数据后台" : "Admin"}</h2>
+        </div>
+        <button type="button" aria-label={isZh ? "关闭" : "Close"} onClick={onClose}>×</button>
+      </header>
+      {!token ? (
+        <form className="admin-login" onSubmit={login}>
+          <LockClosedIcon />
+          <h3>{isZh ? "管理者登录" : "Admin sign in"}</h3>
+          <p>{isZh ? "输入管理密码查看用户、反馈、对话与行为数据。" : "Enter the admin password to view product data."}</p>
+          <input
+            required
+            type="password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            placeholder={isZh ? "管理密码" : "Password"}
+            autoComplete="current-password"
+          />
+          <button type="submit" disabled={state === "saving"}>{state === "saving" ? "…" : (isZh ? "登录" : "Sign in")}</button>
+          {error ? <p className="form-message is-error">{error}</p> : null}
+        </form>
+      ) : (
+        <>
+          <nav className="admin-tabs" aria-label={isZh ? "数据分类" : "Data sections"}>
+            {([
+              ["overview", isZh ? "概览" : "Overview"],
+              ["profiles", isZh ? "用户" : "People"],
+              ["conversations", isZh ? "对话" : "Chats"],
+              ["feedback", isZh ? "反馈" : "Feedback"],
+              ["events", isZh ? "行为" : "Events"],
+            ] as Array<[AdminTab, string]>).map(([id, label]) => (
+              <button type="button" className={tab === id ? "is-active" : ""} onClick={() => setTab(id)} key={id}>{label}</button>
+            ))}
+          </nav>
+          <div className="admin-scroll">
+            {state === "saving" && !overview ? <p className="admin-empty">{isZh ? "正在读取…" : "Loading…"}</p> : null}
+            {overview && tab === "overview" ? (
+              <>
+                <div className="admin-summary">
+                  <article><strong>{overview.summary.profiles}</strong><span>{isZh ? "人生说明书" : "Profiles"}</span></article>
+                  <article><strong>{overview.summary.conversations}</strong><span>{isZh ? "AI 对话" : "Chats"}</span></article>
+                  <article><strong>{overview.summary.feedback}</strong><span>{isZh ? "反馈" : "Feedback"}</span></article>
+                  <article><strong>{overview.summary.events}</strong><span>{isZh ? "行为事件" : "Events"}</span></article>
+                </div>
+                <section className="admin-panel">
+                  <h3>{isZh ? "记录范围" : "Recorded data"}</h3>
+                  <p>{isZh ? "出生资料与人类图核心结果、用户提问与产品回应、反馈及有限的功能使用事件。密码和敏感密钥不进入前端代码。" : "Birth details and chart summaries, questions and responses, feedback, and a limited set of product events. Secrets never enter frontend code."}</p>
+                </section>
+              </>
+            ) : null}
+            {overview && tab === "profiles" ? (
+              <div className="admin-list">
+                {overview.profiles.map((row) => {
+                  const core = (row.chart_core || {}) as Record<string, unknown>;
+                  return (
+                    <article key={String(row.id)}>
+                      <div><strong>{String(row.name || "未填写称呼")}</strong><time>{formatDate(row.updated_at, language)}</time></div>
+                      <p>{String(core.type || "—")} · {String(core.profile || "—")} · {String(core.authority || "—")}</p>
+                      <small>{String(row.birth_place || "—")} · {String(row.birth_date || "—")} {String(row.birth_time || "")}</small>
+                    </article>
+                  );
+                })}
+              </div>
+            ) : null}
+            {overview && tab === "conversations" ? (
+              <div className="admin-list">
+                {overview.conversations.map((row) => (
+                  <article key={String(row.id)}>
+                    <div><strong>{isZh ? `第 ${String(row.chapter_id || "—")} 章` : `Chapter ${String(row.chapter_id || "—")}`}</strong><time>{formatDate(row.created_at, language)}</time></div>
+                    <p>{String(row.question || "")}</p>
+                    <small>{String(row.answer || "")}</small>
+                  </article>
+                ))}
+              </div>
+            ) : null}
+            {overview && tab === "feedback" ? (
+              <div className="admin-list">
+                {overview.feedback.map((row) => (
+                  <article key={String(row.id)}>
+                    <div><strong>{String(row.contact || (isZh ? "匿名反馈" : "Anonymous"))}</strong><time>{formatDate(row.created_at, language)}</time></div>
+                    <p>{String(row.message || "")}</p>
+                    <div className="status-actions">
+                      {["new", "reviewing", "resolved"].map((status) => (
+                        <button
+                          type="button"
+                          className={row.status === status ? "is-active" : ""}
+                          onClick={() => void updateFeedback(String(row.id), status)}
+                          key={status}
+                        >
+                          {status === "new" ? (isZh ? "待处理" : "New") : status === "reviewing" ? (isZh ? "处理中" : "Reviewing") : (isZh ? "已完成" : "Resolved")}
+                        </button>
+                      ))}
+                    </div>
+                  </article>
+                ))}
+              </div>
+            ) : null}
+            {overview && tab === "events" ? (
+              <div className="event-list">
+                {Object.entries(overview.eventBreakdown).sort((a, b) => b[1] - a[1]).map(([name, count]) => (
+                  <div key={name}><span>{name}</span><strong>{count}</strong></div>
+                ))}
+              </div>
+            ) : null}
+            {error ? <p className="form-message is-error">{error}</p> : null}
+          </div>
+          <footer className="admin-footer">
+            <button type="button" onClick={() => void loadOverview(token)}>{isZh ? "刷新" : "Refresh"}</button>
+            <button type="button" onClick={logout}>{isZh ? "退出登录" : "Sign out"}</button>
+          </footer>
+        </>
+      )}
+    </section>
   );
 }
 
@@ -783,17 +1237,49 @@ export default function Prototype() {
   const [theme, setTheme] = useState<Theme>(loadTheme);
   const [profile, setProfile] = useState<LifeProfile>(loadProfile);
   const [profileDraft, setProfileDraft] = useState<LifeProfile>(loadProfile);
-  const [profileSaved, setProfileSaved] = useState(false);
+  const [chart, setChart] = useState<ChartSnapshot | null>(loadChart);
+  const [profileState, setProfileState] = useState<SaveState>("idle");
+  const [profileError, setProfileError] = useState("");
   const [feedback, setFeedback] = useState("");
+  const [feedbackContact, setFeedbackContact] = useState("");
+  const [feedbackState, setFeedbackState] = useState<SaveState>("idle");
+  const [feedbackError, setFeedbackError] = useState("");
+  const [responseText, setResponseText] = useState("");
+  const [videoChannelOpen, setVideoChannelOpen] = useState(false);
+  const [adminOpen, setAdminOpen] = useState(() => window.location.hash === "#data-admin");
+  const clientId = useRef(stableId(CLIENT_ID_KEY));
+  const sessionId = useRef(window.crypto.randomUUID());
+  const appOpenTracked = useRef(false);
   const orderedChapters = useMemo(() => reorderFrom(chapterId), [chapterId]);
   const isZh = language === "zh";
   const activeCopy = chapters.find((chapter) => chapter.id === chapterId)?.[language] ?? chapters[0][language];
+  const profileReady = Boolean(chart?.chartHash);
+
+  const trackEvent = (eventName: string, metadata: Record<string, string | number> = {}, eventChapter = chapterId) => {
+    void apiRequest<{ saved: boolean }>("/v1/events", {
+      method: "POST",
+      body: JSON.stringify({
+        clientId: clientId.current,
+        sessionId: sessionId.current,
+        eventName,
+        chapterId: eventChapter,
+        locale: language,
+        metadata,
+      }),
+    }).catch(() => undefined);
+  };
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
     window.localStorage.setItem(THEME_STORAGE_KEY, theme);
     document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "dark" ? "#10191b" : "#f7f1e6");
   }, [theme]);
+
+  useEffect(() => {
+    if (appOpenTracked.current) return;
+    appOpenTracked.current = true;
+    trackEvent("app_open", { source: "web" });
+  }, []);
 
   useEffect(() => {
     const scroll = document.querySelector<HTMLElement>("[data-testid='mobile-scroll']");
@@ -808,6 +1294,7 @@ export default function Prototype() {
   const selectChapter = (id: number) => {
     setChapterId(id);
     setDirectoryOpen(false);
+    trackEvent("chapter_view", { source: "directory" }, id);
     scrollReadingToTop();
   };
 
@@ -815,6 +1302,7 @@ export default function Prototype() {
     const candidates = chapters.filter((chapter) => chapter.id !== chapterId);
     const next = candidates[Math.floor(Math.random() * candidates.length)];
     setChapterId(next.id);
+    trackEvent("chance_chapter", { target: String(next.id) }, next.id);
     scrollReadingToTop();
   };
 
@@ -822,29 +1310,128 @@ export default function Prototype() {
     event.preventDefault();
     const nextQuestion = question.trim();
     if (!nextQuestion) return;
+    if (!profileReady || !chart) {
+      setProfileDraft(profile);
+      setDrawerView("profile");
+      setDrawerOpen(true);
+      setProfileError(isZh
+        ? "请先完成出生信息并生成人生说明书，问道才能结合你的真实结果回应。"
+        : "Complete your birth details and life manual before asking for a personalized response.");
+      trackEvent("profile_open", { source: "composer" });
+      return;
+    }
+    const answer = questionResponse(nextQuestion, activeCopy, chart, language);
     setSubmittedQuestion(nextQuestion);
+    setResponseText(answer);
     setInsightOpen(true);
+    setQuestion("");
+    trackEvent("question_submit", { questionLength: nextQuestion.length });
+    void apiRequest<{ saved: boolean }>("/v1/conversations", {
+      method: "POST",
+      body: JSON.stringify({
+        clientId: clientId.current,
+        sessionId: sessionId.current,
+        chapterId,
+        locale: language,
+        question: nextQuestion,
+        answer,
+        chartHash: chart.chartHash,
+      }),
+    }).catch(() => undefined);
   };
 
-  const saveProfile = (event: FormEvent) => {
+  const saveProfile = async (event: FormEvent) => {
     event.preventDefault();
     const nextProfile = {
       name: profileDraft.name.trim(),
       birthDate: profileDraft.birthDate,
       birthTime: profileDraft.birthTime,
       birthPlace: profileDraft.birthPlace.trim(),
+      timezone: profileDraft.timezone.trim(),
     };
-    setProfile(nextProfile);
-    setProfileDraft(nextProfile);
-    window.localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(nextProfile));
-    setProfileSaved(true);
-    window.setTimeout(() => setProfileSaved(false), 1600);
+    setProfileState("saving");
+    setProfileError("");
+    try {
+      const nextChart = await apiRequest<ChartSnapshot>("/v1/charts", {
+        method: "POST",
+        body: JSON.stringify({
+          birthDate: nextProfile.birthDate,
+          birthTime: nextProfile.birthTime,
+          timezone: nextProfile.timezone,
+          locationLabel: nextProfile.birthPlace,
+        }),
+      });
+      await apiRequest<{ saved: boolean }>("/v1/profiles", {
+        method: "POST",
+        body: JSON.stringify({
+          clientId: clientId.current,
+          name: nextProfile.name,
+          birthDate: nextProfile.birthDate,
+          birthTime: nextProfile.birthTime,
+          birthPlace: nextProfile.birthPlace,
+          timezone: nextProfile.timezone,
+          chartHash: nextChart.chartHash,
+          chartCore: nextChart.core,
+          chartStructure: nextChart.structure,
+          consentAt: new Date().toISOString(),
+        }),
+      });
+      setProfile(nextProfile);
+      setProfileDraft(nextProfile);
+      setChart(nextChart);
+      window.localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(nextProfile));
+      window.localStorage.setItem(CHART_STORAGE_KEY, JSON.stringify(nextChart));
+      setProfileState("saved");
+      trackEvent("profile_saved", { source: "drawer" });
+      trackEvent("chart_calculated", { value: nextChart.core.type });
+    } catch (nextError) {
+      setProfileState("error");
+      setProfileError(nextError instanceof Error ? nextError.message : "计算失败，请稍后再试。");
+    }
+  };
+
+  const submitFeedback = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!feedback.trim()) return;
+    setFeedbackState("saving");
+    setFeedbackError("");
+    try {
+      await apiRequest<{ saved: boolean }>("/v1/feedback", {
+        method: "POST",
+        body: JSON.stringify({
+          clientId: clientId.current,
+          message: feedback.trim(),
+          contact: feedbackContact.trim(),
+          locale: language,
+          chapterId,
+          pagePath: window.location.pathname,
+          appVersion: APP_VERSION,
+        }),
+      });
+      setFeedback("");
+      setFeedbackContact("");
+      setFeedbackState("saved");
+      trackEvent("feedback_submit", { source: "drawer" });
+    } catch (nextError) {
+      setFeedbackState("error");
+      setFeedbackError(nextError instanceof Error ? nextError.message : "提交失败，请稍后再试。");
+    }
   };
 
   const openDrawer = () => {
     setProfileDraft(profile);
     setDrawerView("home");
     setDrawerOpen(true);
+  };
+
+  const changeLanguage = (nextLanguage: Language) => {
+    setLanguage(nextLanguage);
+    if (nextLanguage !== language) trackEvent("language_change", { value: nextLanguage });
+  };
+
+  const changeTheme = (nextTheme: Theme) => {
+    setTheme(nextTheme);
+    trackEvent("theme_change", { value: nextTheme });
   };
 
   return (
@@ -858,7 +1445,14 @@ export default function Prototype() {
           {isZh ? "问道" : "Wendao"}
         </button>
         <span className="header-rule" aria-hidden="true" />
-        <button className="header-action directory-action" type="button" onClick={() => setDirectoryOpen(true)}>
+        <button
+          className="header-action directory-action"
+          type="button"
+          onClick={() => {
+            setDirectoryOpen(true);
+            trackEvent("directory_open", { source: "header" });
+          }}
+        >
           {isZh ? "目录" : "Contents"}
         </button>
         <div className="header-spacer" />
@@ -870,7 +1464,7 @@ export default function Prototype() {
             type="button"
             className={isZh ? "is-active" : undefined}
             aria-pressed={isZh}
-            onClick={() => setLanguage("zh")}
+            onClick={() => changeLanguage("zh")}
           >
             中
           </button>
@@ -879,7 +1473,7 @@ export default function Prototype() {
             type="button"
             className={!isZh ? "is-active" : undefined}
             aria-pressed={!isZh}
-            onClick={() => setLanguage("en")}
+            onClick={() => changeLanguage("en")}
           >
             EN
           </button>
@@ -974,12 +1568,14 @@ export default function Prototype() {
                       <span className="rail-line rail-fill" />
                     </aside>
                     <div className="section-copy">
-                      {copy.related.map((item) => (
+                      {copy.related
+                        .filter((item) => profileReady || !isLifeManualItem(item))
+                        .map((item) => (
                         <div className="related-item" key={item.title}>
                           <h2>{item.title}</h2>
-                          <p>{item.body}</p>
+                          <p>{isLifeManualItem(item) && chart ? personalizedAdvice(chapter.id, chart, language) : item.body}</p>
                         </div>
-                      ))}
+                        ))}
                       <div className="practice-card">
                         <span className="practice-kicker">{isZh ? "今日一练" : "A practice for today"}</span>
                         <p>{copy.action}</p>
@@ -1007,11 +1603,12 @@ export default function Prototype() {
           <input
             value={question}
             onChange={(event) => setQuestion(event.target.value)}
+            onFocus={() => trackEvent("composer_focus", { source: "reading" })}
             placeholder={isZh ? "问问这一章与你的关系…" : "Ask how this chapter relates to you…"}
             aria-label={isZh ? "向问道提问" : "Ask Wendao"}
           />
           <button type="submit" aria-label={isZh ? "发送" : "Send"}>
-            <PaperPlaneIcon />
+            <ArrowRightIcon />
           </button>
         </form>
       ) : null}
@@ -1052,16 +1649,14 @@ export default function Prototype() {
       >
         <div className="ai-response">
           <p className="ai-response-lead">
-            {isZh
-              ? `先不急着得到结论。“${activeCopy.title}”给你的不是一个标准答案，而是一种看清局面的方式。`
-              : `There is no need to force a conclusion yet. “${activeCopy.title}” offers a way to see the situation, not a standard answer.`}
+            {responseText}
           </p>
           <div className="ai-guidance">
             <span>{isZh ? "此刻可以问自己" : "Ask yourself now"}</span>
             <strong>
               {isZh
-                ? "哪一个选择，会让事情重新流动，而不是让我继续用力僵持？"
-                : "Which choice would let life move again, instead of keeping me locked in effort?"}
+                ? "这个决定在压力过去以后，是否仍然让我感到真实、清楚、可以承担？"
+                : "After the pressure passes, does this decision still feel true, clear, and mine to carry?"}
             </strong>
           </div>
           <p>
@@ -1071,7 +1666,11 @@ export default function Prototype() {
           </p>
           <div className="source-disclosure">
             <span>{isZh ? "回应依据" : "Response basis"}</span>
-            <p>{isZh ? "本章原典 · 你的提问 · 已完成的人生说明书信息" : "This chapter · Your question · Your completed life-manual profile"}</p>
+            <p>
+              {chart
+                ? `${isZh ? "本章原典 · 你的提问" : "This chapter · Your question"} · ${hdLabel(chart.core.type, language)} · ${chart.core.profile} · ${hdLabel(chart.core.authority, language)}`
+                : (isZh ? "本章原典 · 你的提问" : "This chapter · Your question")}
+            </p>
           </div>
         </div>
       </WebSheet>
@@ -1083,14 +1682,42 @@ export default function Prototype() {
         view={drawerView}
         onViewChange={setDrawerView}
         theme={theme}
-        onThemeChange={setTheme}
+        onThemeChange={changeTheme}
         profile={profile}
         profileDraft={profileDraft}
         onProfileDraftChange={setProfileDraft}
         onProfileSave={saveProfile}
-        profileSaved={profileSaved}
+        profileState={profileState}
+        profileError={profileError}
+        chart={chart}
         feedback={feedback}
         onFeedbackChange={setFeedback}
+        feedbackContact={feedbackContact}
+        onFeedbackContactChange={setFeedbackContact}
+        feedbackState={feedbackState}
+        feedbackError={feedbackError}
+        onFeedbackSubmit={submitFeedback}
+        onContactClick={(target) => trackEvent("contact_click", { target })}
+        onVideoChannelOpen={() => {
+          setVideoChannelOpen(true);
+          trackEvent("contact_click", { target: "视频号" });
+        }}
+        onAdminOpen={() => {
+          setDrawerOpen(false);
+          setAdminOpen(true);
+          window.location.hash = "data-admin";
+        }}
+      />
+      <VideoChannelModal open={videoChannelOpen} onClose={() => setVideoChannelOpen(false)} language={language} />
+      <AdminConsole
+        open={adminOpen}
+        onClose={() => {
+          setAdminOpen(false);
+          if (window.location.hash === "#data-admin") {
+            window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
+          }
+        }}
+        language={language}
       />
     </>
   );

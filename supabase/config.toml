@@ -1,0 +1,14 @@
+project_id = "wendao"
+
+[auth]
+site_url = "https://yonge6.github.io/wendao-mobile/#data-admin"
+additional_redirect_urls = [
+  "https://yonge6.github.io/wendao-mobile/",
+  "http://127.0.0.1:4173/",
+  "http://localhost:4173/"
+]
+
+[auth.email]
+enable_signup = false
+double_confirm_changes = true
+enable_confirmations = false
