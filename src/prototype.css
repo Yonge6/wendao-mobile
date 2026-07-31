@@ -1529,6 +1529,71 @@ textarea {
   line-height: 2;
 }
 
+.text-lineage-card {
+  margin-top: 24px;
+  padding: 20px 18px 17px;
+  border: 1px solid color-mix(in srgb, var(--gold) 22%, transparent);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--paper) 88%, var(--gold) 12%);
+}
+
+.text-lineage-card ol {
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.text-lineage-card li {
+  position: relative;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 10px;
+  padding: 0 0 15px;
+}
+
+.text-lineage-card li:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 20px;
+  bottom: 3px;
+  left: 9px;
+  border-left: 1px solid color-mix(in srgb, var(--gold) 35%, transparent);
+}
+
+.text-lineage-card li > span {
+  color: var(--gold);
+  font-family: var(--sans);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.text-lineage-card li div {
+  display: grid;
+  gap: 3px;
+}
+
+.text-lineage-card strong {
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.text-lineage-card small {
+  color: var(--ink-soft);
+  font-family: var(--sans);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.drawer-prose .text-lineage-caveat {
+  margin-top: 1px;
+  padding-top: 13px;
+  border-top: 1px solid color-mix(in srgb, var(--gold) 16%, transparent);
+  font-size: 12px;
+  line-height: 1.75;
+}
+
 .about-method {
   display: grid;
   grid-template-columns: 32px minmax(0, 1fr);

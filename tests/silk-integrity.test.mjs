@@ -62,3 +62,22 @@ test("representative chapters keep brackets outside Pinyin counting and supply P
     });
   }
 });
+
+test("every supplied graph has position, source, and review confidence metadata", () => {
+  const additions = chapters.flatMap((chapter) => chapter.zh.additions);
+  assert.equal(additions.length, 741);
+  for (const addition of additions) {
+    assert.match(addition.character, /\p{Script=Han}/u);
+    assert.ok(addition.line > 0);
+    assert.ok(addition.position > 0);
+    assert.ok(addition.absolutePosition > 0);
+    assert.equal(addition.source, "collatedReading");
+    assert.deepEqual(addition.references, ["silkA", "receivedReference"]);
+    assert.equal(addition.confidence, "review-required");
+    assert.ok(addition.note.includes("逐字复核"));
+  }
+  for (const id of [1, 16, 38, 41, 67, 81]) {
+    const chapter = chapters.find((candidate) => candidate.id === id);
+    assert.deepEqual(inspectChapterIntegrity(chapter), []);
+  }
+});

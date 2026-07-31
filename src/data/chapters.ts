@@ -18,8 +18,22 @@ export type ChapterCopy = ChapterCopyBase & {
   verse: string[];
 };
 
+export type ReconstructionAddition = {
+  character: string;
+  line: number;
+  position: number;
+  absolutePosition: number;
+  basis: "silkBLacuna" | "beyondTranscriptionAlignment";
+  sourceMarker: "□" | "○" | null;
+  source: "collatedReading" | "silkA" | "receivedReference" | "editorialInference";
+  references: Array<"silkA" | "receivedReference">;
+  confidence: "review-required" | "low" | "medium" | "high";
+  note: string;
+};
+
 export type ChineseChapterCopy = ChapterCopyBase & {
   reconstructedVerse: string[];
+  additions: ReconstructionAddition[];
   pinyin: string[][];
 };
 

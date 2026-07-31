@@ -16,6 +16,7 @@ for (const chapter of chapters) {
   const prefix = `Chapter ${chapter.id}`;
   if ("literalSilkB" in (chapter.sources ?? {})) errors.push(`${prefix}: deprecated sources.literalSilkB must not be present`);
   if ("verse" in (chapter.zh ?? {})) errors.push(`${prefix}: deprecated zh.verse must not be present`);
+  if (!Array.isArray(chapter.zh?.additions)) errors.push(`${prefix}: zh.additions must be a structured array`);
   errors.push(...inspectChapterIntegrity(chapter).map((issue) => `${issue.severity} ${issue.message}`));
   if (hanziCount(chapter.sources?.receivedReference ?? "") < 20) errors.push(`${prefix}: received comparison appears incomplete`);
   if (!chapter.zh?.reconstructedVerse?.length || hanziCount(chapter.zh.reconstructedVerse.join("")) < 10) errors.push(`${prefix}: Chinese scripture appears incomplete`);

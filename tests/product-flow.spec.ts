@@ -121,6 +121,24 @@ test("starts at the former default size and offers two larger reading steps", as
   await expect(page.locator(".verse-line-ruby > .verse-punctuation")).toHaveCount(0);
 });
 
+test("About separates the textual lineage from claims of direct descent", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "打开更多功能" }).click();
+  await page.getByRole("button", { name: "关于三慢问道" }).click();
+  const lineage = page.getByRole("region", { name: "道德经文本谱系" });
+  await expect(lineage).toBeVisible();
+  await expect(lineage.locator("li")).toHaveCount(5);
+  await expect(lineage.getByText("王弼本", { exact: true })).toBeVisible();
+  await expect(lineage.getByText(/不代表各版本之间存在单一直系抄传关系/)).toBeVisible();
+  await page.getByRole("button", { name: "关闭菜单", exact: true }).last().click();
+  await page.getByRole("button", { name: "EN", exact: true }).click();
+  await page.getByRole("button", { name: "Open more", exact: true }).click();
+  await page.getByRole("button", { name: "About Wendao" }).click();
+  const englishLineage = page.getByRole("region", { name: "Textual lineage of the Daodejing" });
+  await expect(englishLineage.getByText("Wang Bi edition", { exact: true })).toBeVisible();
+  await expect(englishLineage.getByText(/not a single direct line of transmission/)).toBeVisible();
+});
+
 test("covers all 81 chapters through contents, chance, and progressive reading", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator("article.chapter")).toHaveCount(1);

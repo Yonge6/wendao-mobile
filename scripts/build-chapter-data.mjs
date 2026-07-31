@@ -1,6 +1,6 @@
 import { writeFile, mkdir } from "node:fs/promises";
 import { pinyin } from "pinyin-pro";
-import { markReconstructionSupplies, requiredSupplyIndexes } from "./silk-integrity-core.mjs";
+import { markReconstructionSupplies, reconstructedTokens, requiredSupplyDetails } from "./silk-integrity-core.mjs";
 
 const ACCESS_DATE = "2026-08-01";
 const TAOLIB_URL = "https://raw.githubusercontent.com/xinetzone/tao/main/docs/general/philosophy/laozi-boshu/appendix/phonetic.md";
@@ -183,6 +183,30 @@ function reconstructionLocationSummary(lines) {
   return locations.length ? locations.join("；") : "无校补字位";
 }
 
+function reconstructionAdditions(transcription, reconstructedVerse) {
+  const tokens = reconstructedTokens(reconstructedVerse);
+  return requiredSupplyDetails(transcription, reconstructedVerse).map(({ index, basis, sourceMarker }) => {
+    const token = tokens[index];
+    const linePosition = tokens
+      .filter((candidate) => candidate.lineIndex === token.lineIndex)
+      .findIndex((candidate) => candidate === token) + 1;
+    return {
+      character: token.character,
+      line: token.lineIndex + 1,
+      position: linePosition,
+      absolutePosition: index + 1,
+      basis,
+      sourceMarker,
+      source: "collatedReading",
+      references: ["silkA", "receivedReference"],
+      confidence: "review-required",
+      note: basis === "silkBLacuna"
+        ? `乙本转写此位为${sourceMarker}；校读字取自整理校读层，参考甲本及传世本，仍待原始图版逐字复核。`
+        : "此字超出乙本转写的自动对齐字位；取自整理校读层，参考甲本及传世本，仍待原始图版逐字复核。",
+    };
+  });
+}
+
 function chapterCopy(id, silkOrder, reading, literal, received, english) {
   const correctedReading = reading.map((line) => line
     .replace("万物并作", "万物旁作")
@@ -191,7 +215,8 @@ function chapterCopy(id, silkOrder, reading, literal, received, english) {
   const [topicZh, topicEn] = topics[id - 1];
   const anchor = correctedReading[0].replace(/[。！？；]/g, "").slice(0, 12);
   const missing = (literal.match(/[□○]/g) ?? []).length;
-  const supplied = requiredSupplyIndexes(literal, correctedReading).length;
+  const additions = reconstructionAdditions(literal, reconstructedVerse);
+  const supplied = additions.length;
   const supplyLocations = reconstructionLocationSummary(reconstructedVerse);
   const collation = compactDiff(correctedReading.join(""), received);
   const explicitClassicalTones = { bu: "bù", fu: "fú", gong: "gōng" };
@@ -248,6 +273,7 @@ function chapterCopy(id, silkOrder, reading, literal, received, english) {
       eyebrow: `帛书乙本底本校读 · 对应今本第${chineseNumber(id)}章`,
       title: anchor,
       reconstructedVerse,
+      additions,
       pinyin: pinyinLines,
       variant: `版本参照：以马王堆帛书乙本为底本，残缺处参考甲本及传世本校补。这是整理后的校读版本，不是影印转写。${uncertaintyZh} 传世参照的主要逐位差异（校勘索引，需结合王弼注本人工复核）：${collation}。`,
       explanation: [

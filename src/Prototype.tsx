@@ -912,6 +912,37 @@ function SideDrawer({
                   ? "《三慢问道》以马王堆汉墓帛书乙本为主要底本。由于帛书存在残缺、漫漶与文字异体，本站采用“乙本转写 → 校读恢复 → 现代解读”的三层结构。残缺处参考帛书甲本及王弼本等传世版本，并明确标注，不将后世文本倒灌为帛书原文。"
                   : "Wendao uses the Mawangdui Silk Manuscript B as its primary foundation. Because the manuscript contains damaged and unclear passages, the app separates: 1. Silk B transcription; 2. Textual reconstruction; 3. Modern interpretation. Received texts such as the Wang Bi edition are provided only as references, not replacements."}
               </p>
+              <section className="text-lineage-card" aria-label={isZh ? "道德经文本谱系" : "Textual lineage of the Daodejing"}>
+                <span className="drawer-kicker">{isZh ? "《道德经》文本谱系" : "A textual lineage of the Daodejing"}</span>
+                <ol>
+                  {(isZh
+                    ? [
+                        ["郭店楚墓竹简", "战国中晚期"],
+                        ["马王堆帛书甲、乙本", "西汉初期"],
+                        ["河上公本", "传本年代有争议"],
+                        ["王弼本", "魏晋"],
+                        ["现代校勘整理本", "当代"],
+                      ]
+                    : [
+                        ["Guodian Chu bamboo texts", "late Warring States"],
+                        ["Mawangdui Silk A and B", "early Western Han"],
+                        ["Heshang Gong edition", "received dating disputed"],
+                        ["Wang Bi edition", "Wei–Jin period"],
+                        ["Modern critical editions", "present day"],
+                      ]
+                  ).map(([name, period], index) => (
+                    <li key={name}>
+                      <span>{String(index + 1).padStart(2, "0")}</span>
+                      <div><strong>{name}</strong><small>{period}</small></div>
+                    </li>
+                  ))}
+                </ol>
+                <p className="text-lineage-caveat">
+                  {isZh
+                    ? "这是一条帮助理解先后关系的简化时间线，不代表各版本之间存在单一直系抄传关系；王弼本是重要传世见证之一，不等同于“老子原文”。"
+                    : "This simplified chronology shows sequence, not a single direct line of transmission. The Wang Bi edition is an important received witness, not the original words of Laozi."}
+                </p>
+              </section>
               <p>
                 {isZh
                   ? "解释帮助初学者进入原典；“与你有关”把思想放回焦虑、关系与人生选择；人生说明书只用于增加理解和选择，不替任何人决定。"
