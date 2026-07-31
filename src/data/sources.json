@@ -1,6 +1,6 @@
 {
-  "accessed": "2026-07-31",
-  "editorialPolicy": "Silk Text B is the primary witness. Readable text, supplies, literal witness, and received comparisons remain separate layers.",
+  "accessed": "2026-08-01",
+  "editorialPolicy": "Silk Manuscript B is the primary witness. The diplomatic transcription, explicitly marked reconstruction, and modern interpretation remain separate layers; received texts never replace the witness silently.",
   "sources": [
     {
       "title": "Chinese Text Project: Mawangdui Laozi B",
@@ -8,9 +8,9 @@
       "role": "canonical online witness and parallel-text locator"
     },
     {
-      "title": "Silk B literal transcription mirror",
+      "title": "Silk B diplomatic transcription mirror",
       "url": "https://github.com/changlinli/daoist_similarities",
-      "role": "machine-auditable literal segments retaining lacuna markers"
+      "role": "machine-auditable transcription segments retaining lacuna markers; not a facsimile"
     },
     {
       "title": "Hunan Museum / Mawangdui collection context",

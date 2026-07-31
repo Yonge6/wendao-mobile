@@ -1,25 +1,29 @@
 # 81 章编辑与校验管线
 
-三慢问道将“见证文本”、“可朗读校读正文”和“传世参照”分层存储，不把任何一份现代整理本冒充帛书乙本原帛。
+三慢问道将“帛书乙本转写”、“校读恢复”和“现代解释”分层存储，传世文本另作参照，不把任何一份现代整理本冒充帛书乙本原帛。
 
 - `src/data/chapters.json` 是站点读取的 81 章快照，按帛书篇次排列，同时保留今本 1–81 章号。
 - `src/data/sources.json` 记录来源、用途、访问日期和已知来源异常。
-- `scripts/build-chapter-data.mjs` 重建快照；它保留乙本“□”缺损，并对来源中误标为第 67 章的“小邦寡民”按正文纠为第 80 章。
-- `scripts/validate-chapters.mjs` 是构建硬门槛：章数和章号唯一性、正文长度对照、每行汉字/拼音严格等数、声调、中英结构、三层解释、四个生活视角、人生说明书和今日一练。
+- `scripts/build-chapter-data.mjs` 重建快照；它在 `sources.silkBTranscription` 保留乙本 `□/○` 缺损符号，在 `zh.reconstructedVerse` 以 `〔〕` 标出恢复字，并对来源中误标为第 67 章的“小邦寡民”按正文纠为第 80 章。
+- `scripts/check-silk-integrity.mjs` 阻断高风险通行本措辞、缺失的三层字段和未标记的新增文字。
+- `scripts/validate-chapters.mjs` 是构建总门槛：章数和章号唯一性、正文长度对照、每行汉字/拼音严格等数、声调、中英结构、三层解释、四个生活视角、人生说明书、今日一练与帛书严谨性检查。
 
 编辑原则：
 
-1. 主文标识为“帛书乙本校读/校补正文”，不宣称是影印转写。
-2. 每章紧邻展示乙本字符段；“□”永远表示见证缺损，不得在这一层静默填字。
-3. 可读字、补文、断句和拼音属编辑校读层；不确定性在版本说明中公开。
-4. 自动的逐位差异只是人工复核索引，不是学术校勘记，也不宣称代表惟一的王弼定本。
-5. 英文原典层使用 James Legge 公共领域译文作传世文本对照，页内明示它不是对每一个残损乙本字形的直译。
+1. 主文标识为“帛书乙本底本校读 / Silk B Base Reading”，明确它是整理阅读版本，不是影印转写。
+2. 第一层 `sources.silkBTranscription` 保留乙本转写；`□/○` 永远表示见证缺损或漫漶，不得在这一层静默填字。
+3. 第二层 `zh.reconstructedVerse` 承载可读字、补文、断句和拼音；恢复字或超出转写字位的新增字必须置于 `〔〕`，其总说明写入 `sources.reconstructionNotes`。
+4. 第三层 `zh.explanation` 保持现代解释；版本校勘只更新其中的校读说明，不改写既有生活解读。
+5. 自动的逐位差异和缺损对齐只是人工复核索引，不是学术校勘记，也不宣称代表惟一的王弼定本。
+6. 英文原典层使用 James Legge 公共领域译文作传世文本对照，页内明示它不是对每一个残损乙本字形的直译。
 
 重建与校验：
 
 ```bash
 npm run data:chapters
 npm run validate:chapters
+npm run check:silk
+npm run test:silk
 npm run test:runtime
 npm run build:pages
 ```

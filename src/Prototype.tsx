@@ -1,5 +1,6 @@
 import {
   FormEvent,
+  type ClipboardEvent as ReactClipboardEvent,
   type Dispatch,
   type ReactNode,
   type SetStateAction,
@@ -31,7 +32,7 @@ import {
   foundationalReading,
   type HumanDesignReadingChart,
 } from "./humanDesignReading";
-import { chapters, type ChapterCopy, type RelatedItem } from "./data/chapters";
+import { chapters, type ChapterCopyBase, type RelatedItem } from "./data/chapters";
 
 type Language = "zh" | "en";
 type Theme = "light" | "dark";
@@ -310,7 +311,7 @@ function isLifeManualItem(item: RelatedItem) {
   return item.title === "你的人生说明书" || item.title === "Your life manual";
 }
 
-function personalizedAdvice(chapterId: number, chapter: ChapterCopy, chart: ChartSnapshot, language: Language) {
+function personalizedAdvice(chapterId: number, chapter: ChapterCopyBase, chart: ChartSnapshot, language: Language) {
   const type = hdLabel(chart.core.type, language);
   const strategy = hdLabel(chart.core.strategy, language);
   const authority = hdLabel(chart.core.authority, language);
@@ -338,7 +339,7 @@ function personalizedAdvice(chapterId: number, chapter: ChapterCopy, chart: Char
   return `对${type}的你，《${chapter.title}》是一项只属于本章主题的生活实验：先用“${strategy}”观察这股变化已经在哪里发生，再让${authority}澄清下一步是否真的与本章相应。试做“${chapter.action}”，用实际变化而不是身份标签检验它。`;
 }
 
-function questionResponse(question: string, chapter: ChapterCopy, chart: ChartSnapshot, language: Language) {
+function questionResponse(question: string, chapter: ChapterCopyBase, chart: ChartSnapshot, language: Language) {
   const type = hdLabel(chart.core.type, language);
   const strategy = hdLabel(chart.core.strategy, language);
   const authority = hdLabel(chart.core.authority, language);
@@ -367,12 +368,12 @@ function publicPath() {
 
 function validatePinyinReadings() {
   for (const chapter of chapters) {
-    const { verse, pinyin } = chapter.zh;
-    if (!pinyin || verse.length !== pinyin.length) {
+    const { reconstructedVerse, pinyin } = chapter.zh;
+    if (!pinyin || reconstructedVerse.length !== pinyin.length) {
       throw new Error(`Chapter ${chapter.id}: verse and Pinyin line counts do not match.`);
     }
 
-    verse.forEach((line, lineIndex) => {
+    reconstructedVerse.forEach((line, lineIndex) => {
       const hanziCount = Array.from(line).filter((character) => /\p{Script=Han}/u.test(character)).length;
       if (hanziCount !== pinyin[lineIndex].length) {
         throw new Error(
@@ -401,25 +402,54 @@ function scrollReadingToTop(behavior: ScrollBehavior = "smooth") {
 
 function renderPinyinLine(text: string, pinyin: string[]) {
   let syllableIndex = 0;
+  let inSupply = false;
+  let supplyStartsHere = false;
   const characters = Array.from(text);
   const tokens: ReactNode[] = [];
 
   for (let characterIndex = 0; characterIndex < characters.length; characterIndex += 1) {
     const character = characters[characterIndex];
+    if (character === "〔") {
+      inSupply = true;
+      supplyStartsHere = true;
+      continue;
+    }
+    if (character === "〕") {
+      inSupply = false;
+      supplyStartsHere = false;
+      continue;
+    }
     if (/\p{Script=Han}/u.test(character)) {
       const syllable = pinyin[syllableIndex] ?? "";
       syllableIndex += 1;
+      const isSupplyStart = inSupply && supplyStartsHere;
+      supplyStartsHere = false;
+      const isSupplyEnd = inSupply && characters[characterIndex + 1] === "〕";
+      if (isSupplyEnd) {
+        characterIndex += 1;
+        inSupply = false;
+      }
       let punctuation = "";
-      while (characterIndex + 1 < characters.length && !/\p{Script=Han}/u.test(characters[characterIndex + 1])) {
+      while (
+        characterIndex + 1 < characters.length
+        && !/\p{Script=Han}/u.test(characters[characterIndex + 1])
+        && characters[characterIndex + 1] !== "〔"
+        && characters[characterIndex + 1] !== "〕"
+      ) {
         punctuation += characters[characterIndex + 1];
         characterIndex += 1;
       }
       tokens.push(
-        <span className={`verse-token ${punctuation ? "has-punctuation" : ""}`} key={`${character}-${characterIndex}`}>
+        <span
+          className={`verse-token ${punctuation ? "has-punctuation" : ""} ${isSupplyStart || isSupplyEnd || inSupply ? "is-supplied" : ""}`}
+          key={`${character}-${characterIndex}`}
+        >
+          {isSupplyStart ? <span className="verse-supply-bracket">〔</span> : null}
           <ruby>
             {character}
             <rt>{syllable}</rt>
           </ruby>
+          {isSupplyEnd ? <span className="verse-supply-bracket">〕</span> : null}
           {punctuation ? <span className="verse-punctuation">{punctuation}</span> : null}
         </span>,
       );
@@ -430,6 +460,27 @@ function renderPinyinLine(text: string, pinyin: string[]) {
   }
 
   return tokens;
+}
+
+function copyVerseWithoutPinyin(event: ReactClipboardEvent<HTMLDivElement>) {
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return;
+  const range = selection.getRangeAt(0);
+  if (!event.currentTarget.contains(range.commonAncestorContainer)) return;
+
+  const fragment = range.cloneContents();
+  fragment.querySelectorAll?.("rt").forEach((node) => node.remove());
+  const holder = document.createElement("div");
+  holder.append(fragment);
+  const selectedLines = Array.from(holder.querySelectorAll<HTMLElement>(".verse-line"));
+  const plainText = (selectedLines.length
+    ? selectedLines.map((line) => line.textContent ?? "").join("\n")
+    : holder.textContent ?? "")
+    .replace(/\u00a0/g, " ")
+    .trim();
+  if (!plainText) return;
+  event.clipboardData.setData("text/plain", plainText);
+  event.preventDefault();
 }
 
 type WebSheetProps = {
@@ -858,8 +909,8 @@ function SideDrawer({
               <h3>{isZh ? "经典不是答案库，而是一面活的镜子。" : "A classic is not an answer bank. It is a living mirror."}</h3>
               <p>
                 {isZh
-                  ? "三慢问道以马王堆帛书乙本为主要文本，王弼本及其他版本作为参照。我们会明确标出缺损、校补和异文，不把不同版本静默拼成一个“唯一原文”。"
-                  : "Wendao uses Mawangdui Silk Text B as its primary witness, with Wang Bi and other editions for comparison. Lacunae, supplied text, and variants are identified rather than silently merged."}
+                  ? "《三慢问道》以马王堆汉墓帛书乙本为主要底本。由于帛书存在残缺、漫漶与文字异体，本站采用“乙本转写 → 校读恢复 → 现代解读”的三层结构。残缺处参考帛书甲本及王弼本等传世版本，并明确标注，不将后世文本倒灌为帛书原文。"
+                  : "Wendao uses the Mawangdui Silk Manuscript B as its primary foundation. Because the manuscript contains damaged and unclear passages, the app separates: 1. Silk B transcription; 2. Textual reconstruction; 3. Modern interpretation. Received texts such as the Wang Bi edition are provided only as references, not replacements."}
               </p>
               <p>
                 {isZh
@@ -987,7 +1038,7 @@ function SideDrawer({
         </div>
 
         <footer className="drawer-footer">
-          {isZh ? "帛书乙本为主 · 王弼本及其他版本参照" : "Silk Text B first · Wang Bi and other editions compared"}
+          {isZh ? "帛书乙本底本校读 · 王弼本及其他版本参照" : "Silk B Base Reading · Wang Bi and other editions compared"}
         </footer>
       </aside>
     </div>
@@ -1559,6 +1610,8 @@ export default function Prototype() {
 
           {orderedChapters.slice(0, visibleChapterCount).map((chapter, chapterIndex) => {
             const copy = chapter[language];
+            const verse = isZh ? chapter.zh.reconstructedVerse : chapter.en.verse;
+            const pinyin = isZh ? chapter.zh.pinyin : undefined;
             return (
               <article
                 className={`chapter ${chapterIndex === 0 ? "chapter-current" : "chapter-continuation"}`}
@@ -1586,21 +1639,40 @@ export default function Prototype() {
                       <span className="rail-line rail-fill" />
                     </aside>
                     <div className="section-copy">
+                      <div className="text-layer-map" aria-label={isZh ? "文本三层结构" : "Three textual layers"}>
+                        <span>{isZh ? "01 乙本转写" : "01 Silk B transcription"}</span>
+                        <strong>{isZh ? "02 校读正文" : "02 Base reading"}</strong>
+                        <span>{isZh ? "03 现代解读" : "03 Interpretation"}</span>
+                      </div>
                       <div className="chapter-meta">
                         <p className="chapter-eyebrow">{copy.eyebrow}</p>
                         <span className="chapter-completeness">
-                          {isZh ? `全文 · ${copy.verse.length}句` : `Full text · ${copy.verse.length} lines`}
+                          {isZh ? `全文 · ${verse.length}句` : `Full text · ${verse.length} lines`}
                         </span>
                       </div>
                       <h1 id={`chapter-${chapter.id}-${language}`}>{copy.title}</h1>
-                      <div className="verse">
-                        {copy.verse.map((line, lineIndex) => (
-                          <p className={isZh ? "verse-line verse-line-ruby" : "verse-line"} key={`${chapter.id}-${lineIndex}`}>
-                            {isZh && copy.pinyin
-                              ? renderPinyinLine(line, copy.pinyin[lineIndex])
+                      <div className="reading-layer-heading">
+                        <strong>{isZh ? "第二层｜校读正文" : "Layer 2 · Base reading"}</strong>
+                        <small>{isZh ? "〔〕内为校补字" : "Supplied graphs appear in 〔〕"}</small>
+                      </div>
+                      <div className="verse" onCopy={copyVerseWithoutPinyin}>
+                        {verse.map((line, lineIndex) => (
+                          <p
+                            className={isZh ? "verse-line verse-line-ruby" : "verse-line"}
+                            key={`${chapter.id}-${lineIndex}`}
+                            aria-label={line}
+                            data-copy-text={line}
+                          >
+                            {isZh && pinyin
+                              ? renderPinyinLine(line, pinyin[lineIndex])
                               : line}
                           </p>
                         ))}
+                      </div>
+                      <div className="transcription-layer">
+                        <strong>{isZh ? "第一层｜帛书乙本转写" : "Layer 1 · Silk B transcription"}</strong>
+                        <p lang="zh-Hant">{chapter.sources.silkBTranscription}</p>
+                        <small>{isZh ? chapter.sources.reconstructionNotes : `Editorial record: ${chapter.sources.reconstructionNotes}`}</small>
                       </div>
                       <p className="variant-note">{copy.variant}</p>
                     </div>
@@ -1615,6 +1687,9 @@ export default function Prototype() {
                       <span className="rail-line rail-fill" />
                     </aside>
                     <div className="section-copy">
+                      <div className="interpretation-layer-heading">
+                        {isZh ? "第三层｜现代解读" : "Layer 3 · Modern interpretation"}
+                      </div>
                       {copy.explanation.map((item) => (
                         <div className="explanation-item" key={item.title}>
                           <h2>{item.title}</h2>
@@ -1674,7 +1749,7 @@ export default function Prototype() {
 
           <footer className="reading-footer">
             <span>{isZh ? "认识 · 接纳 · 成为 · 活出" : "Know · Accept · Become · Live"}</span>
-            <small>{isZh ? "帛书乙本为主 · 多版本互校" : "Silk Text B first · Versions compared"}</small>
+            <small>{isZh ? "帛书乙本底本校读 · 多版本互校" : "Silk B Base Reading · Versions compared"}</small>
           </footer>
         </main>
       </div>

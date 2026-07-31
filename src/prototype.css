@@ -332,6 +332,22 @@ textarea {
   min-width: 0;
 }
 
+.text-layer-map {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 12px;
+  margin: 0 0 13px;
+  color: var(--ink-soft);
+  font-family: var(--sans);
+  font-size: 8px;
+  letter-spacing: 0.055em;
+}
+
+.text-layer-map strong {
+  color: var(--gold);
+  font-weight: 600;
+}
+
 .chapter-eyebrow {
   margin: 0;
   color: var(--ink-soft);
@@ -370,6 +386,27 @@ textarea {
   margin: 0;
 }
 
+.reading-layer-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 7px;
+  color: var(--gold);
+  font-family: var(--sans);
+}
+
+.reading-layer-heading strong {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+}
+
+.reading-layer-heading small {
+  color: var(--ink-soft);
+  font-size: 8px;
+}
+
 .verse-line {
   margin: 0;
   color: var(--ink);
@@ -403,6 +440,17 @@ textarea {
   align-items: flex-end;
 }
 
+.verse-token.is-supplied {
+  color: color-mix(in srgb, var(--ink) 88%, var(--gold));
+}
+
+.verse-supply-bracket {
+  align-self: flex-end;
+  color: var(--gold);
+  font-size: 0.72em;
+  line-height: 1.55;
+}
+
 .verse-token.has-punctuation + .verse-token {
   margin-left: 0.3em;
 }
@@ -429,6 +477,11 @@ textarea {
   white-space: nowrap;
 }
 
+.verse-token > .verse-punctuation {
+  width: 0.55em;
+  transform: none;
+}
+
 .variant-note {
   margin: 19px 0 29px;
   color: var(--ink-soft);
@@ -436,6 +489,43 @@ textarea {
   font-size: var(--reading-note-size);
   line-height: 1.7;
   letter-spacing: 0.03em;
+}
+
+.transcription-layer {
+  display: grid;
+  gap: 8px;
+  margin: 22px 0 0;
+  padding: 14px 15px;
+  border-left: 1px solid color-mix(in srgb, var(--gold) 70%, transparent);
+  background: color-mix(in srgb, var(--gold) 5%, transparent);
+  color: var(--ink-soft);
+  font-family: var(--sans);
+}
+
+.transcription-layer strong,
+.interpretation-layer-heading {
+  color: var(--gold);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+}
+
+.transcription-layer p {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: var(--reading-note-size);
+  line-height: 1.85;
+  overflow-wrap: anywhere;
+}
+
+.transcription-layer small {
+  font-size: calc(var(--reading-note-size) * 0.88);
+  line-height: 1.75;
+}
+
+.interpretation-layer-heading {
+  margin: 0 0 17px;
 }
 
 .explanation-section {

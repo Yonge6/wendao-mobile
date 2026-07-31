@@ -1,4 +1,5 @@
 import { readFile } from "node:fs/promises";
+import { inspectChapterIntegrity } from "./silk-integrity-core.mjs";
 
 const chapters = JSON.parse(await readFile(new URL("../src/data/chapters.json", import.meta.url), "utf8"));
 const errors = [];
@@ -13,12 +14,14 @@ for (let id = 1; id <= 81; id += 1) {
 
 for (const chapter of chapters) {
   const prefix = `Chapter ${chapter.id}`;
-  if (!chapter.sources?.literalSilkB || !chapter.sources?.receivedReference) errors.push(`${prefix}: missing witness/reference`);
+  if ("literalSilkB" in (chapter.sources ?? {})) errors.push(`${prefix}: deprecated sources.literalSilkB must not be present`);
+  if ("verse" in (chapter.zh ?? {})) errors.push(`${prefix}: deprecated zh.verse must not be present`);
+  errors.push(...inspectChapterIntegrity(chapter).map((issue) => `${issue.severity} ${issue.message}`));
   if (hanziCount(chapter.sources?.receivedReference ?? "") < 20) errors.push(`${prefix}: received comparison appears incomplete`);
-  if (!chapter.zh?.verse?.length || hanziCount(chapter.zh.verse.join("")) < 10) errors.push(`${prefix}: Chinese scripture appears incomplete`);
-  if (hanziCount(chapter.zh.verse.join("")) < hanziCount(chapter.sources?.receivedReference ?? "") * 0.6) errors.push(`${prefix}: reading text is unexpectedly short against received comparison`);
-  if (chapter.zh.verse.length !== chapter.zh.pinyin?.length) errors.push(`${prefix}: Chinese line/Pinyin line mismatch`);
-  chapter.zh.verse.forEach((line, index) => {
+  if (!chapter.zh?.reconstructedVerse?.length || hanziCount(chapter.zh.reconstructedVerse.join("")) < 10) errors.push(`${prefix}: Chinese scripture appears incomplete`);
+  if (hanziCount(chapter.zh.reconstructedVerse.join("")) < hanziCount(chapter.sources?.receivedReference ?? "") * 0.6) errors.push(`${prefix}: reading text is unexpectedly short against received comparison`);
+  if (chapter.zh.reconstructedVerse.length !== chapter.zh.pinyin?.length) errors.push(`${prefix}: Chinese line/Pinyin line mismatch`);
+  chapter.zh.reconstructedVerse.forEach((line, index) => {
     const syllables = chapter.zh.pinyin[index] ?? [];
     if (hanziCount(line) !== syllables.length) errors.push(`${prefix} line ${index + 1}: ${hanziCount(line)} Hanzi vs ${syllables.length} Pinyin`);
     if (syllables.some((syllable) => !hasTone(syllable) && !/^[aeiouü]$/i.test(syllable))) errors.push(`${prefix} line ${index + 1}: untoned Pinyin syllable`);
@@ -37,4 +40,4 @@ if (errors.length) {
   console.error(errors.join("\n"));
   process.exit(1);
 }
-console.log(`Validated ${chapters.length} chapters: unique 1-81, complete bilingual structure, witnesses, and strict Hanzi/Pinyin alignment.`);
+console.log(`Validated ${chapters.length} chapters: unique 1-81, complete bilingual structure, three-layer Silk B fields, marked supplies, high-risk phrase gate, and strict Hanzi/Pinyin alignment.`);

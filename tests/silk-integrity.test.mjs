@@ -1,0 +1,64 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+import { inspectChapterIntegrity } from "../scripts/silk-integrity-core.mjs";
+
+const chapters = JSON.parse(await readFile(new URL("../src/data/chapters.json", import.meta.url), "utf8"));
+const hanzi = (value) => Array.from(value).filter((character) => /\p{Script=Han}/u.test(character));
+
+function fixture(reconstructedVerse, silkBTranscription = reconstructedVerse.join("")) {
+  return {
+    id: 1,
+    sources: {
+      silkBTranscription,
+      receivedReference: "道可道，非常道。",
+      reconstructionNotes: "测试用校补说明。",
+    },
+    zh: { reconstructedVerse },
+  };
+}
+
+test("Silk B wording passes", () => {
+  assert.deepEqual(inspectChapterIntegrity(fixture(["道可道也，非恒道也。"])) , []);
+});
+
+test("received-text high-risk wording fails", () => {
+  const issues = inspectChapterIntegrity(fixture(["道可道，非常道。"]));
+  assert.ok(issues.some((issue) => issue.message.includes("发现“非常道”")));
+});
+
+test("bracketed supply passes", () => {
+  assert.deepEqual(inspectChapterIntegrity(fixture(["上〔义〕为之"], "上□为之")), []);
+});
+
+test("unmarked supply fails", () => {
+  const issues = inspectChapterIntegrity(fixture(["上义为之"], "上□为之"));
+  assert.ok(issues.some((issue) => issue.message.includes("新增文字未标注来源")));
+});
+
+test("received-reference phrases do not contaminate reconstruction checks", () => {
+  const chapter1 = chapters.find((chapter) => chapter.id === 1);
+  const chapter41 = chapters.find((chapter) => chapter.id === 41);
+  assert.ok(chapter1.sources.receivedReference.includes("非常道"));
+  assert.ok(chapter41.sources.receivedReference.includes("大器晚成"));
+  assert.deepEqual(inspectChapterIntegrity(chapter1), []);
+  assert.deepEqual(inspectChapterIntegrity(chapter41), []);
+});
+
+test("representative chapters keep brackets outside Pinyin counting and supply Pinyin for every marked Hanzi", () => {
+  for (const id of [1, 16, 38, 41, 67, 81]) {
+    const chapter = chapters.find((candidate) => candidate.id === id);
+    assert.ok(chapter, `Chapter ${id} must exist`);
+    assert.equal(chapter.zh.reconstructedVerse.length, chapter.zh.pinyin.length);
+    chapter.zh.reconstructedVerse.forEach((line, lineIndex) => {
+      assert.equal(hanzi(line).length, chapter.zh.pinyin[lineIndex].length, `Chapter ${id}, line ${lineIndex + 1}`);
+      for (const supply of line.matchAll(/〔([^〕]+)〕/g)) {
+        const before = hanzi(line.slice(0, supply.index)).length;
+        const suppliedCount = hanzi(supply[1]).length;
+        const suppliedPinyin = chapter.zh.pinyin[lineIndex].slice(before, before + suppliedCount);
+        assert.equal(suppliedPinyin.length, suppliedCount, `Chapter ${id}, line ${lineIndex + 1} supply`);
+        assert.ok(suppliedPinyin.every(Boolean), `Chapter ${id}, line ${lineIndex + 1} supplied Pinyin`);
+      }
+    });
+  }
+});

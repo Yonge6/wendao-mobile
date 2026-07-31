@@ -5,15 +5,22 @@ export type RelatedItem = {
   body: string;
 };
 
-export type ChapterCopy = {
+export type ChapterCopyBase = {
   eyebrow: string;
   title: string;
-  verse: string[];
-  pinyin?: string[][];
   variant: string;
   explanation: RelatedItem[];
   related: RelatedItem[];
   action: string;
+};
+
+export type ChapterCopy = ChapterCopyBase & {
+  verse: string[];
+};
+
+export type ChineseChapterCopy = ChapterCopyBase & {
+  reconstructedVerse: string[];
+  pinyin: string[][];
 };
 
 export type Chapter = {
@@ -21,11 +28,12 @@ export type Chapter = {
   silkOrder: string;
   theme: { zh: string; en: string };
   sources: {
-    literalSilkB: string;
+    silkBTranscription: string;
     receivedReference: string;
+    reconstructionNotes: string;
     accessed: string;
   };
-  zh: ChapterCopy;
+  zh: ChineseChapterCopy;
   en: ChapterCopy;
 };
 

@@ -145,6 +145,67 @@ test("covers all 81 chapters through contents, chance, and progressive reading",
   await expect(page.locator("article.chapter")).toHaveCount(2);
 });
 
+test("renders the three textual layers and copies reconstructed text without Pinyin", async ({ page, context }) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.goto("/");
+  await page.getByRole("button", { name: "目录", exact: true }).click();
+  await page.locator('.directory-item[data-chapter-id="1"]').click();
+
+  const chapter = page.locator('.chapter-current[data-chapter-id="1"]');
+  await expect(chapter.getByText("01 乙本转写", { exact: true })).toBeVisible();
+  await expect(chapter.getByText("02 校读正文", { exact: true })).toBeVisible();
+  await expect(chapter.getByText("03 现代解读", { exact: true })).toBeVisible();
+  await expect(chapter.getByText("第一层｜帛书乙本转写", { exact: true })).toBeVisible();
+  await expect(chapter.getByText("第二层｜校读正文", { exact: true })).toBeVisible();
+  await expect(chapter.getByText("第三层｜现代解读", { exact: true })).toBeVisible();
+
+  const suppliedTokens = chapter.locator(".verse-token.is-supplied");
+  await expect(suppliedTokens.first().locator("rt")).not.toHaveText("");
+  await expect(chapter.locator(".verse-supply-bracket")).toHaveCount(8);
+
+  const line = chapter.locator(".verse-line").first();
+  const expected = await line.getAttribute("data-copy-text");
+  await line.evaluate((element) => {
+    const range = document.createRange();
+    range.selectNodeContents(element);
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+  });
+  await page.keyboard.press(process.platform === "darwin" ? "Meta+C" : "Control+C");
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(expected);
+});
+
+test("representative supplied chapters expose accessible reading text, copy cleanly, and do not overflow", async ({ page, context }) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.setViewportSize({ width: 320, height: 900 });
+  await page.goto("/");
+  for (const id of [1, 16, 38, 41, 67, 81]) {
+    await page.getByRole("button", { name: "目录", exact: true }).click();
+    await page.locator(`.directory-item[data-chapter-id="${id}"]`).click();
+    const chapter = page.locator(`.chapter-current[data-chapter-id="${id}"]`);
+    const lineLabels = await chapter.locator(".verse-line").evaluateAll((lines) => lines.map((line) => line.getAttribute("aria-label")));
+    expect(lineLabels.every((line) => line && !/[a-zāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]/i.test(line))).toBe(true);
+    const overflow = await page.getByTestId("mobile-scroll").evaluate((element) => element.scrollWidth - element.clientWidth);
+    expect(overflow, `Chapter ${id} horizontal overflow`).toBeLessThanOrEqual(0);
+    if (id !== 81) await expect(chapter.locator(".verse-supply-bracket").first()).toBeVisible();
+
+    const copyLine = id === 81
+      ? chapter.locator(".verse-line").first()
+      : chapter.locator('.verse-line[data-copy-text*="〔"]').first();
+    const expectedCopy = await copyLine.getAttribute("data-copy-text");
+    await copyLine.evaluate((element) => {
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      const selection = window.getSelection();
+      selection?.removeAllRanges();
+      selection?.addRange(range);
+    });
+    await page.keyboard.press(process.platform === "darwin" ? "Meta+C" : "Control+C");
+    await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(expectedCopy);
+  }
+});
+
 for (const width of [320, 390, 720]) {
   test(`${width}px reading has no horizontal overflow or detached punctuation`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });

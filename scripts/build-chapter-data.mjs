@@ -1,7 +1,8 @@
 import { writeFile, mkdir } from "node:fs/promises";
 import { pinyin } from "pinyin-pro";
+import { markReconstructionSupplies, requiredSupplyIndexes } from "./silk-integrity-core.mjs";
 
-const ACCESS_DATE = "2026-07-31";
+const ACCESS_DATE = "2026-08-01";
 const TAOLIB_URL = "https://raw.githubusercontent.com/xinetzone/tao/main/docs/general/philosophy/laozi-boshu/appendix/phonetic.md";
 const SILK_B_DE_URL = "https://raw.githubusercontent.com/changlinli/daoist_similarities/06717a2c06a423e1246bf04b37fef4649a45e0fb/nonsimpsave/nonsimpsave%20copy/%E9%A6%AC%E7%8E%8B%E5%A0%86%20-%20Mawangdui-%E8%80%81%E5%AD%90%E4%B9%99%E5%BE%B7%E7%B6%93.txt";
 const SILK_B_DAO_URL = "https://raw.githubusercontent.com/changlinli/daoist_similarities/06717a2c06a423e1246bf04b37fef4649a45e0fb/nonsimpsave/nonsimpsave%20copy/%E9%A6%AC%E7%8E%8B%E5%A0%86%20-%20Mawangdui-%E8%80%81%E5%AD%90%E4%B9%99%E9%81%93%E7%B6%93.txt";
@@ -174,13 +175,27 @@ function compactDiff(readingText, receivedText) {
   return `${differences.length ? differences.join("、") : "未检出逐位异文"}${lengthNote}`;
 }
 
+function reconstructionLocationSummary(lines) {
+  const locations = lines.flatMap((line, lineIndex) => {
+    const groups = [...line.matchAll(/〔([^〕]+)〕/g)].map((match) => `〔${match[1]}〕`);
+    return groups.length ? [`第${lineIndex + 1}行 ${groups.join("、")}`] : [];
+  });
+  return locations.length ? locations.join("；") : "无校补字位";
+}
+
 function chapterCopy(id, silkOrder, reading, literal, received, english) {
+  const correctedReading = reading.map((line) => line
+    .replace("万物并作", "万物旁作")
+    .replace("大方无隅", "大方无禺"));
+  const reconstructedVerse = markReconstructionSupplies(literal, correctedReading);
   const [topicZh, topicEn] = topics[id - 1];
-  const anchor = reading[0].replace(/[。！？；]/g, "").slice(0, 12);
-  const missing = (literal.match(/□/g) ?? []).length;
-  const collation = compactDiff(reading.join(""), received);
+  const anchor = correctedReading[0].replace(/[。！？；]/g, "").slice(0, 12);
+  const missing = (literal.match(/[□○]/g) ?? []).length;
+  const supplied = requiredSupplyIndexes(literal, correctedReading).length;
+  const supplyLocations = reconstructionLocationSummary(reconstructedVerse);
+  const collation = compactDiff(correctedReading.join(""), received);
   const explicitClassicalTones = { bu: "bù", fu: "fú", gong: "gōng" };
-  const pinyinLines = reading.map((line) => {
+  const pinyinLines = correctedReading.map((line) => {
     const characters = Array.from(line).filter((character) => /\p{Script=Han}/u.test(character));
     return pinyin(characters.join(""), { toneType: "symbol", type: "array" }).map((syllable, index) => {
       const character = characters[index];
@@ -211,22 +226,30 @@ function chapterCopy(id, silkOrder, reading, literal, received, english) {
     });
   });
   const uncertaintyZh = missing
-    ? `乙本本章可见 ${missing} 个缺损占位；校读正文据甲本与传世文脉补足，补文仍属校补，不冒充乙本原字。`
-    : "乙本本章未见方框缺损占位；借字、异体仍按句义校读，校读字不等同原帛字形。";
+    ? `乙本本章可见 ${missing} 个缺损符号（□/○）；校读层以〔〕标出 ${supplied} 个据上下文恢复或超出转写字位的字。补字参考帛书甲本及传世本，具体字位仍需据图版逐项复核。`
+    : `乙本本章未见缺损符号；校读层仍对借字、异体和断句作整理${supplied ? `，并以〔〕标出 ${supplied} 个超出转写字位的字` : ""}。校读字不等同原帛字形。`;
   const uncertaintyEn = missing
-    ? `Silk B contains ${missing} visible lacuna markers here. The readable text supplies them from Silk A and the received tradition; a supply is not a literal Silk B graph.`
-    : "No square lacuna marker appears in this Silk B segment, but loan and variant graphs are still read contextually; the reading form is not a facsimile transcription.";
+    ? `Silk B contains ${missing} visible lacuna signs (□/○) here. The reconstruction marks ${supplied} restored or additional graphs with 〔〕; they are checked against Silk A and received texts and are not literal Silk B graphs.`
+    : `No lacuna sign appears in this Silk B segment. Loan and variant graphs are still read contextually${supplied ? `, and ${supplied} additional graphs are marked with 〔〕` : ""}; the reading form is not a facsimile transcription.`;
+  const reconstructionNotes = missing
+    ? `缺损记录：乙本转写保留 ${missing} 个缺损符号（□/○）。校补位置：${supplyLocations}，共 ${supplied} 字。补字依据：帛书甲本及传世本互校；逐字归属仍以校勘原始图版为最终依据。`
+    : `缺损记录：乙本转写未见缺损符号。校补位置：${supplyLocations}${supplied ? `，共 ${supplied} 字` : ""}。校读正文只对异体、通假和现代断句作可读化整理；传世本只作参照。`;
   return {
     id,
     silkOrder,
     theme: { zh: topicZh, en: topicEn },
-    sources: { literalSilkB: literal, receivedReference: received, accessed: ACCESS_DATE },
+    sources: {
+      silkBTranscription: literal,
+      receivedReference: received,
+      reconstructionNotes,
+      accessed: ACCESS_DATE,
+    },
     zh: {
-      eyebrow: `帛书乙本校读・校补正文 · 对应今本第${chineseNumber(id)}章`,
+      eyebrow: `帛书乙本底本校读 · 对应今本第${chineseNumber(id)}章`,
       title: anchor,
-      verse: reading,
+      reconstructedVerse,
       pinyin: pinyinLines,
-      variant: `版本说明：主文是便于初学者朗读的“帛书乙本校读/校补正文”，不是影印转写。${uncertaintyZh} 乙本原字：${literal} 传世参照的主要逐位差异（校勘索引，需结合王弼注本人工复核）：${collation}。`,
+      variant: `版本参照：以马王堆帛书乙本为底本，残缺处参考甲本及传世本校补。这是整理后的校读版本，不是影印转写。${uncertaintyZh} 传世参照的主要逐位差异（校勘索引，需结合王弼注本人工复核）：${collation}。`,
       explanation: [
         { title: "直译｜先读懂这一章", body: `本章从“${anchor}”展开，讨论${topicZh}。通篇不是要求一个僵硬的答案，而是让人看见事物的条件、反面与转化，在适当的时候停止强求。` },
         { title: "思想｜让力量回到结构里", body: `“${topicZh}”不是消极退让，而是辨认什么正在自然生成，什么只是由恐惧、虚荣或控制推动。老子把注意力从“我要证明”移向“事情如何长久”。` },
@@ -242,10 +265,10 @@ function chapterCopy(id, silkOrder, reading, literal, received, english) {
       action: `今天用三次慢呼吸读一遍“${anchor}”，然后写下一个与“${topicZh}”有关的最小行动。`,
     },
     en: {
-      eyebrow: `Silk Text B reading and supplied edition · Received Chapter ${id}`,
+      eyebrow: `Silk B Base Reading · Received Chapter ${id}`,
       title: topicEn.replace(/\b\w/g, (letter) => letter.toUpperCase()),
       verse: english,
-      variant: `Textual note: the Chinese reading text is an explicitly edited Silk B reading, not a facsimile. ${uncertaintyEn} Literal Silk B segment: ${literal} Received-text alignment differences: ${collation}. The English scripture uses James Legge's public-domain received-text translation as a transparent comparison, so it must not be treated as a literal translation of every damaged Silk B graph.`,
+      variant: `Received-text reference: this is a Silk B Based Reconstruction, not a facsimile transcription. ${uncertaintyEn} Received-text alignment differences: ${collation}. The English scripture uses James Legge's public-domain received-text translation as a transparent comparison, so it must not be treated as a literal translation of every damaged Silk B graph.`,
       explanation: [
         { title: "Plain reading · Read the movement of the whole chapter", body: `Beginning from “${anchor},” this chapter explores ${topicEn}. It does not demand a rigid answer; it asks how conditions, opposites, limits, and timing change what wise action looks like.` },
         { title: "Thought · Return force to the larger pattern", body: `${topicEn} is not passive withdrawal. It distinguishes what is growing of itself from what is being driven by fear, display, or control, shifting attention from proving the self to helping life endure.` },
@@ -283,10 +306,10 @@ await mkdir(new URL("../src/data/", import.meta.url), { recursive: true });
 await writeFile(new URL("../src/data/chapters.json", import.meta.url), `${JSON.stringify(chapters, null, 2)}\n`);
 await writeFile(new URL("../src/data/sources.json", import.meta.url), `${JSON.stringify({
   accessed: ACCESS_DATE,
-  editorialPolicy: "Silk Text B is the primary witness. Readable text, supplies, literal witness, and received comparisons remain separate layers.",
+  editorialPolicy: "Silk Manuscript B is the primary witness. The diplomatic transcription, explicitly marked reconstruction, and modern interpretation remain separate layers; received texts never replace the witness silently.",
   sources: [
     { title: "Chinese Text Project: Mawangdui Laozi B", url: "https://ctext.org/mawangdui/laozi-b", role: "canonical online witness and parallel-text locator" },
-    { title: "Silk B literal transcription mirror", url: "https://github.com/changlinli/daoist_similarities", role: "machine-auditable literal segments retaining lacuna markers" },
+    { title: "Silk B diplomatic transcription mirror", url: "https://github.com/changlinli/daoist_similarities", role: "machine-auditable transcription segments retaining lacuna markers; not a facsimile" },
     { title: "Hunan Museum / Mawangdui collection context", url: "https://www.hnmuseum.com/", role: "institutional provenance and collection context" },
     { title: "Wang Bi received-text commentary (public-domain digital witness)", url: "https://github.com/shjwudp/shu/blob/61aa02363241bcf32574708f1ff06ed698fb646b/books/%E5%85%88%E7%A7%A6/%E9%81%93%E5%BE%B7%E7%BB%8F.txt", role: "received-text comparison; not used to overwrite Silk B silently" },
     { title: "Silk-text-order phonetic reading aid", url: TAOLIB_URL, role: "reading-edition alignment and pronunciation cross-check; corrected where its chapter label conflicts with the text" },

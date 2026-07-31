@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "data:chapters": "node scripts/build-chapter-data.mjs",
-    "validate:chapters": "node scripts/validate-chapters.mjs",
+    "check:silk": "node scripts/check-silk-integrity.mjs",
+    "test:silk": "node --test tests/silk-integrity.test.mjs",
+    "validate:chapters": "node scripts/validate-chapters.mjs && npm run check:silk && npm run test:silk",
     "check:runtime": "node scripts/check-mobile-runtime.mjs",
     "update:runtime-lock": "node scripts/update-mobile-runtime-lock.mjs",
     "test:runtime": "playwright test",
