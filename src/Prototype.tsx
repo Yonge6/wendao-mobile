@@ -142,19 +142,38 @@ function stableId(storageKey: string) {
   return id;
 }
 
-async function apiRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const response = await fetch(`${API_BASE}${path}`, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...init.headers,
-    },
-  });
-  const payload = await response.json() as { data: T | null; error?: { message?: string } | null };
-  if (!response.ok || !payload.data) {
-    throw new Error(payload.error?.message || "服务暂时不可用，请稍后再试。");
+async function apiRequest<T>(path: string, init: RequestInit = {}, timeoutMs = 15_000): Promise<T> {
+  const controller = new AbortController();
+  const inheritedSignal = init.signal;
+  const abortFromCaller = () => controller.abort();
+  const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
+
+  if (inheritedSignal?.aborted) controller.abort();
+  inheritedSignal?.addEventListener("abort", abortFromCaller, { once: true });
+
+  try {
+    const response = await fetch(`${API_BASE}${path}`, {
+      ...init,
+      signal: controller.signal,
+      headers: {
+        "Content-Type": "application/json",
+        ...init.headers,
+      },
+    });
+    const payload = await response.json() as { data: T | null; error?: { message?: string } | null };
+    if (!response.ok || !payload.data) {
+      throw new Error(payload.error?.message || "服务暂时不可用，请稍后再试。");
+    }
+    return payload.data;
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new Error("REQUEST_TIMEOUT");
+    }
+    throw error;
+  } finally {
+    window.clearTimeout(timeout);
+    inheritedSignal?.removeEventListener("abort", abortFromCaller);
   }
-  return payload.data;
 }
 
 const MAINLAND_MARKERS = [
@@ -690,32 +709,46 @@ function reorderFrom(id: number) {
   return [...chapters.slice(index), ...chapters.slice(0, index)];
 }
 
-function scrollReadingToTop() {
+function scrollReadingToTop(behavior: ScrollBehavior = "smooth") {
   window.requestAnimationFrame(() => {
     document.querySelector<HTMLElement>("[data-testid='mobile-scroll']")?.scrollTo({
       top: 0,
-      behavior: "smooth",
+      behavior,
     });
   });
 }
 
 function renderPinyinLine(text: string, pinyin: string[]) {
   let syllableIndex = 0;
+  const characters = Array.from(text);
+  const tokens: ReactNode[] = [];
 
-  return Array.from(text).map((character, characterIndex) => {
+  for (let characterIndex = 0; characterIndex < characters.length; characterIndex += 1) {
+    const character = characters[characterIndex];
     if (/\p{Script=Han}/u.test(character)) {
       const syllable = pinyin[syllableIndex] ?? "";
       syllableIndex += 1;
-      return (
-        <ruby key={`${character}-${characterIndex}`}>
-          {character}
-          <rt>{syllable}</rt>
-        </ruby>
+      let punctuation = "";
+      while (characterIndex + 1 < characters.length && !/\p{Script=Han}/u.test(characters[characterIndex + 1])) {
+        punctuation += characters[characterIndex + 1];
+        characterIndex += 1;
+      }
+      tokens.push(
+        <span className={`verse-token ${punctuation ? "has-punctuation" : ""}`} key={`${character}-${characterIndex}`}>
+          <ruby>
+            {character}
+            <rt>{syllable}</rt>
+          </ruby>
+          {punctuation ? <span className="verse-punctuation">{punctuation}</span> : null}
+        </span>,
       );
+      continue;
     }
 
-    return <span className="verse-punctuation" key={`${character}-${characterIndex}`}>{character}</span>;
-  });
+    tokens.push(<span className="verse-punctuation" key={`${character}-${characterIndex}`}>{character}</span>);
+  }
+
+  return tokens;
 }
 
 type WebSheetProps = {
@@ -855,7 +888,7 @@ function SideDrawer({
       : view === "profile-detail"
         ? (isZh ? "详细解读" : "Detailed reading")
       : view === "about"
-        ? (isZh ? "关于问道" : "About Wendao")
+        ? (isZh ? "关于三慢问道" : "About Wendao")
         : (isZh ? "意见反馈" : "Feedback");
 
   const contacts = [
@@ -889,7 +922,7 @@ function SideDrawer({
             </button>
           ) : <span className="drawer-orbit" aria-hidden="true" />}
           <div>
-            <span className="drawer-brand">问道 · WENDAO</span>
+            <span className="drawer-brand">三慢问道 · WENDAO</span>
             <h2 id="drawer-title">{headerTitle}</h2>
           </div>
           <button
@@ -916,7 +949,7 @@ function SideDrawer({
                   {profileComplete
                     ? `${hdLabel(chart!.core.type, language)} · ${chart!.core.profile} · ${hdLabel(chart!.core.authority, language)}`
                     : (isZh
-                      ? "出生日期、准确时间和地点，会成为个性化阅读的基础；问道不绘制人类图。"
+                      ? "出生日期、准确时间和地点，会成为个性化阅读的基础；三慢问道不绘制人类图。"
                       : "Birth date, exact time, and place form the basis of your personal reading.")}
                 </p>
                 <button type="button" className="drawer-primary" onClick={() => onViewChange("profile")}>
@@ -968,7 +1001,7 @@ function SideDrawer({
                 <button type="button" onClick={() => onViewChange("about")}>
                   <span className="drawer-nav-icon"><InfoCircledIcon /></span>
                   <span>
-                    <strong>{isZh ? "关于问道" : "About Wendao"}</strong>
+                    <strong>{isZh ? "关于三慢问道" : "About Wendao"}</strong>
                     <small>{isZh ? "我们如何理解原典与人生" : "How we approach text and life"}</small>
                   </span>
                   <ChevronRightIcon />
@@ -1009,7 +1042,7 @@ function SideDrawer({
                 <>
                   <p className="drawer-intro">
                     {isZh
-                      ? "问道会根据出生地点自动识别当地时区，并在产品内完成计算；只呈现类型、策略、权威等结果，不绘制人类图。出生时间越准确，解读越可靠。"
+                      ? "三慢问道会根据出生地点自动识别当地时区，并在产品内完成计算；只呈现类型、策略、权威等结果，不绘制人类图。出生时间越准确，解读越可靠。"
                       : "Wendao identifies the local time zone from your birthplace and calculates your result here. It shows only the useful reading—never a BodyGraph. A precise birth time gives a more reliable result."}
                   </p>
                   <label>
@@ -1057,7 +1090,7 @@ function SideDrawer({
                   </label>
                   <p className="privacy-note">
                     {isZh
-                      ? "隐私说明：出生地点会发送至地点查询服务以识别当地时区；出生资料将安全传送至问道，用于计算、保存你的人生说明书和改善产品，不会公开，也不会绘制人类图。"
+                      ? "隐私说明：出生地点会发送至地点查询服务以识别当地时区；出生资料将安全传送至三慢问道，用于计算、保存你的人生说明书和改善产品，不会公开，也不会绘制人类图。"
                       : "Privacy: your birthplace is sent to a location service to identify its time zone. Your birth details are securely sent to Wendao to calculate and save your life manual and improve the product. They are not public, and no BodyGraph is rendered."}
                   </p>
                   <button type="submit" className="drawer-primary drawer-save" disabled={profileState === "saving"}>
@@ -1144,7 +1177,7 @@ function SideDrawer({
               <h3>{isZh ? "经典不是答案库，而是一面活的镜子。" : "A classic is not an answer bank. It is a living mirror."}</h3>
               <p>
                 {isZh
-                  ? "问道以马王堆帛书乙本为主要文本，王弼本及其他版本作为参照。我们会明确标出缺损、校补和异文，不把不同版本静默拼成一个“唯一原文”。"
+                  ? "三慢问道以马王堆帛书乙本为主要文本，王弼本及其他版本作为参照。我们会明确标出缺损、校补和异文，不把不同版本静默拼成一个“唯一原文”。"
                   : "Wendao uses Mawangdui Silk Text B as its primary witness, with Wang Bi and other editions for comparison. Lacunae, supplied text, and variants are identified rather than silently merged."}
               </p>
               <p>
@@ -1287,7 +1320,7 @@ function VideoChannelModal({ open, onClose, language }: { open: boolean; onClose
       <button type="button" className="image-modal-backdrop" aria-label={language === "zh" ? "关闭" : "Close"} onClick={onClose} />
       <figure>
         <button type="button" aria-label={language === "zh" ? "关闭" : "Close"} onClick={onClose}>×</button>
-        <img src="/assets/wendao/video-channel.jpg" alt={language === "zh" ? "问道视频号二维码" : "Wendao WeChat Channels QR code"} />
+        <img src="/assets/wendao/video-channel.jpg" alt={language === "zh" ? "三慢问道视频号二维码" : "Wendao WeChat Channels QR code"} />
         <figcaption>{language === "zh" ? "扫码关注视频号" : "Scan to follow on WeChat Channels"}</figcaption>
       </figure>
     </div>
@@ -1387,7 +1420,7 @@ function AdminConsole({ open, onClose, language }: AdminConsoleProps) {
     <section className="admin-console" role="dialog" aria-modal="true" aria-labelledby="admin-title">
       <header>
         <div>
-          <span>问道 · WENDAO</span>
+          <span>三慢问道 · WENDAO</span>
           <h2 id="admin-title">{isZh ? "数据后台" : "Admin"}</h2>
         </div>
         <button type="button" aria-label={isZh ? "关闭" : "Close"} onClick={onClose}>×</button>
@@ -1586,7 +1619,7 @@ export default function Prototype() {
     const observer = new IntersectionObserver(([entry]) => {
       if (!entry.isIntersecting) return;
       setVisibleChapterCount((current) => Math.min(current + 1, orderedChapters.length));
-    }, { root, threshold: 0.72 });
+    }, { root, threshold: 1 });
 
     observer.observe(trigger);
     return () => observer.disconnect();
@@ -1618,7 +1651,7 @@ export default function Prototype() {
       setDrawerView("profile");
       setDrawerOpen(true);
       setProfileError(isZh
-        ? "请先完成出生信息并生成人生说明书，问道才能结合你的真实结果回应。"
+        ? "请先完成出生信息并生成人生说明书，三慢问道才能结合你的真实结果回应。"
         : "Complete your birth details and life manual before asking for a personalized response.");
       trackEvent("profile_open", { source: "composer" });
       return;
@@ -1665,7 +1698,19 @@ export default function Prototype() {
           locationLabel: nextProfile.birthPlace,
         }),
       });
-      await apiRequest<{ saved: boolean }>("/v1/profiles", {
+      setProfile(nextProfile);
+      setProfileDraft(nextProfile);
+      setChart(nextChart);
+      window.localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(nextProfile));
+      window.localStorage.setItem(CHART_STORAGE_KEY, JSON.stringify(nextChart));
+      setProfileState("saved");
+      trackEvent("profile_saved", { source: "drawer" });
+      trackEvent("chart_calculated", { value: nextChart.core.type });
+
+      // The engine result is the user-facing outcome. Product-data persistence
+      // runs in the background so a slow analytics backend cannot trap the form
+      // in its calculating state after the chart is already available.
+      void apiRequest<{ saved: boolean }>("/v1/profiles", {
         method: "POST",
         body: JSON.stringify({
           clientId: clientId.current,
@@ -1679,15 +1724,7 @@ export default function Prototype() {
           chartStructure: nextChart.structure,
           consentAt: new Date().toISOString(),
         }),
-      });
-      setProfile(nextProfile);
-      setProfileDraft(nextProfile);
-      setChart(nextChart);
-      window.localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(nextProfile));
-      window.localStorage.setItem(CHART_STORAGE_KEY, JSON.stringify(nextChart));
-      setProfileState("saved");
-      trackEvent("profile_saved", { source: "drawer" });
-      trackEvent("chart_calculated", { value: nextChart.core.type });
+      }).catch(() => undefined);
     } catch (nextError) {
       setProfileState("error");
       const message = nextError instanceof Error ? nextError.message : "";
@@ -1695,7 +1732,11 @@ export default function Prototype() {
         ? (isZh
           ? "暂时无法识别这个出生地点，请填写更完整的“城市 + 国家或地区”后重试。"
           : "We couldn't identify this birthplace. Add the city and country or region, then try again.")
-        : (message || (isZh ? "计算失败，请稍后再试。" : "Calculation failed. Please try again.")));
+        : message === "REQUEST_TIMEOUT"
+          ? (isZh
+            ? "计算服务响应超时，请检查网络后重新生成。"
+            : "The calculation service took too long to respond. Check your connection and try again.")
+          : (message || (isZh ? "计算失败，请稍后再试。" : "Calculation failed. Please try again.")));
     }
   };
 
@@ -1735,6 +1776,8 @@ export default function Prototype() {
 
   const changeLanguage = (nextLanguage: Language) => {
     setLanguage(nextLanguage);
+    setVisibleChapterCount(1);
+    scrollReadingToTop("auto");
     if (nextLanguage !== language) trackEvent("language_change", { value: nextLanguage });
   };
 
@@ -1750,8 +1793,8 @@ export default function Prototype() {
         aria-label={isZh ? "阅读工具" : "Reading tools"}
         lang={isZh ? "zh-CN" : "en"}
       >
-        <button className="wordmark" type="button" onClick={scrollReadingToTop}>
-          {isZh ? "问道" : "Wendao"}
+        <button className="wordmark" type="button" onClick={() => scrollReadingToTop()}>
+          {isZh ? "三慢问道" : "Wendao"}
         </button>
         <span className="header-rule" aria-hidden="true" />
         <button
@@ -1820,6 +1863,7 @@ export default function Prototype() {
                   <div className="next-chapter-divider" aria-label={isZh ? "下一章" : "Next chapter"}>
                     <span className="divider-dot" />
                     <span className="divider-line" />
+                    <small>{isZh ? "下一章已展开" : "Next chapter opened"}</small>
                   </div>
                 ) : null}
 
@@ -1902,11 +1946,15 @@ export default function Prototype() {
           })}
 
           {visibleChapterCount < orderedChapters.length ? (
-            <div className="chapter-load-trigger" ref={loadMoreRef} role="status">
-              <span aria-hidden="true" />
-              <small>{isZh ? "继续向下，进入下一章" : "Continue down to the next chapter"}</small>
-              <strong>{orderedChapters[visibleChapterCount][language].title}</strong>
-            </div>
+            <>
+              <div className="chapter-load-trigger" role="status">
+                <small>{isZh ? "本章已读完" : "End of this chapter"}</small>
+                <strong>{isZh ? "继续向下，开启下一章" : "Continue down to open the next chapter"}</strong>
+                <span>{isZh ? "下一章" : "Next"} · {orderedChapters[visibleChapterCount][language].title}</span>
+                <i aria-hidden="true" />
+              </div>
+              <div className="chapter-load-sentinel" ref={loadMoreRef} aria-hidden="true" />
+            </>
           ) : null}
 
           <footer className="reading-footer">
@@ -1927,7 +1975,7 @@ export default function Prototype() {
             onChange={(event) => setQuestion(event.target.value)}
             onFocus={() => trackEvent("composer_focus", { source: "reading" })}
             placeholder={isZh ? "问问这一章与你的关系…" : "Ask how this chapter relates to you…"}
-            aria-label={isZh ? "向问道提问" : "Ask Wendao"}
+            aria-label={isZh ? "向三慢问道提问" : "Ask Wendao"}
           />
           <button type="submit" aria-label={isZh ? "发送" : "Send"}>
             <ArrowRightIcon />
@@ -2008,6 +2056,8 @@ export default function Prototype() {
         readingSize={readingSize}
         onReadingSizeChange={(size) => {
           setReadingSize(size);
+          setVisibleChapterCount(1);
+          scrollReadingToTop("auto");
           trackEvent("reading_size_change", { value: size });
         }}
         profile={profile}

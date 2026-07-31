@@ -385,6 +385,16 @@ textarea {
   ruby-position: over;
 }
 
+.verse-token {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: flex-end;
+}
+
+.verse-token.has-punctuation + .verse-token {
+  margin-left: 0.3em;
+}
+
 .verse-line-ruby rt {
   display: block;
   min-height: 11px;
@@ -399,8 +409,12 @@ textarea {
 }
 
 .verse-punctuation {
+  display: inline-block;
+  width: 0;
   align-self: flex-end;
-  margin-left: -0.1em;
+  overflow: visible;
+  transform: translateX(-0.04em);
+  white-space: nowrap;
 }
 
 .variant-note {
@@ -492,42 +506,68 @@ textarea {
 .next-chapter-divider {
   display: flex;
   align-items: center;
-  gap: 0;
+  gap: 9px;
   margin: 38px 0 29px 24px;
+}
+
+.next-chapter-divider small {
+  flex: 0 0 auto;
+  color: var(--gold);
+  font-family: var(--sans);
+  font-size: 8px;
+  letter-spacing: 0.14em;
 }
 
 .chapter-load-trigger {
   display: grid;
   justify-items: center;
-  gap: 7px;
-  min-height: 82px;
-  margin: 34px 0 12px 54px;
-  padding: 17px 12px;
-  border-top: 1px solid var(--gold-light);
-  border-bottom: 1px solid color-mix(in srgb, var(--gold) 18%, transparent);
+  gap: 8px;
+  min-height: 128px;
+  margin: 36px 0 15px 54px;
+  padding: 22px 16px 18px;
+  border: 1px solid color-mix(in srgb, var(--gold) 38%, transparent);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 50% 0, color-mix(in srgb, var(--gold) 9%, transparent), transparent 62%),
+    color-mix(in srgb, var(--paper) 72%, transparent);
+  box-shadow: 0 12px 30px color-mix(in srgb, var(--shadow-color) 58%, transparent);
   color: var(--ink-soft);
   text-align: center;
 }
 
-.chapter-load-trigger > span {
+.chapter-load-trigger i {
+  display: block;
   width: 7px;
   height: 7px;
+  margin-top: 2px;
   border-right: 1px solid var(--gold);
   border-bottom: 1px solid var(--gold);
   transform: rotate(45deg);
 }
 
 .chapter-load-trigger small {
+  color: var(--gold);
   font-family: var(--sans);
   font-size: 8px;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.18em;
 }
 
 .chapter-load-trigger strong {
   color: var(--ink);
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 16px;
+  font-weight: 600;
   letter-spacing: 0.08em;
+}
+
+.chapter-load-trigger > span {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+}
+
+.chapter-load-sentinel {
+  height: 28px;
+  margin: 76px 0 0 54px;
+  background: linear-gradient(to bottom, var(--gold-light), transparent) center / 1px 100% no-repeat;
 }
 
 .divider-dot {
@@ -2116,7 +2156,8 @@ textarea {
   }
 
   .wordmark {
-    font-size: 24px;
+    font-size: 21px;
+    letter-spacing: 0.02em;
   }
 
   .header-action {
