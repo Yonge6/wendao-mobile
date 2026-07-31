@@ -28,18 +28,18 @@
 }
 
 :root[data-reading-size="small"] {
-  --reading-title-size: 27px;
-  --reading-verse-size: 22px;
-  --reading-next-title-size: 24px;
-  --reading-next-verse-size: 20px;
-  --reading-english-verse-size: 19px;
-  --reading-body-size: 12px;
-  --reading-detail-size: 10px;
-  --reading-note-size: 8px;
-  --reading-pinyin-size: 7px;
+  --reading-title-size: 29px;
+  --reading-verse-size: 24px;
+  --reading-next-title-size: 26px;
+  --reading-next-verse-size: 21px;
+  --reading-english-verse-size: 20px;
+  --reading-body-size: 13px;
+  --reading-detail-size: 11px;
+  --reading-note-size: 9px;
+  --reading-pinyin-size: 8px;
 }
 
-:root[data-reading-size="large"] {
+:root[data-reading-size="medium"] {
   --reading-title-size: 32px;
   --reading-verse-size: 28px;
   --reading-next-title-size: 29px;
@@ -49,6 +49,18 @@
   --reading-detail-size: 14px;
   --reading-note-size: 11px;
   --reading-pinyin-size: 10px;
+}
+
+:root[data-reading-size="large"] {
+  --reading-title-size: 36px;
+  --reading-verse-size: 32px;
+  --reading-next-title-size: 33px;
+  --reading-next-verse-size: 29px;
+  --reading-english-verse-size: 27px;
+  --reading-body-size: 18px;
+  --reading-detail-size: 16px;
+  --reading-note-size: 12px;
+  --reading-pinyin-size: 11px;
 }
 
 :root[data-theme="dark"] {
@@ -504,10 +516,16 @@ textarea {
 }
 
 .next-chapter-divider {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 9px;
-  margin: 38px 0 29px 24px;
+  margin: 58px 0 36px 24px;
+  animation: chapter-reveal 780ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.chapter-continuation {
+  animation: chapter-rise 820ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .next-chapter-divider small {
@@ -519,30 +537,41 @@ textarea {
 }
 
 .chapter-load-trigger {
+  position: relative;
   display: grid;
   justify-items: center;
-  gap: 8px;
-  min-height: 128px;
-  margin: 36px 0 15px 54px;
-  padding: 22px 16px 18px;
+  gap: 10px;
+  min-height: 174px;
+  margin: 48px 0 10px 54px;
+  padding: 34px 18px 28px;
   border: 1px solid color-mix(in srgb, var(--gold) 38%, transparent);
-  border-radius: 20px;
+  border-radius: 50% 50% 22px 22px / 28px 28px 22px 22px;
   background:
-    radial-gradient(circle at 50% 0, color-mix(in srgb, var(--gold) 9%, transparent), transparent 62%),
+    radial-gradient(circle at 50% 0, color-mix(in srgb, var(--gold) 15%, transparent), transparent 58%),
+    linear-gradient(to bottom, transparent, color-mix(in srgb, var(--gold) 5%, transparent)),
     color-mix(in srgb, var(--paper) 72%, transparent);
-  box-shadow: 0 12px 30px color-mix(in srgb, var(--shadow-color) 58%, transparent);
+  box-shadow:
+    0 18px 42px color-mix(in srgb, var(--shadow-color) 62%, transparent),
+    inset 0 1px color-mix(in srgb, var(--gold) 18%, transparent);
   color: var(--ink-soft);
   text-align: center;
+  transition: border-color 300ms ease, box-shadow 300ms ease, background-color 300ms ease;
 }
 
-.chapter-load-trigger i {
-  display: block;
-  width: 7px;
-  height: 7px;
-  margin-top: 2px;
-  border-right: 1px solid var(--gold);
-  border-bottom: 1px solid var(--gold);
-  transform: rotate(45deg);
+.chapter-load-trigger::before,
+.chapter-load-trigger::after {
+  position: absolute;
+  top: -21px;
+  width: 1px;
+  height: 42px;
+  background: linear-gradient(to bottom, transparent, var(--gold), transparent);
+  content: "";
+}
+
+.chapter-load-trigger::after {
+  top: auto;
+  bottom: -25px;
+  height: 50px;
 }
 
 .chapter-load-trigger small {
@@ -554,20 +583,66 @@ textarea {
 
 .chapter-load-trigger strong {
   color: var(--ink);
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.12em;
+  line-height: 1.55;
 }
 
 .chapter-load-trigger > span {
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.08em;
 }
 
+.chapter-ritual-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 18px;
+  margin-top: 4px;
+}
+
+.chapter-ritual-mark i {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--gold);
+  opacity: 0.36;
+  animation: ritual-breathe 1.8s ease-in-out infinite;
+}
+
+.chapter-ritual-mark i:nth-child(2) {
+  animation-delay: 180ms;
+}
+
+.chapter-ritual-mark i:nth-child(3) {
+  animation-delay: 360ms;
+}
+
+.chapter-ritual-mark.is-opening i {
+  animation-duration: 720ms;
+}
+
 .chapter-load-sentinel {
-  height: 28px;
-  margin: 76px 0 0 54px;
+  height: 42px;
+  margin: 92px 0 0 54px;
   background: linear-gradient(to bottom, var(--gold-light), transparent) center / 1px 100% no-repeat;
+}
+
+@keyframes ritual-breathe {
+  0%, 100% { opacity: 0.24; transform: scale(0.78); }
+  50% { opacity: 0.92; transform: scale(1.2); }
+}
+
+@keyframes chapter-rise {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes chapter-reveal {
+  from { opacity: 0; letter-spacing: 0.16em; }
+  to { opacity: 1; letter-spacing: normal; }
 }
 
 .divider-dot {
@@ -947,7 +1022,7 @@ textarea {
   margin-bottom: 4px;
   color: var(--gold);
   font-family: var(--sans);
-  font-size: 8px;
+  font-size: 9px;
   letter-spacing: 0.16em;
 }
 
@@ -1021,7 +1096,7 @@ textarea {
 .drawer-kicker {
   color: var(--gold);
   font-family: var(--sans);
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 0.13em;
 }
 
@@ -1041,7 +1116,7 @@ textarea {
   margin: 0 0 18px;
   color: var(--ink-soft);
   font-family: var(--sans);
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.75;
 }
 
@@ -1058,7 +1133,7 @@ textarea {
   padding: 10px 15px;
   border-radius: 999px;
   font-family: var(--sans);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   text-decoration: none;
 }
@@ -1121,7 +1196,7 @@ textarea {
 
 .drawer-nav strong {
   font-family: var(--serif);
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   letter-spacing: 0.04em;
 }
@@ -1130,7 +1205,7 @@ textarea {
   overflow: hidden;
   color: var(--ink-soft);
   font-family: var(--sans);
-  font-size: 9px;
+  font-size: 10px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1163,7 +1238,7 @@ textarea {
   background: transparent;
   color: var(--ink-soft);
   font-family: var(--sans);
-  font-size: 9px;
+  font-size: 10px;
 }
 
 .text-size-control button:last-child {
@@ -1222,7 +1297,7 @@ textarea {
   margin: 0 0 4px;
   color: var(--ink-soft);
   font-family: var(--sans);
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.8;
 }
 
@@ -1233,7 +1308,7 @@ textarea {
   gap: 7px;
   color: var(--ink-soft);
   font-family: var(--sans);
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 0.05em;
 }
 
@@ -1284,7 +1359,7 @@ textarea {
   margin-top: 6px;
   color: color-mix(in srgb, var(--ink-soft) 74%, transparent);
   font-family: var(--sans);
-  font-size: 10px;
+  font-size: 11px;
   line-height: 1.65;
 }
 
@@ -1292,7 +1367,7 @@ textarea {
   margin: -2px 0 1px;
   color: color-mix(in srgb, var(--ink-soft) 78%, transparent);
   font-family: var(--sans);
-  font-size: 9px;
+  font-size: 10px;
   line-height: 1.7;
 }
 
@@ -1324,13 +1399,13 @@ textarea {
 .profile-saved-summary span {
   color: var(--gold);
   font-family: var(--sans);
-  font-size: 8px;
+  font-size: 9px;
   letter-spacing: 0.08em;
 }
 
 .profile-saved-summary strong {
   overflow: hidden;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1339,7 +1414,7 @@ textarea {
 .profile-saved-summary small {
   color: var(--ink-soft);
   font-family: var(--sans);
-  font-size: 8px;
+  font-size: 9px;
   line-height: 1.5;
   overflow-wrap: anywhere;
 }
@@ -1353,7 +1428,7 @@ textarea {
   background: transparent;
   color: var(--ink);
   font-family: var(--sans);
-  font-size: 9px;
+  font-size: 10px;
   white-space: nowrap;
 }
 
@@ -1383,11 +1458,11 @@ textarea {
 .about-method span {
   color: var(--gold);
   font-family: var(--sans);
-  font-size: 10px;
+  font-size: 11px;
 }
 
 .about-method p {
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.5;
 }
 
@@ -1403,7 +1478,7 @@ textarea {
 .form-message {
   margin: 0;
   font-family: var(--sans);
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.65;
 }
 
@@ -1431,13 +1506,13 @@ textarea {
 }
 
 .profile-result-heading span {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.1em;
 }
 
 .profile-result-heading small {
-  font-size: 8px;
+  font-size: 9px;
 }
 
 .profile-facts {
@@ -1460,13 +1535,13 @@ textarea {
 .profile-facts dt {
   color: var(--ink-soft);
   font-family: var(--sans);
-  font-size: 8px;
+  font-size: 9px;
 }
 
 .profile-facts dd {
   margin: 4px 0 0;
   overflow-wrap: anywhere;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .profile-cross {
@@ -1474,7 +1549,7 @@ textarea {
   margin-top: 13px;
   color: color-mix(in srgb, var(--ink-soft) 76%, transparent);
   font-family: var(--sans);
-  font-size: 8px;
+  font-size: 9px;
   line-height: 1.55;
 }
 
@@ -1489,7 +1564,7 @@ textarea {
   padding: 14px 0 4px;
   color: var(--gold);
   font-family: var(--sans);
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 0.12em;
 }
 
@@ -1502,7 +1577,7 @@ textarea {
 .profile-detail-sections h4 {
   margin: 0;
   color: var(--ink);
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 500;
   line-height: 1.55;
 }
@@ -1537,13 +1612,13 @@ textarea {
 }
 
 .profile-detail-button strong {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
 }
 
 .profile-detail-button small {
   color: var(--ink-soft);
-  font-size: 8px;
+  font-size: 9px;
 }
 
 .profile-detail-reading {
@@ -1567,7 +1642,7 @@ textarea {
   margin: 0;
   color: var(--ink-soft);
   font-family: var(--sans);
-  font-size: 10px;
+  font-size: 11px;
 }
 
 .profile-detail-sections article {
@@ -1582,7 +1657,7 @@ textarea {
   padding-top: 2px;
   color: var(--gold);
   font-family: var(--sans);
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 0.08em;
 }
 
@@ -1614,7 +1689,7 @@ textarea {
 
 .life-philosophy > p {
   margin-top: 12px;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.9;
 }
 
@@ -1641,12 +1716,12 @@ textarea {
 .life-path span {
   color: var(--gold);
   font-family: var(--sans);
-  font-size: 8px;
+  font-size: 9px;
 }
 
 .life-path strong {
   color: var(--ink);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 500;
   line-height: 1.45;
 }
@@ -1665,14 +1740,14 @@ textarea {
 
 .life-principles strong {
   color: var(--gold);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
 }
 
 .life-principles article p {
   margin: 6px 0 0;
   font-family: var(--sans);
-  font-size: 9px;
+  font-size: 10px;
   line-height: 1.7;
 }
 
@@ -1688,7 +1763,7 @@ textarea {
   margin-top: 16px;
   padding-top: 16px;
   border-top: 1px solid color-mix(in srgb, var(--gold) 14%, transparent);
-  font-size: 10px;
+  font-size: 11px;
 }
 
 .contact-section {
@@ -1720,12 +1795,12 @@ textarea {
 
 .contact-list span {
   color: var(--ink-soft);
-  font-size: 10px;
+  font-size: 11px;
 }
 
 .contact-list strong {
   overflow: hidden;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 400;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -2090,9 +2165,17 @@ textarea {
   border-top: 1px solid color-mix(in srgb, var(--gold) 16%, transparent);
   color: var(--ink-soft);
   font-family: var(--sans);
-  font-size: 8px;
+  font-size: 9px;
   letter-spacing: 0.08em;
   text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chapter-continuation,
+  .next-chapter-divider,
+  .chapter-ritual-mark i {
+    animation: none;
+  }
 }
 
 :root[data-theme="dark"] .bottom-sheet {

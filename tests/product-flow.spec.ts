@@ -71,7 +71,9 @@ test("refreshes progressive reading after language and text-size changes", async
   await reading.evaluate((element) => {
     element.scrollTop = element.scrollHeight;
   });
+  await expect(page.getByText("下一章正在展开", { exact: true })).toBeVisible();
   await expect(page.locator("article.chapter")).toHaveCount(2);
+  await expect(page.getByText("下一章已展开", { exact: true })).toBeVisible();
 
   await page.getByRole("button", { name: "EN", exact: true }).click();
   await expect(page.locator("article.chapter")).toHaveCount(1);
@@ -81,6 +83,42 @@ test("refreshes progressive reading after language and text-size changes", async
   await page.getByRole("button", { name: "L", exact: true }).click();
   await expect(page.locator("article.chapter")).toHaveCount(1);
   await expect.poll(async () => reading.evaluate((element) => element.scrollTop)).toBeLessThan(4);
+});
+
+test("starts at the former default size and offers two larger reading steps", async ({ page }) => {
+  await page.goto("/");
+  const verse = page.locator(".chapter-current .verse-line").first();
+  await expect(verse).toHaveCSS("font-size", "24px");
+
+  await page.getByRole("button", { name: "打开更多功能" }).click();
+  await expect(page.getByRole("button", { name: "小", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByText("夜间阅读", { exact: true })).toHaveCSS("font-size", "15px");
+  await expect(page.getByText("降低亮度，保留纸墨层次", { exact: true })).toHaveCSS("font-size", "10px");
+
+  const sizeControl = page.getByRole("group", { name: "选择阅读字号" });
+  await sizeControl.getByRole("button", { name: "中", exact: true }).click();
+  await expect(verse).toHaveCSS("font-size", "28px");
+  await sizeControl.getByRole("button", { name: "大", exact: true }).click();
+  await expect(verse).toHaveCSS("font-size", "32px");
+
+  await page.getByRole("button", { name: "关闭菜单", exact: true }).last().click();
+  await page.setViewportSize({ width: 320, height: 900 });
+  const overflow = await page.evaluate(() => {
+    const reading = document.querySelector<HTMLElement>("[data-testid='mobile-scroll']")!;
+    const bounds = reading.getBoundingClientRect();
+    const contentOverflow = Array.from(reading.querySelectorAll<HTMLElement>("*"))
+      .reduce((largest, element) => {
+        const rect = element.getBoundingClientRect();
+        return Math.max(largest, rect.right - bounds.right, bounds.left - rect.left);
+      }, 0);
+    return {
+      document: document.documentElement.scrollWidth - window.innerWidth,
+      visibleContent: Math.ceil(contentOverflow),
+    };
+  });
+  expect(overflow.document).toBeLessThanOrEqual(0);
+  expect(overflow.visibleContent).toBeLessThanOrEqual(0);
+  await expect(page.locator(".verse-line-ruby > .verse-punctuation")).toHaveCount(0);
 });
 
 test("covers all 81 chapters through contents, chance, and progressive reading", async ({ page }) => {

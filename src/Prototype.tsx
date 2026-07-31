@@ -72,7 +72,7 @@ const API_BASE = "https://pluto-human-design-api.vercel.app";
 const PROFILE_STORAGE_KEY = "wendao-life-profile";
 const CHART_STORAGE_KEY = "wendao-chart-snapshot";
 const THEME_STORAGE_KEY = "wendao-theme";
-const READING_SIZE_STORAGE_KEY = "wendao-reading-size";
+const READING_SIZE_STORAGE_KEY = "wendao-reading-size-v2";
 const CLIENT_ID_KEY = "wendao-client-id";
 const ADMIN_TOKEN_KEY = "wendao-admin-token";
 const APP_VERSION = "2026.07.31";
@@ -106,9 +106,9 @@ function loadChart(): ChartSnapshot | null {
 }
 
 function loadReadingSize(): ReadingSize {
-  if (typeof window === "undefined") return "medium";
+  if (typeof window === "undefined") return "small";
   const stored = window.localStorage.getItem(READING_SIZE_STORAGE_KEY);
-  return stored === "small" || stored === "large" ? stored : "medium";
+  return stored === "medium" || stored === "large" ? stored : "small";
 }
 
 function stableId(storageKey: string) {
@@ -1228,6 +1228,7 @@ export default function Prototype() {
   const [submittedQuestion, setSubmittedQuestion] = useState("");
   const [isReadingScrolled, setIsReadingScrolled] = useState(false);
   const [visibleChapterCount, setVisibleChapterCount] = useState(1);
+  const [isOpeningNextChapter, setIsOpeningNextChapter] = useState(false);
   const [theme, setTheme] = useState<Theme>(loadTheme);
   const [readingSize, setReadingSize] = useState<ReadingSize>(loadReadingSize);
   const [profile, setProfile] = useState<LifeProfile>(loadProfile);
@@ -1246,6 +1247,8 @@ export default function Prototype() {
   const sessionId = useRef(window.crypto.randomUUID());
   const appOpenTracked = useRef(false);
   const loadMoreRef = useRef<HTMLDivElement>(null);
+  const chapterOpeningRef = useRef(false);
+  const chapterOpeningTimerRef = useRef<number | null>(null);
   const orderedChapters = useMemo(() => reorderFrom(chapterId), [chapterId]);
   const isZh = language === "zh";
   const activeCopy = chapters.find((chapter) => chapter.id === chapterId)?.[language] ?? chapters[0][language];
@@ -1298,15 +1301,35 @@ export default function Prototype() {
     if (!root || !trigger || visibleChapterCount >= orderedChapters.length) return;
 
     const observer = new IntersectionObserver(([entry]) => {
-      if (!entry.isIntersecting) return;
-      setVisibleChapterCount((current) => Math.min(current + 1, orderedChapters.length));
+      if (!entry.isIntersecting || chapterOpeningRef.current) return;
+      chapterOpeningRef.current = true;
+      setIsOpeningNextChapter(true);
+      const openingDelay = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 720;
+      chapterOpeningTimerRef.current = window.setTimeout(() => {
+        setVisibleChapterCount((current) => Math.min(current + 1, orderedChapters.length));
+        chapterOpeningRef.current = false;
+        setIsOpeningNextChapter(false);
+        chapterOpeningTimerRef.current = null;
+      }, openingDelay);
     }, { root, threshold: 1 });
 
     observer.observe(trigger);
     return () => observer.disconnect();
   }, [orderedChapters, visibleChapterCount]);
 
+  useEffect(() => () => {
+    if (chapterOpeningTimerRef.current !== null) window.clearTimeout(chapterOpeningTimerRef.current);
+  }, []);
+
+  const resetChapterOpening = () => {
+    if (chapterOpeningTimerRef.current !== null) window.clearTimeout(chapterOpeningTimerRef.current);
+    chapterOpeningTimerRef.current = null;
+    chapterOpeningRef.current = false;
+    setIsOpeningNextChapter(false);
+  };
+
   const selectChapter = (id: number) => {
+    resetChapterOpening();
     setChapterId(id);
     setVisibleChapterCount(1);
     setDirectoryOpen(false);
@@ -1315,6 +1338,7 @@ export default function Prototype() {
   };
 
   const meetAChapter = () => {
+    resetChapterOpening();
     const candidates = chapters.filter((chapter) => chapter.id !== chapterId);
     const next = candidates[Math.floor(Math.random() * candidates.length)];
     setChapterId(next.id);
@@ -1456,6 +1480,7 @@ export default function Prototype() {
   };
 
   const changeLanguage = (nextLanguage: Language) => {
+    resetChapterOpening();
     setLanguage(nextLanguage);
     setVisibleChapterCount(1);
     scrollReadingToTop("auto");
@@ -1631,9 +1656,17 @@ export default function Prototype() {
             <>
               <div className="chapter-load-trigger" role="status">
                 <small>{isZh ? "本章已读完" : "End of this chapter"}</small>
-                <strong>{isZh ? "继续向下，开启下一章" : "Continue down to open the next chapter"}</strong>
+                <strong>
+                  {isOpeningNextChapter
+                    ? (isZh ? "下一章正在展开" : "The next chapter is opening")
+                    : (isZh ? "继续向下，开启下一章" : "Continue down to open the next chapter")}
+                </strong>
                 <span>{isZh ? "下一章" : "Next"} · {orderedChapters[visibleChapterCount][language].title}</span>
-                <i aria-hidden="true" />
+                <span className={`chapter-ritual-mark ${isOpeningNextChapter ? "is-opening" : ""}`} aria-hidden="true">
+                  <i />
+                  <i />
+                  <i />
+                </span>
               </div>
               <div className="chapter-load-sentinel" ref={loadMoreRef} aria-hidden="true" />
             </>
@@ -1738,6 +1771,7 @@ export default function Prototype() {
         onThemeChange={changeTheme}
         readingSize={readingSize}
         onReadingSizeChange={(size) => {
+          resetChapterOpening();
           setReadingSize(size);
           setVisibleChapterCount(1);
           scrollReadingToTop("auto");
