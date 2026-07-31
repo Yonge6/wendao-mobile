@@ -26,10 +26,15 @@ import "@fontsource/noto-sans-sc/400.css";
 import "@fontsource/noto-sans-sc/500.css";
 import "@fontsource/noto-serif-sc/400.css";
 import "@fontsource/noto-serif-sc/600.css";
+import {
+  detailedReading,
+  foundationalReading,
+  type HumanDesignReadingChart,
+} from "./humanDesignReading";
 
 type Language = "zh" | "en";
 type Theme = "light" | "dark";
-type DrawerView = "home" | "profile" | "about" | "feedback";
+type DrawerView = "home" | "profile" | "profile-detail" | "about" | "feedback";
 
 type LifeProfile = {
   name: string;
@@ -39,18 +44,10 @@ type LifeProfile = {
   timezone: string;
 };
 
-type ChartSnapshot = {
+type ChartSnapshot = HumanDesignReadingChart & {
   schemaVersion: string;
   chartHash: string;
   verificationStatus: string;
-  core: {
-    type: string;
-    strategy: string;
-    authority: string;
-    profile: string;
-    definition: string;
-    incarnationCross: string;
-  };
   structure: {
     definedCenters: string[];
     channels: number[][];
@@ -308,24 +305,32 @@ function isLifeManualItem(item: RelatedItem) {
   return item.title === "你的人生说明书" || item.title === "Your life manual";
 }
 
-function personalizedAdvice(chapterId: number, chart: ChartSnapshot, language: Language) {
+function personalizedAdvice(chapterId: number, chapter: ChapterCopy, chart: ChartSnapshot, language: Language) {
   const type = hdLabel(chart.core.type, language);
   const strategy = hdLabel(chart.core.strategy, language);
   const authority = hdLabel(chart.core.authority, language);
   if (language === "en") {
-    const chapterThought = chapterId === 8
-      ? "Water suggests that flexibility can be strength: let the situation reach you before deciding how to move."
-      : chapterId === 9
-        ? "Knowing when enough is enough protects your energy from being spent only to prove yourself."
-        : "Before naming the situation too quickly, notice what your own response is already showing you.";
-    return `Your chart describes you as a ${type}, with ${strategy} as your strategy and ${authority} as your decision-making authority. ${chapterThought} This is a lens for reflection, not a verdict: use it to notice your timing, then make the choice that remains true after the immediate pressure passes.`;
+    if (chapterId === 8) {
+      return `For you as a ${type}, “Be like water” begins with ${strategy}: let the situation arrive before spending your energy. Use ${authority} to sense which opening has a natural current. Flexibility here is not retreat; it is changing form without abandoning your direction.`;
+    }
+    if (chapterId === 9) {
+      return `Your ${type} energy is valuable precisely because it is not meant to prove itself without end. In this chapter, ${strategy} helps you notice when the essential work is complete, while ${authority} helps distinguish a true next step from pressure to add more. Define an “enough line,” then allow yourself to stop.`;
+    }
+    if (chapterId === 1) {
+      return `Labels such as ${type} and ${authority} can help you observe yourself, but they are not your final name. Practice ${strategy} as an experiment rather than an identity: describe what your body is showing now, and leave room for tomorrow to reveal something different.`;
+    }
+    return `Read “${chapter.title}” through your lived experiment as a ${type}: begin with ${strategy}, give ${authority} room to become clear, and test the chapter’s insight against what actually happens in your life.`;
   }
-  const chapterThought = chapterId === 8
-    ? "水提醒你：柔软不是退让，而是先让局面来到你这里，再辨认自己真正愿意流向哪里。"
-    : chapterId === 9
-      ? "“持而盈之”提醒你留意那个已经足够的时刻，不必为了证明自己继续消耗。"
-      : "在急着命名局面之前，先听见身体已经给出的回应，让真实经验走在标签前面。";
-  return `你的人类图类型是${type}，策略是“${strategy}”，做重要决定时可参考${authority}。${chapterThought}这不是对你的判定，而是一面观察自己的镜子：先辨认节奏与感受，再由你决定怎样行动。`;
+  if (chapterId === 8) {
+    return `对${type}的你来说，“如水”可以先从“${strategy}”开始：让局面来到面前，再把力量给真正有回应的方向。结合${authority}辨认哪一道缝隙有自然的流动。这里的柔软不是退让，而是改变形态，却不背离自己的方向。`;
+  }
+  if (chapterId === 9) {
+    return `${type}的生命力之所以珍贵，正因为它不必被用来无止境地证明自己。这一章里，“${strategy}”帮助你看见事情何时已经完成，${authority}则帮助你分辨：下一步来自真实需要，还是来自“还不够好”的压力。为一件事划出“足够线”，到达便停。`;
+  }
+  if (chapterId === 1) {
+    return `${type}、${authority}这些名字可以帮助你观察自己，却不是你的最终定义。把“${strategy}”当作一种生活实验，而不是新的身份标签：描述此刻身体正在呈现什么，也给明天的自己留下变化的空间。`;
+  }
+  return `读《${chapter.title}》时，可以把它放回${type}的真实生活实验：从“${strategy}”开始，给${authority}足够的澄清空间，再用实际发生的经验检验这一章给你的启发。`;
 }
 
 function questionResponse(question: string, chapter: ChapterCopy, chart: ChartSnapshot, language: Language) {
@@ -343,6 +348,16 @@ function loadTheme(): Theme {
   const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
   if (stored === "light" || stored === "dark") return stored;
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+
+function isAdminLocation() {
+  if (typeof window === "undefined") return false;
+  return /\/admin\/?$/.test(window.location.pathname) || window.location.hash === "#data-admin";
+}
+
+function publicPath() {
+  const path = window.location.pathname.replace(/admin\/?$/, "");
+  return path || "/";
 }
 
 const chapters: Chapter[] = [
@@ -765,7 +780,6 @@ type SideDrawerProps = {
   onFeedbackSubmit: (event: FormEvent) => void;
   onContactClick: (target: string) => void;
   onVideoChannelOpen: () => void;
-  onAdminOpen: () => void;
 };
 
 function SideDrawer({
@@ -792,7 +806,6 @@ function SideDrawer({
   onFeedbackSubmit,
   onContactClick,
   onVideoChannelOpen,
-  onAdminOpen,
 }: SideDrawerProps) {
   const isZh = language === "zh";
   const profileComplete = Boolean(chart?.chartHash);
@@ -812,6 +825,8 @@ function SideDrawer({
     ? (isZh ? "你的空间" : "Your space")
     : view === "profile"
       ? (isZh ? "人生说明书" : "Life manual")
+      : view === "profile-detail"
+        ? (isZh ? "详细解读" : "Detailed reading")
       : view === "about"
         ? (isZh ? "关于问道" : "About Wendao")
         : (isZh ? "意见反馈" : "Feedback");
@@ -841,7 +856,7 @@ function SideDrawer({
               type="button"
               className="drawer-icon-button"
               aria-label={isZh ? "返回" : "Back"}
-              onClick={() => onViewChange("home")}
+              onClick={() => onViewChange(view === "profile-detail" ? "profile" : "home")}
             >
               <ArrowLeftIcon />
             </button>
@@ -886,14 +901,6 @@ function SideDrawer({
               </section>
 
               <nav className="drawer-nav" aria-label={isZh ? "更多功能" : "More features"}>
-                <button type="button" onClick={() => onViewChange("profile")}>
-                  <span className="drawer-nav-icon"><PersonIcon /></span>
-                  <span>
-                    <strong>{isZh ? "人生说明书" : "Life manual"}</strong>
-                    <small>{isZh ? "出生资料与个性化基础" : "Birth details and personalization"}</small>
-                  </span>
-                  <ChevronRightIcon />
-                </button>
                 <div className="drawer-nav-row">
                   <span className="drawer-nav-icon">{theme === "dark" ? <MoonIcon /> : <SunIcon />}</span>
                   <span>
@@ -1008,11 +1015,58 @@ function SideDrawer({
                     <div><dt>{isZh ? "人生角色" : "Profile"}</dt><dd>{chart.core.profile}</dd></div>
                     <div><dt>{isZh ? "定义" : "Definition"}</dt><dd>{hdLabel(chart.core.definition, language)}</dd></div>
                   </dl>
-                  <p>{personalizedAdvice(8, chart, language)}</p>
+                  <div className="foundational-reading">
+                    <span className="reading-kicker">{isZh ? "基础解读" : "Foundational reading"}</span>
+                    {foundationalReading(chart, language).map((section) => (
+                      <article key={section.title}>
+                        <h4>{section.title}</h4>
+                        <p>{section.body}</p>
+                      </article>
+                    ))}
+                  </div>
                   <small className="profile-cross">{isZh ? "轮回交叉" : "Incarnation cross"} · {chart.core.incarnationCross}</small>
+                  <button
+                    type="button"
+                    className="profile-detail-button"
+                    onClick={() => onViewChange("profile-detail")}
+                  >
+                    <span>
+                      <strong>{isZh ? "查看详细解读" : "Read the detailed guide"}</strong>
+                      <small>{isZh ? "12 个与你有关的主题" : "12 themes shaped by your result"}</small>
+                    </span>
+                    <ArrowRightIcon />
+                  </button>
                 </section>
               ) : null}
             </form>
+          ) : null}
+
+          {view === "profile-detail" && chart ? (
+            <section className="profile-detail-reading" aria-label={isZh ? "人类图详细解读" : "Detailed Human Design reading"}>
+              <div className="profile-detail-intro">
+                <span className="drawer-kicker">{isZh ? "你的人生说明书" : "Your life manual"}</span>
+                <h3>{isZh ? "一份理解自己的地图，不是一份限制你的判词。" : "A map for understanding yourself, not a verdict that limits you."}</h3>
+                <p>
+                  {hdLabel(chart.core.type, language)} · {chart.core.profile} · {hdLabel(chart.core.authority, language)}
+                </p>
+              </div>
+              <div className="profile-detail-sections">
+                {detailedReading(chart, language).map((section, index) => (
+                  <article key={section.title}>
+                    <span>{String(index + 1).padStart(2, "0")}</span>
+                    <div>
+                      <h4>{section.title}</h4>
+                      <p>{section.body}</p>
+                    </div>
+                  </article>
+                ))}
+              </div>
+              <p className="reading-disclaimer">
+                {isZh
+                  ? "人类图只作为自我观察与对话的视角，不是科学结论，也不替你作决定。请把真实经验、身体感受与现实信息放在任何标签之前。"
+                  : "Human Design is offered as a lens for reflection and conversation, not a scientific conclusion or a substitute for your decisions. Put lived experience, bodily awareness, and real-world information before any label."}
+              </p>
+            </section>
           ) : null}
 
           {view === "about" ? (
@@ -1029,6 +1083,54 @@ function SideDrawer({
                   ? "解释帮助初学者进入原典；“与你有关”把思想放回焦虑、关系与人生选择；人生说明书只用于增加理解和选择，不替任何人决定。"
                   : "Meaning helps newcomers enter the text; For You brings it into anxiety, relationships, and choice. Your life manual widens understanding without deciding for you."}
               </p>
+              <section className="life-philosophy">
+                <span className="drawer-kicker">{isZh ? "我们的生命观" : "Our philosophy of life"}</span>
+                <h4>
+                  {isZh
+                    ? "生命不是用来证明自己的，而是用来认识、接纳、成为并活出自己。"
+                    : "Life is not for proving yourself. It is for knowing, accepting, becoming, and living as yourself."}
+                </h4>
+                <p>
+                  {isZh
+                    ? "真正的成长，不是把自己改造成某个标准答案，而是在变化中越来越诚实地看见自己，越来越从容地选择自己的活法。"
+                    : "Growth is not the work of turning yourself into a standard answer. It is learning to see yourself more honestly through change, and to choose your way of living with greater ease."}
+                </p>
+                <div className="life-path" aria-label={isZh ? "核心路径" : "Core path"}>
+                  {(isZh
+                    ? ["认识自己", "接纳自己", "成为自己", "活出自己"]
+                    : ["Know yourself", "Accept yourself", "Become yourself", "Live as yourself"]
+                  ).map((item, index) => (
+                    <div key={item}>
+                      <span>{String(index + 1).padStart(2, "0")}</span>
+                      <strong>{item}</strong>
+                    </div>
+                  ))}
+                </div>
+                <div className="life-principles">
+                  <article>
+                    <strong>{isZh ? "一休" : "Pause"}</strong>
+                    <p>{isZh ? "先照顾身体，安顿情绪，再继续前行。" : "Care for the body, settle emotion, then continue."}</p>
+                  </article>
+                  <article>
+                    <strong>{isZh ? "不二" : "Wholeness"}</strong>
+                    <p>{isZh ? "接纳高峰与低谷，拥抱完整而非完美。" : "Accept peaks and valleys; choose wholeness over perfection."}</p>
+                  </article>
+                  <article>
+                    <strong>{isZh ? "三慢" : "Go slowly"}</strong>
+                    <p>{isZh ? "慢下来、慢慢来、慢慢成为，尊重生命的节奏。" : "Slow down, take your time, and respect the rhythm of becoming."}</p>
+                  </article>
+                  <article>
+                    <strong>{isZh ? "如水" : "Be Water"}</strong>
+                    <p>{isZh ? "向内扎根，向外流动；顺应变化，不失本心。" : "Root inwardly, move outwardly; adapt without losing your center."}</p>
+                  </article>
+                </div>
+                <blockquote>{isZh ? "向内认识自己，向外如水而行。" : "Know yourself within; move through the world like water."}</blockquote>
+                <p className="life-vision">
+                  {isZh
+                    ? "我们愿陪伴彼此走进低谷与高峰，探索身心健康的工作与生活方式；真实面对自己与世界，善待自己、他人与生命，并在创造和欣赏中活出生命之美。"
+                    : "We hope to accompany one another through valleys and peaks, exploring healthier ways to work and live: facing self and world truthfully, treating life with kindness, and creating and appreciating beauty."}
+                </p>
+              </section>
               <div className="about-method">
                 <span>01</span><p>{isZh ? "原典与版本透明" : "Transparent textual witnesses"}</p>
                 <span>02</span><p>{isZh ? "解释清楚但不简化思想" : "Clarity without flattening the thought"}</p>
@@ -1057,10 +1159,6 @@ function SideDrawer({
                   </button>
                 </div>
               </div>
-              <button type="button" className="admin-entry" onClick={onAdminOpen}>
-                <LockClosedIcon />
-                {isZh ? "数据后台" : "Admin"}
-              </button>
             </section>
           ) : null}
 
@@ -1100,9 +1198,6 @@ function SideDrawer({
                     ? (isZh ? "已收到，谢谢你" : "Received. Thank you.")
                     : (isZh ? "提交反馈" : "Submit feedback")}
               </button>
-              <small className="feedback-note">
-                {isZh ? "反馈会直接进入问道后台，不会跳转到其他网站。" : "Your feedback goes directly to Wendao. No external site opens."}
-              </small>
               {feedbackError ? <p className="form-message is-error">{feedbackError}</p> : null}
             </form>
           ) : null}
@@ -1361,7 +1456,7 @@ export default function Prototype() {
   const [feedbackError, setFeedbackError] = useState("");
   const [responseText, setResponseText] = useState("");
   const [videoChannelOpen, setVideoChannelOpen] = useState(false);
-  const [adminOpen, setAdminOpen] = useState(() => window.location.hash === "#data-admin");
+  const [adminOpen, setAdminOpen] = useState(isAdminLocation);
   const clientId = useRef(stableId(CLIENT_ID_KEY));
   const sessionId = useRef(window.crypto.randomUUID());
   const appOpenTracked = useRef(false);
@@ -1694,7 +1789,7 @@ export default function Prototype() {
                         .map((item) => (
                         <div className="related-item" key={item.title}>
                           <h2>{item.title}</h2>
-                          <p>{isLifeManualItem(item) && chart ? personalizedAdvice(chapter.id, chart, language) : item.body}</p>
+                          <p>{isLifeManualItem(item) && chart ? personalizedAdvice(chapter.id, copy, chart, language) : item.body}</p>
                         </div>
                         ))}
                       <div className="practice-card">
@@ -1823,20 +1918,16 @@ export default function Prototype() {
           setVideoChannelOpen(true);
           trackEvent("contact_click", { target: "视频号" });
         }}
-        onAdminOpen={() => {
-          setDrawerOpen(false);
-          setAdminOpen(true);
-          window.location.hash = "data-admin";
-        }}
       />
       <VideoChannelModal open={videoChannelOpen} onClose={() => setVideoChannelOpen(false)} language={language} />
       <AdminConsole
         open={adminOpen}
         onClose={() => {
           setAdminOpen(false);
-          if (window.location.hash === "#data-admin") {
-            window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
-          }
+          const nextPath = /\/admin\/?$/.test(window.location.pathname)
+            ? publicPath()
+            : window.location.pathname;
+          window.history.replaceState(null, "", `${nextPath}${window.location.search}`);
         }}
         language={language}
       />

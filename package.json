@@ -12,7 +12,7 @@
     "dev": "vite",
     "prebuild": "npm run check:runtime",
     "build": "tsc && vite build && node scripts/prepare-sites-build.mjs",
-    "build:pages": "npm run check:runtime && tsc && vite build --base=/wendao-mobile/ && node scripts/prepare-pages-build.mjs"
+    "build:pages": "npm run check:runtime && tsc && vite build --base=/ && node scripts/prepare-pages-build.mjs"
   },
   "dependencies": {
     "@fontsource/noto-sans-sc": "^5.3.0",

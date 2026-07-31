@@ -58,7 +58,11 @@ See `src/mobile/COMPONENTS.md` for the full component and gesture contract.
 - If a reader focuses the AI composer before a verified profile exists, route them into the birth-information form before answering. Once verified, disclose that responses use the chapter, the question, and the reader's type, strategy, authority, and profile; present these as reflective lenses, never deterministic verdicts.
 - Store the minimum product data required for continuity and improvement through the Wendao backend: consented birth profile plus chart summary, submitted feedback, questions and generated responses, and an allowlisted set of product events. Keep service credentials and the admin password server-side only.
 - Feedback submits inside Wendao without opening GitHub. The password-protected, phone-friendly data console covers profile totals and summaries, conversations, feedback status, and event counts.
+- Keep the data console completely absent from public navigation and About. Its private entry is the unlinked `/admin/` path on the Wendao domain.
 - `关于问道 / About Wendao` ends with the supplied email and social contacts. `视频号 / WeChat Channels` opens the supplied QR image in an in-product modal.
+- Treat the user’s life philosophy as Wendao’s product philosophy: `认识自己 → 接纳自己 → 成为自己 → 活出自己`, supported by `一休 / 不二 / 三慢 / Be Water`, the values `真 / 善 / 美`, and the line `向内认识自己，向外如水而行`.
+- Chapter-level `你的人生说明书 / Your life manual` copy must combine the reader’s verified Human Design result with that chapter’s distinct theme and practice. Do not reuse one generic personalized paragraph across chapters.
+- The canonical public URL is `https://wendao.wonderelian.com/`; the private admin URL is `https://wendao.wonderelian.com/admin/`.
 - Support a persistent day/night reading mode. Both modes must retain the paper-and-ink character and meet comfortable long-form reading contrast.
 - Keep the AI composer visually quiet and fixed above the safe area or simulated keyboard. Hide it whenever a phone-scoped bottom sheet is open.
 - Keep the top reading controls fixed while the scripture scrolls. When the reader moves down the text, lower the AI composer's opacity until it is hovered or focused.

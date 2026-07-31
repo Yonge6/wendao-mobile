@@ -1179,13 +1179,6 @@ textarea {
   opacity: 0.42;
 }
 
-.feedback-note {
-  color: var(--ink-soft);
-  font-family: var(--sans);
-  font-size: 9px;
-  text-align: center;
-}
-
 .form-message {
   margin: 0;
   font-family: var(--sans);
@@ -1255,13 +1248,6 @@ textarea {
   font-size: 13px;
 }
 
-.profile-result > p {
-  margin: 0;
-  color: var(--ink-soft);
-  font-size: 12px;
-  line-height: 1.9;
-}
-
 .profile-cross {
   display: block;
   margin-top: 13px;
@@ -1269,6 +1255,219 @@ textarea {
   font-family: var(--sans);
   font-size: 8px;
   line-height: 1.55;
+}
+
+.foundational-reading {
+  display: grid;
+  gap: 0;
+  margin-top: 21px;
+  border-top: 1px solid color-mix(in srgb, var(--gold) 22%, transparent);
+}
+
+.reading-kicker {
+  padding: 14px 0 4px;
+  color: var(--gold);
+  font-family: var(--sans);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+}
+
+.foundational-reading article {
+  padding: 14px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--gold) 14%, transparent);
+}
+
+.foundational-reading h4,
+.profile-detail-sections h4 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.55;
+}
+
+.foundational-reading p,
+.profile-detail-sections p {
+  margin: 7px 0 0;
+  color: var(--ink-soft);
+  font-size: 11px;
+  line-height: 1.85;
+}
+
+.profile-detail-button {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 17px;
+  padding: 14px 15px;
+  border: 1px solid color-mix(in srgb, var(--gold) 28%, transparent);
+  border-radius: 13px;
+  background: color-mix(in srgb, var(--gold) 7%, var(--card-surface));
+  color: var(--ink);
+  font-family: var(--sans);
+  text-align: left;
+}
+
+.profile-detail-button > span {
+  display: grid;
+  gap: 4px;
+}
+
+.profile-detail-button strong {
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.profile-detail-button small {
+  color: var(--ink-soft);
+  font-size: 8px;
+}
+
+.profile-detail-reading {
+  padding-bottom: 28px;
+}
+
+.profile-detail-intro {
+  padding: 4px 0 24px;
+  border-bottom: 1px solid color-mix(in srgb, var(--gold) 22%, transparent);
+}
+
+.profile-detail-intro h3 {
+  max-width: 330px;
+  margin: 10px 0;
+  font-size: 21px;
+  font-weight: 500;
+  line-height: 1.55;
+}
+
+.profile-detail-intro p {
+  margin: 0;
+  color: var(--ink-soft);
+  font-family: var(--sans);
+  font-size: 10px;
+}
+
+.profile-detail-sections article {
+  display: grid;
+  grid-template-columns: 31px minmax(0, 1fr);
+  gap: 13px;
+  padding: 20px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--gold) 15%, transparent);
+}
+
+.profile-detail-sections article > span {
+  padding-top: 2px;
+  color: var(--gold);
+  font-family: var(--sans);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+}
+
+.reading-disclaimer {
+  margin: 22px 0 0;
+  padding: 15px 16px;
+  border-left: 1px solid var(--gold);
+  background: color-mix(in srgb, var(--gold) 6%, transparent);
+  color: var(--ink-soft);
+  font-family: var(--sans);
+  font-size: 9px;
+  line-height: 1.8;
+}
+
+.life-philosophy {
+  margin-top: 30px;
+  padding: 22px 0 24px;
+  border-top: 1px solid color-mix(in srgb, var(--gold) 24%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--gold) 24%, transparent);
+}
+
+.life-philosophy h4 {
+  margin: 10px 0 0;
+  color: var(--ink);
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1.75;
+}
+
+.life-philosophy > p {
+  margin-top: 12px;
+  font-size: 11px;
+  line-height: 1.9;
+}
+
+.life-path {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 22px 0;
+  border-top: 1px solid color-mix(in srgb, var(--gold) 18%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--gold) 18%, transparent);
+}
+
+.life-path div {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  padding: 12px 6px;
+  border-right: 1px solid color-mix(in srgb, var(--gold) 14%, transparent);
+}
+
+.life-path div:last-child {
+  border-right: 0;
+}
+
+.life-path span {
+  color: var(--gold);
+  font-family: var(--sans);
+  font-size: 8px;
+}
+
+.life-path strong {
+  color: var(--ink);
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.life-principles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.life-principles article {
+  padding: 13px;
+  border: 1px solid color-mix(in srgb, var(--gold) 15%, transparent);
+  background: color-mix(in srgb, var(--gold) 5%, transparent);
+}
+
+.life-principles strong {
+  color: var(--gold);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.life-principles article p {
+  margin: 6px 0 0;
+  font-family: var(--sans);
+  font-size: 9px;
+  line-height: 1.7;
+}
+
+.life-philosophy blockquote {
+  margin: 22px 0 0;
+  color: var(--ink);
+  font-size: 17px;
+  line-height: 1.7;
+  text-align: center;
+}
+
+.life-philosophy .life-vision {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid color-mix(in srgb, var(--gold) 14%, transparent);
+  font-size: 10px;
 }
 
 .contact-section {
@@ -1309,22 +1508,6 @@ textarea {
   font-weight: 400;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.admin-entry {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: 100%;
-  margin-top: 26px;
-  padding: 11px;
-  border: 1px solid color-mix(in srgb, var(--gold) 24%, transparent);
-  border-radius: 999px;
-  background: transparent;
-  color: var(--ink-soft);
-  font-family: var(--sans);
-  font-size: 10px;
 }
 
 .image-modal {
