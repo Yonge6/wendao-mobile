@@ -9,19 +9,45 @@
   --paper-deep: #eee3d1;
   --serif: "Noto Serif SC", "Songti SC", "STSong", serif;
   --sans: "Noto Sans SC", "PingFang SC", sans-serif;
+  --header-surface: rgba(247, 241, 230, 0.94);
+  --header-surface-strong: rgba(247, 241, 230, 0.97);
+  --card-surface: #f8f2e7;
+  --composer-surface: rgba(249, 245, 236, 0.94);
+  --field-surface: rgba(255, 252, 246, 0.68);
+  --shadow-color: rgba(51, 43, 27, 0.13);
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --ink: #dbe7e3;
+  --ink-soft: #a6c0ba;
+  --gold: #c7a86e;
+  --gold-light: rgba(199, 168, 110, 0.42);
+  --paper: #10191b;
+  --paper-deep: #162225;
+  --header-surface: rgba(16, 25, 27, 0.91);
+  --header-surface-strong: rgba(16, 25, 27, 0.97);
+  --card-surface: #172326;
+  --composer-surface: rgba(22, 34, 37, 0.94);
+  --field-surface: rgba(227, 237, 233, 0.055);
+  --shadow-color: rgba(0, 0, 0, 0.3);
+  color-scheme: dark;
 }
 
 body {
   background: var(--paper);
+  transition: background-color 220ms ease;
 }
 
 button,
-input {
+input,
+textarea {
   font: inherit;
 }
 
 .app-screen {
   position: relative;
+  isolation: isolate;
   width: 100%;
   max-width: 720px;
   height: 100dvh;
@@ -32,16 +58,42 @@ input {
   -webkit-overflow-scrolling: touch;
   background-color: var(--paper);
   color: var(--ink);
+  transition: background-color 220ms ease, color 220ms ease;
+}
+
+.app-screen::before {
+  position: fixed;
+  z-index: -1;
+  top: 0;
+  left: 50%;
+  width: min(100%, 720px);
+  height: 100dvh;
+  transform: translateX(-50%);
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(rgba(247, 241, 230, 0.12), rgba(247, 241, 230, 0.22)),
+    url("/assets/wendao/paper-mist-background.png");
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: cover;
+  content: "";
+  pointer-events: none;
+  transition: background-color 220ms ease, filter 220ms ease;
+}
+
+:root[data-theme="dark"] .app-screen::before {
+  background-image:
+    linear-gradient(rgba(11, 19, 21, 0.72), rgba(11, 19, 21, 0.82)),
+    url("/assets/wendao/paper-mist-background.png");
+  filter: grayscale(0.35) saturate(0.55);
 }
 
 .reading-shell {
+  position: relative;
+  z-index: 1;
   min-height: 100%;
   padding: calc(env(safe-area-inset-top, 0px) + 91px) 24px calc(env(safe-area-inset-bottom, 0px) + 118px);
-  background-color: var(--paper);
-  background-image: url("/assets/wendao/paper-mist-background.png");
-  background-repeat: repeat-y;
-  background-position: center top;
-  background-size: 100% auto;
+  background: transparent;
   font-family: var(--serif);
 }
 
@@ -63,10 +115,7 @@ input {
   min-height: calc(env(safe-area-inset-top, 0px) + 76px);
   padding: calc(env(safe-area-inset-top, 0px) + 14px) 24px 10px;
   border-bottom: 1px solid transparent;
-  background-color: rgba(247, 241, 230, 0.94);
-  background-image: url("/assets/wendao/paper-mist-background.png");
-  background-position: center top;
-  background-size: 100% auto;
+  background-color: var(--header-surface);
   backdrop-filter: blur(14px);
   transition:
     border-color 180ms ease,
@@ -76,8 +125,8 @@ input {
 
 .reading-header-fixed.is-scrolled {
   border-bottom-color: rgba(174, 127, 43, 0.22);
-  background-color: rgba(247, 241, 230, 0.97);
-  box-shadow: 0 8px 22px rgba(53, 47, 35, 0.08);
+  background-color: var(--header-surface-strong);
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--shadow-color) 62%, transparent);
 }
 
 .reading-header button {
@@ -125,7 +174,7 @@ input {
   align-items: center;
   gap: 6px;
   font-family: var(--sans);
-  color: rgba(18, 63, 73, 0.42);
+  color: color-mix(in srgb, var(--ink) 42%, transparent);
   font-size: 11px;
 }
 
@@ -133,7 +182,7 @@ input {
   font-family: var(--sans);
   font-size: 11px;
   font-weight: 400;
-  color: rgba(18, 63, 73, 0.48);
+  color: color-mix(in srgb, var(--ink) 48%, transparent);
 }
 
 .language-switch button.is-active {
@@ -141,9 +190,28 @@ input {
   font-weight: 500;
 }
 
+.header-menu-button {
+  display: grid;
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 50% !important;
+}
+
+.header-menu-button:hover,
+.header-menu-button:focus-visible {
+  background: color-mix(in srgb, var(--gold) 10%, transparent);
+}
+
+.header-menu-button svg {
+  width: 17px;
+  height: 17px;
+}
+
 .philosophy-line {
   margin: 8px 0 41px 70px;
-  color: rgba(18, 63, 73, 0.54);
+  color: color-mix(in srgb, var(--ink) 54%, transparent);
   font-family: var(--sans);
   font-size: 9px;
   letter-spacing: 0.18em;
@@ -199,7 +267,7 @@ input {
   padding: 9px 0;
   text-align: center;
   flex: 0 0 auto;
-  background: rgba(247, 241, 230, 0.58);
+  background: color-mix(in srgb, var(--paper) 58%, transparent);
 }
 
 .rail-label span {
@@ -238,7 +306,7 @@ input {
 
 .chapter-completeness {
   flex: 0 0 auto;
-  color: rgba(174, 127, 43, 0.82);
+  color: color-mix(in srgb, var(--gold) 82%, transparent);
   font-family: var(--sans);
   font-size: 8px;
   letter-spacing: 0.06em;
@@ -259,6 +327,7 @@ input {
 
 .verse-line {
   margin: 0;
+  color: var(--ink);
   font-size: 24px;
   font-weight: 400;
   letter-spacing: 0.075em;
@@ -287,7 +356,7 @@ input {
   display: block;
   min-height: 11px;
   margin-bottom: 1px;
-  color: rgba(49, 89, 101, 0.78);
+  color: color-mix(in srgb, var(--ink-soft) 78%, transparent);
   font-family: var(--sans);
   font-size: 8px;
   font-weight: 400;
@@ -401,14 +470,14 @@ input {
   align-items: center;
   gap: 8px;
   margin: 54px 0 26px;
-  color: rgba(18, 63, 73, 0.62);
+  color: color-mix(in srgb, var(--ink) 62%, transparent);
   font-family: var(--sans);
   font-size: 10px;
   letter-spacing: 0.17em;
 }
 
 .reading-footer small {
-  color: rgba(174, 127, 43, 0.7);
+  color: color-mix(in srgb, var(--gold) 70%, transparent);
   font-size: 8px;
   letter-spacing: 0.12em;
 }
@@ -428,8 +497,8 @@ input {
   padding: 5px 6px 5px 15px;
   border: 1px solid rgba(174, 127, 43, 0.6);
   border-radius: 27px;
-  background: rgba(249, 245, 236, 0.94);
-  box-shadow: 0 9px 25px rgba(51, 43, 27, 0.13), inset 0 1px 0 rgba(255, 255, 255, 0.86);
+  background: var(--composer-surface);
+  box-shadow: 0 9px 25px var(--shadow-color), inset 0 1px 0 rgba(255, 255, 255, 0.16);
   backdrop-filter: blur(12px);
   transition:
     bottom 180ms ease,
@@ -440,15 +509,15 @@ input {
 
 .ai-composer.is-reading {
   opacity: 0.5;
-  background-color: rgba(249, 245, 236, 0.62);
-  box-shadow: 0 5px 16px rgba(51, 43, 27, 0.08);
+  background-color: color-mix(in srgb, var(--composer-surface) 68%, transparent);
+  box-shadow: 0 5px 16px color-mix(in srgb, var(--shadow-color) 62%, transparent);
 }
 
 .ai-composer.is-reading:hover,
 .ai-composer.is-reading:focus-within {
   opacity: 1;
-  background-color: rgba(249, 245, 236, 0.96);
-  box-shadow: 0 9px 25px rgba(51, 43, 27, 0.13), inset 0 1px 0 rgba(255, 255, 255, 0.86);
+  background-color: var(--composer-surface);
+  box-shadow: 0 9px 25px var(--shadow-color), inset 0 1px 0 rgba(255, 255, 255, 0.16);
 }
 
 .composer-spark {
@@ -468,7 +537,7 @@ input {
 }
 
 .ai-composer input::placeholder {
-  color: rgba(18, 63, 73, 0.55);
+  color: color-mix(in srgb, var(--ink) 55%, transparent);
 }
 
 .ai-composer > button {
@@ -479,7 +548,7 @@ input {
   border: 0;
   border-radius: 50%;
   background: var(--ink);
-  color: #f9f3e7;
+  color: var(--paper);
   cursor: pointer;
 }
 
@@ -491,8 +560,9 @@ input {
 
 .bottom-sheet {
   border: 1px solid rgba(174, 127, 43, 0.27);
-  background-color: #f8f2e7;
+  background-color: var(--card-surface);
   background-image: url("/assets/wendao/paper-mist-background.png");
+  background-repeat: no-repeat;
   background-size: 100% auto;
   color: var(--ink);
   font-family: var(--serif);
@@ -688,10 +758,448 @@ input {
 
 .source-disclosure p {
   margin-top: 8px;
-  color: rgba(18, 63, 73, 0.62);
+  color: color-mix(in srgb, var(--ink) 62%, transparent);
   font-family: var(--sans);
   font-size: 9px;
   line-height: 1.6;
+}
+
+.drawer-layer {
+  position: fixed;
+  z-index: 90;
+  inset: 0;
+}
+
+.drawer-backdrop {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  border: 0;
+  background: rgba(10, 24, 27, 0.34);
+  backdrop-filter: blur(3px);
+}
+
+.side-drawer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  width: min(88vw, 410px);
+  height: 100dvh;
+  border-left: 1px solid color-mix(in srgb, var(--gold) 26%, transparent);
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--card-surface) 94%, transparent), var(--card-surface));
+  box-shadow: -24px 0 70px rgba(7, 19, 22, 0.19);
+  color: var(--ink);
+  font-family: var(--serif);
+  animation: drawer-enter 240ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes drawer-enter {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+.drawer-header {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) 36px;
+  align-items: center;
+  gap: 13px;
+  padding: calc(env(safe-area-inset-top, 0px) + 22px) 22px 17px;
+  border-bottom: 1px solid color-mix(in srgb, var(--gold) 20%, transparent);
+}
+
+.drawer-header > div {
+  min-width: 0;
+}
+
+.drawer-brand {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--gold);
+  font-family: var(--sans);
+  font-size: 8px;
+  letter-spacing: 0.16em;
+}
+
+.drawer-header h2 {
+  margin: 0;
+  font-size: 23px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
+.drawer-orbit {
+  width: 25px;
+  height: 25px;
+  border: 1px solid color-mix(in srgb, var(--gold) 72%, transparent);
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 7px color-mix(in srgb, var(--gold) 7%, transparent);
+}
+
+.drawer-icon-button,
+.drawer-close {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink);
+}
+
+.drawer-icon-button:hover,
+.drawer-close:hover {
+  background: color-mix(in srgb, var(--gold) 10%, transparent);
+}
+
+.drawer-close {
+  font-family: var(--sans);
+  font-size: 27px;
+  font-weight: 300;
+}
+
+.drawer-scroll {
+  overflow-y: auto;
+  padding: 22px;
+  overscroll-behavior: contain;
+}
+
+.life-manual-card {
+  position: relative;
+  overflow: hidden;
+  padding: 23px;
+  border: 1px solid color-mix(in srgb, var(--gold) 34%, transparent);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 88% 12%, color-mix(in srgb, var(--gold) 18%, transparent), transparent 34%),
+    var(--field-surface);
+}
+
+.life-manual-card::after {
+  position: absolute;
+  right: -36px;
+  bottom: -52px;
+  width: 138px;
+  height: 138px;
+  border: 1px solid color-mix(in srgb, var(--gold) 18%, transparent);
+  border-radius: 50%;
+  content: "";
+}
+
+.drawer-kicker {
+  color: var(--gold);
+  font-family: var(--sans);
+  font-size: 9px;
+  letter-spacing: 0.13em;
+}
+
+.life-manual-card h3,
+.drawer-prose h3 {
+  position: relative;
+  z-index: 1;
+  margin: 11px 0 8px;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.life-manual-card p {
+  position: relative;
+  z-index: 1;
+  margin: 0 0 18px;
+  color: var(--ink-soft);
+  font-family: var(--sans);
+  font-size: 11px;
+  line-height: 1.75;
+}
+
+.drawer-primary,
+.drawer-secondary {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  min-height: 43px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 15px;
+  border-radius: 999px;
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.drawer-primary {
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.drawer-secondary {
+  margin-top: 8px;
+  border: 1px solid color-mix(in srgb, var(--gold) 42%, transparent);
+  background: transparent;
+  color: var(--ink);
+}
+
+.drawer-primary svg,
+.drawer-secondary svg {
+  flex: 0 0 auto;
+}
+
+.drawer-nav {
+  display: flex;
+  flex-direction: column;
+  margin-top: 19px;
+  border-top: 1px solid color-mix(in srgb, var(--gold) 18%, transparent);
+}
+
+.drawer-nav > button,
+.drawer-nav > a,
+.drawer-nav-row {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) 24px;
+  align-items: center;
+  gap: 12px;
+  min-height: 67px;
+  padding: 11px 3px;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--gold) 15%, transparent);
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+  text-decoration: none;
+}
+
+.drawer-nav > button > span:nth-child(2),
+.drawer-nav > a > span:nth-child(2),
+.drawer-nav-row > span:nth-child(2) {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.drawer-nav strong {
+  font-family: var(--serif);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.drawer-nav small {
+  overflow: hidden;
+  color: var(--ink-soft);
+  font-family: var(--sans);
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.drawer-nav-icon {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--gold) 22%, transparent);
+  border-radius: 50%;
+  color: var(--gold);
+}
+
+.theme-toggle {
+  position: relative;
+  width: 41px;
+  height: 23px;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--gold) 35%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ink) 8%, transparent);
+}
+
+.theme-toggle span {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: var(--ink-soft);
+  transition: transform 180ms ease, background-color 180ms ease;
+}
+
+.theme-toggle.is-on span {
+  transform: translateX(18px);
+  background: var(--gold);
+}
+
+.drawer-form,
+.drawer-feedback {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.drawer-intro {
+  margin: 0 0 4px;
+  color: var(--ink-soft);
+  font-family: var(--sans);
+  font-size: 11px;
+  line-height: 1.8;
+}
+
+.drawer-form label,
+.drawer-feedback label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  color: var(--ink-soft);
+  font-family: var(--sans);
+  font-size: 10px;
+  letter-spacing: 0.05em;
+}
+
+.drawer-form input,
+.drawer-feedback textarea {
+  width: 100%;
+  border: 1px solid color-mix(in srgb, var(--gold) 28%, transparent);
+  border-radius: 12px;
+  outline: 0;
+  background: var(--field-surface);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 13px;
+  letter-spacing: normal;
+}
+
+.drawer-form input {
+  height: 46px;
+  padding: 0 13px;
+}
+
+.drawer-feedback textarea {
+  min-height: 168px;
+  padding: 13px;
+  line-height: 1.7;
+  resize: vertical;
+}
+
+.drawer-form input:focus,
+.drawer-feedback textarea:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--gold) 10%, transparent);
+}
+
+.drawer-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.privacy-note {
+  margin: -2px 0 1px;
+  color: color-mix(in srgb, var(--ink-soft) 78%, transparent);
+  font-family: var(--sans);
+  font-size: 9px;
+  line-height: 1.7;
+}
+
+.drawer-save {
+  margin-top: 4px;
+}
+
+.drawer-reading-link {
+  margin-top: -7px;
+}
+
+.drawer-prose p {
+  margin: 17px 0 0;
+  color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 2;
+}
+
+.about-method {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  gap: 0 13px;
+  align-items: center;
+  margin-top: 24px;
+  border-top: 1px solid color-mix(in srgb, var(--gold) 20%, transparent);
+}
+
+.about-method span,
+.about-method p {
+  margin: 0;
+  padding: 12px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--gold) 16%, transparent);
+}
+
+.about-method span {
+  color: var(--gold);
+  font-family: var(--sans);
+  font-size: 10px;
+}
+
+.about-method p {
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.feedback-submit {
+  margin-top: 3px;
+}
+
+.feedback-submit.is-disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+  pointer-events: none;
+}
+
+.feedback-note {
+  color: var(--ink-soft);
+  font-family: var(--sans);
+  font-size: 9px;
+  text-align: center;
+}
+
+.drawer-footer {
+  padding: 13px 22px calc(env(safe-area-inset-bottom, 0px) + 15px);
+  border-top: 1px solid color-mix(in srgb, var(--gold) 16%, transparent);
+  color: var(--ink-soft);
+  font-family: var(--sans);
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  text-align: center;
+}
+
+:root[data-theme="dark"] .bottom-sheet {
+  background-image:
+    linear-gradient(rgba(16, 25, 27, 0.9), rgba(16, 25, 27, 0.96)),
+    url("/assets/wendao/paper-mist-background.png");
+  background-blend-mode: multiply;
+}
+
+:root[data-theme="dark"] .ai-guidance {
+  background: rgba(222, 235, 230, 0.045);
+}
+
+:root[data-theme="dark"] .directory-item.is-current,
+:root[data-theme="dark"] .practice-card,
+:root[data-theme="dark"] .rail-label {
+  background-color: rgba(222, 235, 230, 0.025);
+}
+
+:root[data-theme="dark"] .app-screen,
+:root[data-theme="dark"] .reading-header-fixed,
+:root[data-theme="dark"] .side-drawer,
+:root[data-theme="dark"] .web-sheet {
+  scrollbar-color: color-mix(in srgb, var(--gold) 42%, transparent) transparent;
 }
 
 [lang="en"] .wordmark,
@@ -725,6 +1233,29 @@ input {
 }
 
 @media (max-width: 374px) {
+  .reading-header-fixed {
+    gap: 8px;
+    padding-right: 16px;
+    padding-left: 16px;
+  }
+
+  .wordmark {
+    font-size: 24px;
+  }
+
+  .header-action {
+    font-size: 11px;
+  }
+
+  .language-switch {
+    gap: 4px;
+  }
+
+  .header-menu-button {
+    width: 28px;
+    height: 28px;
+  }
+
   .reading-shell {
     padding-left: 19px;
     padding-right: 19px;
@@ -745,6 +1276,20 @@ input {
 
   .verse-line {
     font-size: 21px;
+  }
+
+  .side-drawer {
+    width: 94vw;
+  }
+
+  .drawer-scroll,
+  .drawer-header {
+    padding-right: 18px;
+    padding-left: 18px;
+  }
+
+  .drawer-form-grid {
+    grid-template-columns: 1fr;
   }
 }
 

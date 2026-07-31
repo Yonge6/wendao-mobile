@@ -1,11 +1,32 @@
-import { FormEvent, useEffect, useMemo, useState } from "react";
-import { PaperPlaneIcon } from "@radix-ui/react-icons";
+import { FormEvent, type ReactNode, useEffect, useMemo, useState } from "react";
+import {
+  ArrowLeftIcon,
+  ChatBubbleIcon,
+  CheckIcon,
+  ChevronRightIcon,
+  ExternalLinkIcon,
+  HamburgerMenuIcon,
+  InfoCircledIcon,
+  MoonIcon,
+  PaperPlaneIcon,
+  PersonIcon,
+  SunIcon,
+} from "@radix-ui/react-icons";
 import "@fontsource/noto-sans-sc/400.css";
 import "@fontsource/noto-sans-sc/500.css";
 import "@fontsource/noto-serif-sc/400.css";
 import "@fontsource/noto-serif-sc/600.css";
 
 type Language = "zh" | "en";
+type Theme = "light" | "dark";
+type DrawerView = "home" | "profile" | "about" | "feedback";
+
+type LifeProfile = {
+  name: string;
+  birthDate: string;
+  birthTime: string;
+  birthPlace: string;
+};
 
 type RelatedItem = {
   title: string;
@@ -30,28 +51,51 @@ type Chapter = {
   en: ChapterCopy;
 };
 
+const HUMAN_DESIGN_URL = "https://human-design.wonderelian.com/";
+const PROFILE_STORAGE_KEY = "wendao-life-profile";
+const THEME_STORAGE_KEY = "wendao-theme";
+const emptyProfile: LifeProfile = { name: "", birthDate: "", birthTime: "", birthPlace: "" };
+
+function loadProfile(): LifeProfile {
+  if (typeof window === "undefined") return emptyProfile;
+
+  try {
+    const stored = window.localStorage.getItem(PROFILE_STORAGE_KEY);
+    return stored ? { ...emptyProfile, ...JSON.parse(stored) } : emptyProfile;
+  } catch {
+    return emptyProfile;
+  }
+}
+
+function loadTheme(): Theme {
+  if (typeof window === "undefined") return "light";
+  const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
+  if (stored === "light" || stored === "dark") return stored;
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+
 const chapters: Chapter[] = [
   {
     id: 8,
     silkOrder: "44",
     zh: {
-      eyebrow: "帛书校订本 · 对应今本第八章",
+      eyebrow: "帛书乙本 · 对应今本第八章",
       title: "上善如水",
       verse: [
-        "上善如水，",
-        "水善利万物而有静。",
-        "居众人之所恶，",
+        "上善如水。",
+        "水善利万物而有争，",
+        "居众人之所亚，",
         "故几于道矣。",
         "居善地，心善渊，",
         "予善天，言善信，",
-        "政善治，事善能，",
+        "正善治，事善能，",
         "动善时。",
         "夫唯不争，故无尤。",
       ],
       pinyin: [
         ["shàng", "shàn", "rú", "shuǐ"],
-        ["shuǐ", "shàn", "lì", "wàn", "wù", "ér", "yǒu", "jìng"],
-        ["jū", "zhòng", "rén", "zhī", "suǒ", "wù"],
+        ["shuǐ", "shàn", "lì", "wàn", "wù", "ér", "yǒu", "zhēng"],
+        ["jū", "zhòng", "rén", "zhī", "suǒ", "yà"],
         ["gù", "jī", "yú", "dào", "yǐ"],
         ["jū", "shàn", "dì", "xīn", "shàn", "yuān"],
         ["yǔ", "shàn", "tiān", "yán", "shàn", "xìn"],
@@ -59,7 +103,7 @@ const chapters: Chapter[] = [
         ["dòng", "shàn", "shí"],
         ["fū", "wéi", "bù", "zhēng", "gù", "wú", "yóu"],
       ],
-      variant: "本页据所附校订本作“如水 / 有静 / 所恶” · 甲本“治水” · 乙本“如水” · 王弼本“若水”",
+      variant: "乙本原文保留“有争 / 所亚 / 正善治” · 通行校读多作“不争 / 所恶 / 政善治” · 王弼本作“若水”",
       explanation: [
         "最接近道的善，像水。它滋养万物，却不与万物争先；它总是流向低处，安静地停在人们不愿停留的位置。",
         "为什么用水来讲“道”？水没有固定形状，却始终保有自己的性质；它能顺着环境改变路径，也能用漫长而持续的力量改变环境。柔软在这里不是脆弱，而是一种不被单一姿态困住的能力。",
@@ -92,14 +136,14 @@ const chapters: Chapter[] = [
           body: "有些行动太早会耗散，太晚会错过。先观察局面是否已经具备条件：信息够不够、身体是否准备好、关系里是否出现了可以流动的缝隙。",
         },
         {
-          title: "你的出厂设置",
+          title: "你的人生说明书",
           body: "你习惯先回应世界，再照顾自己。把一小部分注意力留给内心真正的水位：此刻的顺应来自清醒，还是来自害怕失去？个性化结果会帮助你辨认两者，而不会替你做决定。",
         },
       ],
       action: "慢三次呼吸，再回应。把答案放慢一点，让真实的自己先出现。",
     },
     en: {
-      eyebrow: "Mawangdui Silk Text A · Received Chapter 8",
+      eyebrow: "Mawangdui Silk Text B · Received Chapter 8",
       title: "The Highest Good Is Like Water",
       verse: [
         "The highest good is like water.",
@@ -112,7 +156,7 @@ const chapters: Chapter[] = [
         "In movement, the right time.",
         "Because it does not contend, it incurs no blame.",
       ],
-      variant: "Edited silk reading shown in full · Silk A: “govern water” · Silk B: “like water” · Wang Bi: “as water”",
+      variant: "Silk B preserves “there is contention / what people disdain” · Common collation reads “without contention” · Wang Bi begins “as water”",
       explanation: [
         "The goodness closest to the Way behaves like water. It nourishes everything without racing to be first, and quietly settles in the low places others avoid.",
         "Why does water illuminate the Way? It has no fixed shape, yet never loses its nature. It changes course with its surroundings and, through patient continuity, also changes those surroundings. Here, softness means freedom from being trapped in a single posture.",
@@ -145,7 +189,7 @@ const chapters: Chapter[] = [
           body: "Acting too early can scatter energy; acting too late can miss the opening. Notice whether the information, your body, and the relationship have formed enough of a channel for movement.",
         },
         {
-          title: "Your native pattern",
+          title: "Your life manual",
           body: "You may respond to the world before checking on yourself. Keep attention on your inner waterline: is this adaptation coming from clarity, or fear of loss? Personalization can help you distinguish them without deciding for you.",
         },
       ],
@@ -156,23 +200,23 @@ const chapters: Chapter[] = [
     id: 9,
     silkOrder: "45",
     zh: {
-      eyebrow: "帛书校订本 · 对应今本第九章",
-      title: "持而盈之",
+      eyebrow: "帛书乙本 · 对应今本第九章",
+      title: "植而盈之",
       verse: [
-        "持而盈之，不若其已。",
-        "揣而锐之，不可长保也。",
-        "金玉盈室，莫之能守也。",
-        "富贵而骄，自遗其咎也。",
+        "植而盈之，不若其已；",
+        "锻而允之，不可长葆也。",
+        "金玉盈室，莫之能守也；",
+        "贵富而骄，自遗咎也。",
         "功遂身退，天之道也。",
       ],
       pinyin: [
-        ["chí", "ér", "yíng", "zhī", "bù", "ruò", "qí", "yǐ"],
-        ["chuǎi", "ér", "ruì", "zhī", "bù", "kě", "cháng", "bǎo", "yě"],
+        ["zhí", "ér", "yíng", "zhī", "bù", "ruò", "qí", "yǐ"],
+        ["duàn", "ér", "yǔn", "zhī", "bù", "kě", "cháng", "bǎo", "yě"],
         ["jīn", "yù", "yíng", "shì", "mò", "zhī", "néng", "shǒu", "yě"],
-        ["fù", "guì", "ér", "jiāo", "zì", "yí", "qí", "jiù", "yě"],
+        ["guì", "fù", "ér", "jiāo", "zì", "yí", "jiù", "yě"],
         ["gōng", "suì", "shēn", "tuì", "tiān", "zhī", "dào", "yě"],
       ],
-      variant: "帛书乙本作“植 / 锻而允 / 长葆 / 贵富” · 王弼本作“持 / 揣而锐 / 长保 / 富贵”",
+      variant: "本页直录乙本“植 / 锻而允 / 长葆 / 贵富” · 王弼本作“持 / 揣而锐 / 长保 / 富贵”",
       explanation: [
         "已经满了还要继续加，锋芒已经很盛还要反复磨砺，都难以长久。老子提醒的不是拒绝成就，而是识别“够了”的时刻。",
         "完成之后懂得退一步，是给成果留下生长的空间，也是让自己免于被成功反过来占有。",
@@ -191,14 +235,14 @@ const chapters: Chapter[] = [
           body: "如果你已经得到核心结果，下一步也许不是扩张，而是整理、巩固与放下。",
         },
         {
-          title: "你的出厂设置",
+          title: "你的人生说明书",
           body: "当你很容易把责任揽到自己身上，“功遂身退”是在练习信任：事情可以在没有你持续控制时继续运转。",
         },
       ],
       action: "今天为一件事设定“足够线”，到线就停，不再追加证明。",
     },
     en: {
-      eyebrow: "Mawangdui Silk Text A · Received Chapter 9",
+      eyebrow: "Mawangdui Silk Text B · Received Chapter 9",
       title: "Holding Until It Overflows",
       verse: [
         "Hold and fill it—better to stop.",
@@ -226,7 +270,7 @@ const chapters: Chapter[] = [
           body: "If the essential result is already here, the next move may be to consolidate, organize, and release—not expand.",
         },
         {
-          title: "Your native pattern",
+          title: "Your life manual",
           body: "If you tend to carry every responsibility, stepping back is a practice of trust: life can continue without your constant control.",
         },
       ],
@@ -237,7 +281,7 @@ const chapters: Chapter[] = [
     id: 1,
     silkOrder: "1",
     zh: {
-      eyebrow: "帛书甲乙本校订 · 对应今本第一章",
+      eyebrow: "帛书乙本校补 · 对应今本第一章",
       title: "道可道也",
       verse: [
         "道可道也，非恒道也。",
@@ -245,9 +289,9 @@ const chapters: Chapter[] = [
         "无名万物之始也；",
         "有名万物之母也。",
         "故恒无欲也，以观其妙；",
-        "恒有欲也，以观其所徼。",
-        "两者同出，异名同谓。",
-        "玄之又玄，众妙之门。",
+        "恒又欲也，以观其所噭。",
+        "两者同出，异名同胃。",
+        "玄之又玄，众眇之门。",
       ],
       pinyin: [
         ["dào", "kě", "dào", "yě", "fēi", "héng", "dào", "yě"],
@@ -255,11 +299,11 @@ const chapters: Chapter[] = [
         ["wú", "míng", "wàn", "wù", "zhī", "shǐ", "yě"],
         ["yǒu", "míng", "wàn", "wù", "zhī", "mǔ", "yě"],
         ["gù", "héng", "wú", "yù", "yě", "yǐ", "guān", "qí", "miào"],
-        ["héng", "yǒu", "yù", "yě", "yǐ", "guān", "qí", "suǒ", "jiào"],
+        ["héng", "yòu", "yù", "yě", "yǐ", "guān", "qí", "suǒ", "jiào"],
         ["liǎng", "zhě", "tóng", "chū", "yì", "míng", "tóng", "wèi"],
-        ["xuán", "zhī", "yòu", "xuán", "zhòng", "miào", "zhī", "mén"],
+        ["xuán", "zhī", "yòu", "xuán", "zhòng", "miǎo", "zhī", "mén"],
       ],
-      variant: "帛书作“恒 / 也 / 所徼” · 王弼本作“常”，并省去部分“也”字",
+      variant: "乙本有缺损，本页据甲本校补缺字；保留乙本“又 / 噭 / 胃 / 眇” · 王弼本作“有 / 徼 / 谓 / 妙”",
       explanation: [
         "能够被说清楚的道理，都只是此刻的一个切面；能够被命名的身份，也不能涵盖一个生命的全部。",
         "名字帮助我们理解世界，却也容易把世界固定。保留一点“不急着定义”的空间，变化才有可能被看见。",
@@ -278,14 +322,14 @@ const chapters: Chapter[] = [
           body: "你不需要立刻为不确定找到一个名字。允许暂时不知道，往往比仓促下结论更接近事实。",
         },
         {
-          title: "你的出厂设置",
+          title: "你的人生说明书",
           body: "人类图等工具可以成为观察你的镜子，却不应成为限制你的围墙。结果用来增加选择，不是替你做决定。",
         },
       ],
       action: "把一个“我就是……”改写成“我最近常常……”，给自己留出变化的余地。",
     },
     en: {
-      eyebrow: "Mawangdui Silk Text A · Received Chapter 1",
+      eyebrow: "Mawangdui Silk Text B, lacunae supplied · Received Chapter 1",
       title: "A Way That Can Be Spoken",
       verse: [
         "A way that can be spoken is not the enduring Way.",
@@ -316,7 +360,7 @@ const chapters: Chapter[] = [
           body: "You do not need to name every uncertainty immediately. Allowing yourself not to know can be more truthful than a hurried conclusion.",
         },
         {
-          title: "Your native pattern",
+          title: "Your life manual",
           body: "Human Design and similar tools can be mirrors, not walls. Use the result to widen your choices—not to make the choice for you.",
         },
       ],
@@ -383,7 +427,7 @@ type WebSheetProps = {
   onOpenChange: (open: boolean) => void;
   title: string;
   description?: string;
-  children: React.ReactNode;
+  children: ReactNode;
 };
 
 function WebSheet({ open, onOpenChange, title, description, children }: WebSheetProps) {
@@ -426,17 +470,330 @@ function WebSheet({ open, onOpenChange, title, description, children }: WebSheet
   );
 }
 
+type SideDrawerProps = {
+  open: boolean;
+  onClose: () => void;
+  language: Language;
+  view: DrawerView;
+  onViewChange: (view: DrawerView) => void;
+  theme: Theme;
+  onThemeChange: (theme: Theme) => void;
+  profile: LifeProfile;
+  profileDraft: LifeProfile;
+  onProfileDraftChange: (profile: LifeProfile) => void;
+  onProfileSave: (event: FormEvent) => void;
+  profileSaved: boolean;
+  feedback: string;
+  onFeedbackChange: (feedback: string) => void;
+};
+
+function SideDrawer({
+  open,
+  onClose,
+  language,
+  view,
+  onViewChange,
+  theme,
+  onThemeChange,
+  profile,
+  profileDraft,
+  onProfileDraftChange,
+  onProfileSave,
+  profileSaved,
+  feedback,
+  onFeedbackChange,
+}: SideDrawerProps) {
+  const isZh = language === "zh";
+  const profileComplete = Boolean(profile.name && profile.birthDate && profile.birthTime && profile.birthPlace);
+
+  useEffect(() => {
+    if (!open) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [onClose, open]);
+
+  if (!open) return null;
+
+  const headerTitle = view === "home"
+    ? (isZh ? "你的空间" : "Your space")
+    : view === "profile"
+      ? (isZh ? "人生说明书" : "Life manual")
+      : view === "about"
+        ? (isZh ? "关于问道" : "About Wendao")
+        : (isZh ? "意见反馈" : "Feedback");
+
+  const feedbackUrl = `https://github.com/Yonge6/wendao-mobile/issues/new?title=${encodeURIComponent(
+    isZh ? "问道产品反馈" : "Wendao feedback",
+  )}&body=${encodeURIComponent(feedback)}`;
+
+  return (
+    <div className="drawer-layer">
+      <button
+        type="button"
+        className="drawer-backdrop"
+        aria-label={isZh ? "关闭菜单" : "Close menu"}
+        onClick={onClose}
+      />
+      <aside className="side-drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title">
+        <header className="drawer-header">
+          {view !== "home" ? (
+            <button
+              type="button"
+              className="drawer-icon-button"
+              aria-label={isZh ? "返回" : "Back"}
+              onClick={() => onViewChange("home")}
+            >
+              <ArrowLeftIcon />
+            </button>
+          ) : <span className="drawer-orbit" aria-hidden="true" />}
+          <div>
+            <span className="drawer-brand">问道 · WENDAO</span>
+            <h2 id="drawer-title">{headerTitle}</h2>
+          </div>
+          <button
+            type="button"
+            className="drawer-close"
+            aria-label={isZh ? "关闭菜单" : "Close menu"}
+            onClick={onClose}
+          >
+            ×
+          </button>
+        </header>
+
+        <div className="drawer-scroll">
+          {view === "home" ? (
+            <>
+              <section className="life-manual-card">
+                <span className="drawer-kicker">{isZh ? "你的人生说明书" : "Your life manual"}</span>
+                <h3>
+                  {profileComplete
+                    ? (isZh ? `${profile.name}，资料已保存` : `${profile.name}, your details are saved`)
+                    : (isZh ? "从认识自己的起点开始" : "Begin with the facts of your birth")}
+                </h3>
+                <p>
+                  {profileComplete
+                    ? `${profile.birthDate} · ${profile.birthTime} · ${profile.birthPlace}`
+                    : (isZh
+                      ? "出生日期、准确时间和地点，会成为个性化解读的基础。"
+                      : "Birth date, exact time, and place form the basis of your personal reading.")}
+                </p>
+                <button type="button" className="drawer-primary" onClick={() => onViewChange("profile")}>
+                  <PersonIcon />
+                  {profileComplete
+                    ? (isZh ? "查看与修改资料" : "Review and edit")
+                    : (isZh ? "录入出生信息" : "Enter birth details")}
+                </button>
+                <a className="drawer-secondary" href={HUMAN_DESIGN_URL} target="_blank" rel="noreferrer">
+                  {isZh ? "生成并查看详细解读" : "Generate a detailed reading"}
+                  <ExternalLinkIcon />
+                </a>
+              </section>
+
+              <nav className="drawer-nav" aria-label={isZh ? "更多功能" : "More features"}>
+                <button type="button" onClick={() => onViewChange("profile")}>
+                  <span className="drawer-nav-icon"><PersonIcon /></span>
+                  <span>
+                    <strong>{isZh ? "人生说明书" : "Life manual"}</strong>
+                    <small>{isZh ? "出生资料与个性化基础" : "Birth details and personalization"}</small>
+                  </span>
+                  <ChevronRightIcon />
+                </button>
+                <a href={HUMAN_DESIGN_URL} target="_blank" rel="noreferrer">
+                  <span className="drawer-nav-icon"><ExternalLinkIcon /></span>
+                  <span>
+                    <strong>{isZh ? "人类图详细解读" : "Human Design reading"}</strong>
+                    <small>human-design.wonderelian.com</small>
+                  </span>
+                  <ChevronRightIcon />
+                </a>
+                <div className="drawer-nav-row">
+                  <span className="drawer-nav-icon">{theme === "dark" ? <MoonIcon /> : <SunIcon />}</span>
+                  <span>
+                    <strong>{isZh ? "夜间阅读" : "Night reading"}</strong>
+                    <small>{isZh ? "降低亮度，保留纸墨层次" : "Lower luminance, keep the ink texture"}</small>
+                  </span>
+                  <button
+                    type="button"
+                    className={`theme-toggle ${theme === "dark" ? "is-on" : ""}`}
+                    role="switch"
+                    aria-checked={theme === "dark"}
+                    aria-label={isZh ? "切换夜间阅读" : "Toggle night reading"}
+                    onClick={() => onThemeChange(theme === "dark" ? "light" : "dark")}
+                  >
+                    <span />
+                  </button>
+                </div>
+                <button type="button" onClick={() => onViewChange("about")}>
+                  <span className="drawer-nav-icon"><InfoCircledIcon /></span>
+                  <span>
+                    <strong>{isZh ? "关于问道" : "About Wendao"}</strong>
+                    <small>{isZh ? "我们如何理解原典与人生" : "How we approach text and life"}</small>
+                  </span>
+                  <ChevronRightIcon />
+                </button>
+                <button type="button" onClick={() => onViewChange("feedback")}>
+                  <span className="drawer-nav-icon"><ChatBubbleIcon /></span>
+                  <span>
+                    <strong>{isZh ? "意见反馈" : "Feedback"}</strong>
+                    <small>{isZh ? "告诉我们哪里可以更好" : "Help us make the reading better"}</small>
+                  </span>
+                  <ChevronRightIcon />
+                </button>
+              </nav>
+            </>
+          ) : null}
+
+          {view === "profile" ? (
+            <form className="drawer-form" onSubmit={onProfileSave}>
+              <p className="drawer-intro">
+                {isZh
+                  ? "这些信息保存在当前浏览器中，用于构建与你有关的阅读语境。真正的人类图计算和详细解读会在 Pluto 人生使用说明书中完成。"
+                  : "These details stay in this browser and shape your reading context. Chart calculation and the full interpretation happen in Pluto Life Manual."}
+              </p>
+              <label>
+                <span>{isZh ? "姓名或称呼" : "Name"}</span>
+                <input
+                  required
+                  value={profileDraft.name}
+                  onChange={(event) => onProfileDraftChange({ ...profileDraft, name: event.target.value })}
+                  placeholder={isZh ? "我们该如何称呼你" : "How should we address you?"}
+                />
+              </label>
+              <div className="drawer-form-grid">
+                <label>
+                  <span>{isZh ? "出生日期" : "Birth date"}</span>
+                  <input
+                    required
+                    type="date"
+                    value={profileDraft.birthDate}
+                    onChange={(event) => onProfileDraftChange({ ...profileDraft, birthDate: event.target.value })}
+                  />
+                </label>
+                <label>
+                  <span>{isZh ? "出生时间" : "Birth time"}</span>
+                  <input
+                    required
+                    type="time"
+                    value={profileDraft.birthTime}
+                    onChange={(event) => onProfileDraftChange({ ...profileDraft, birthTime: event.target.value })}
+                  />
+                </label>
+              </div>
+              <label>
+                <span>{isZh ? "出生地点" : "Birth place"}</span>
+                <input
+                  required
+                  value={profileDraft.birthPlace}
+                  onChange={(event) => onProfileDraftChange({ ...profileDraft, birthPlace: event.target.value })}
+                  placeholder={isZh ? "城市、区县或地区" : "City, district, or region"}
+                />
+              </label>
+              <p className="privacy-note">
+                {isZh
+                  ? "隐私说明：问道当前只在你的浏览器里保存这份资料，不会在提交时上传。"
+                  : "Privacy: Wendao currently stores these details only in your browser and does not upload them on save."}
+              </p>
+              <button type="submit" className="drawer-primary drawer-save">
+                {profileSaved ? <CheckIcon /> : <PersonIcon />}
+                {profileSaved ? (isZh ? "已保存" : "Saved") : (isZh ? "保存人生资料" : "Save details")}
+              </button>
+              <a className="drawer-secondary drawer-reading-link" href={HUMAN_DESIGN_URL} target="_blank" rel="noreferrer">
+                {isZh ? "前往 Pluto 生成基础与详细解读" : "Open Pluto for basic and detailed readings"}
+                <ExternalLinkIcon />
+              </a>
+            </form>
+          ) : null}
+
+          {view === "about" ? (
+            <section className="drawer-prose">
+              <span className="drawer-kicker">{isZh ? "真实自己，流动人生" : "True to yourself. Flow with life."}</span>
+              <h3>{isZh ? "经典不是答案库，而是一面活的镜子。" : "A classic is not an answer bank. It is a living mirror."}</h3>
+              <p>
+                {isZh
+                  ? "问道以马王堆帛书乙本为主要文本，王弼本及其他版本作为参照。我们会明确标出缺损、校补和异文，不把不同版本静默拼成一个“唯一原文”。"
+                  : "Wendao uses Mawangdui Silk Text B as its primary witness, with Wang Bi and other editions for comparison. Lacunae, supplied text, and variants are identified rather than silently merged."}
+              </p>
+              <p>
+                {isZh
+                  ? "解释帮助初学者进入原典；“与你有关”把思想放回焦虑、关系与人生选择；人生说明书只用于增加理解和选择，不替任何人决定。"
+                  : "Meaning helps newcomers enter the text; For You brings it into anxiety, relationships, and choice. Your life manual widens understanding without deciding for you."}
+              </p>
+              <div className="about-method">
+                <span>01</span><p>{isZh ? "原典与版本透明" : "Transparent textual witnesses"}</p>
+                <span>02</span><p>{isZh ? "解释清楚但不简化思想" : "Clarity without flattening the thought"}</p>
+                <span>03</span><p>{isZh ? "启发行动但不制造依赖" : "Actionable guidance without dependence"}</p>
+              </div>
+            </section>
+          ) : null}
+
+          {view === "feedback" ? (
+            <section className="drawer-feedback">
+              <p className="drawer-intro">
+                {isZh
+                  ? "可以告诉我们原文、拼音、解释、设计或使用体验中任何不准确、不舒服的地方。"
+                  : "Tell us what feels inaccurate or uncomfortable in the text, Pinyin, interpretation, design, or interaction."}
+              </p>
+              <label>
+                <span>{isZh ? "你的反馈" : "Your feedback"}</span>
+                <textarea
+                  rows={7}
+                  value={feedback}
+                  onChange={(event) => onFeedbackChange(event.target.value)}
+                  placeholder={isZh ? "请写下你看到的问题，或希望增加的内容…" : "Describe the issue or what you would like to see…"}
+                />
+              </label>
+              <a
+                className={`drawer-primary feedback-submit ${feedback.trim() ? "" : "is-disabled"}`}
+                href={feedback.trim() ? feedbackUrl : undefined}
+                target="_blank"
+                rel="noreferrer"
+                aria-disabled={!feedback.trim()}
+              >
+                <ChatBubbleIcon />
+                {isZh ? "提交到项目反馈" : "Open project feedback"}
+              </a>
+              <small className="feedback-note">
+                {isZh ? "将打开 GitHub 反馈页，并自动带入你写的内容。" : "This opens GitHub with your message pre-filled."}
+              </small>
+            </section>
+          ) : null}
+        </div>
+
+        <footer className="drawer-footer">
+          {isZh ? "帛书乙本为主 · 王弼本及其他版本参照" : "Silk Text B first · Wang Bi and other editions compared"}
+        </footer>
+      </aside>
+    </div>
+  );
+}
+
 export default function Prototype() {
   const [language, setLanguage] = useState<Language>("zh");
   const [chapterId, setChapterId] = useState(8);
   const [directoryOpen, setDirectoryOpen] = useState(false);
   const [insightOpen, setInsightOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerView, setDrawerView] = useState<DrawerView>("home");
   const [question, setQuestion] = useState("");
   const [submittedQuestion, setSubmittedQuestion] = useState("");
   const [isReadingScrolled, setIsReadingScrolled] = useState(false);
+  const [theme, setTheme] = useState<Theme>(loadTheme);
+  const [profile, setProfile] = useState<LifeProfile>(loadProfile);
+  const [profileDraft, setProfileDraft] = useState<LifeProfile>(loadProfile);
+  const [profileSaved, setProfileSaved] = useState(false);
+  const [feedback, setFeedback] = useState("");
   const orderedChapters = useMemo(() => reorderFrom(chapterId), [chapterId]);
   const isZh = language === "zh";
   const activeCopy = chapters.find((chapter) => chapter.id === chapterId)?.[language] ?? chapters[0][language];
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "dark" ? "#10191b" : "#f7f1e6");
+  }, [theme]);
 
   useEffect(() => {
     const scroll = document.querySelector<HTMLElement>("[data-testid='mobile-scroll']");
@@ -467,6 +824,27 @@ export default function Prototype() {
     if (!nextQuestion) return;
     setSubmittedQuestion(nextQuestion);
     setInsightOpen(true);
+  };
+
+  const saveProfile = (event: FormEvent) => {
+    event.preventDefault();
+    const nextProfile = {
+      name: profileDraft.name.trim(),
+      birthDate: profileDraft.birthDate,
+      birthTime: profileDraft.birthTime,
+      birthPlace: profileDraft.birthPlace.trim(),
+    };
+    setProfile(nextProfile);
+    setProfileDraft(nextProfile);
+    window.localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(nextProfile));
+    setProfileSaved(true);
+    window.setTimeout(() => setProfileSaved(false), 1600);
+  };
+
+  const openDrawer = () => {
+    setProfileDraft(profile);
+    setDrawerView("home");
+    setDrawerOpen(true);
   };
 
   return (
@@ -506,6 +884,14 @@ export default function Prototype() {
             EN
           </button>
         </div>
+        <button
+          className="header-menu-button"
+          type="button"
+          aria-label={isZh ? "打开更多功能" : "Open more"}
+          onClick={openDrawer}
+        >
+          <HamburgerMenuIcon />
+        </button>
       </header>
 
       <div className="app-screen" data-testid="mobile-scroll">
@@ -607,12 +993,12 @@ export default function Prototype() {
 
           <footer className="reading-footer">
             <span>{isZh ? "认识 · 接纳 · 成为 · 活出" : "Know · Accept · Become · Live"}</span>
-            <small>{isZh ? "帛书为主 · 多版本互校" : "Silk text first · Versions compared"}</small>
+            <small>{isZh ? "帛书乙本为主 · 多版本互校" : "Silk Text B first · Versions compared"}</small>
           </footer>
         </main>
       </div>
 
-      {!directoryOpen && !insightOpen ? (
+      {!directoryOpen && !insightOpen && !drawerOpen ? (
         <form
           className={`ai-composer ${isReadingScrolled ? "is-reading" : ""}`}
           onSubmit={submitQuestion}
@@ -685,10 +1071,27 @@ export default function Prototype() {
           </p>
           <div className="source-disclosure">
             <span>{isZh ? "回应依据" : "Response basis"}</span>
-            <p>{isZh ? "本章原典 · 你的提问 · 已完成的出厂设置信息" : "This chapter · Your question · Your completed native-pattern profile"}</p>
+            <p>{isZh ? "本章原典 · 你的提问 · 已完成的人生说明书信息" : "This chapter · Your question · Your completed life-manual profile"}</p>
           </div>
         </div>
       </WebSheet>
+
+      <SideDrawer
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        language={language}
+        view={drawerView}
+        onViewChange={setDrawerView}
+        theme={theme}
+        onThemeChange={setTheme}
+        profile={profile}
+        profileDraft={profileDraft}
+        onProfileDraftChange={setProfileDraft}
+        onProfileSave={saveProfile}
+        profileSaved={profileSaved}
+        feedback={feedback}
+        onFeedbackChange={setFeedback}
+      />
     </>
   );
 }

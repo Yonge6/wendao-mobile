@@ -49,14 +49,17 @@ See `src/mobile/COMPONENTS.md` for the full component and gesture contract.
 
 - The public GitHub Pages build is a normal responsive H5 reading page, not a simulated phone or app preview. It fills the mobile browser naturally and becomes a restrained 720 px reading column on larger screens; do not show device bezels, a device picker, a mock status bar, or a simulated keyboard on the public surface.
 - Treat `最终方向/方案1最终精修-目录版.png` as the visual source of truth: mist-gold xuan paper, pale ink mountains, deep teal typography, and restrained antique-gold rules.
+- Keep the paper base seamless and render the ink-mountain art as one fixed, non-repeating, low-contrast viewport layer. Never repeat the combined paper-and-mountain bitmap vertically; that creates visible horizontal seams in long chapters.
 - Reading is the primary experience. Keep the order `原文 / Text` → `解释 / Meaning` → `与你有关 / For you`, with rich long-form scrolling and uninterrupted continuation into the next chapter.
 - Keep `目录 / Contents`, `偶遇一章 / Chance`, and whole-page `中 / EN` switching in the reading header.
+- Keep a right-side `更多 / More` drawer containing `人生说明书 / Life manual`, the external Pluto Human Design detailed reading, night reading, about, and feedback. Birth details saved inside Wendao remain local to the browser unless a future authorized backend is explicitly added.
+- Support a persistent day/night reading mode. Both modes must retain the paper-and-ink character and meet comfortable long-form reading contrast.
 - Keep the AI composer visually quiet and fixed above the safe area or simulated keyboard. Hide it whenever a phone-scoped bottom sheet is open.
 - Keep the top reading controls fixed while the scripture scrolls. When the reader moves down the text, lower the AI composer's opacity until it is hovered or focused.
 - Display small tone-marked Hanyu Pinyin above every Chinese character in the original scripture text; do not add pinyin to translations or the English reading mode.
 - Never present a chapter excerpt as the chapter's original text. Every chapter screen must show the complete selected-edition text, identify whether it is a literal witness or an edited collation, and keep a visible full-text line count.
-- For Chapter 8, follow the user-supplied comparison book's edited main reading: `上善如水，水善利万物而有静……夫唯不争，故无尤。` Keep the Silk A, Silk B, and Wang Bi opening variants explicit rather than silently mixing them.
-- Mawangdui silk text is primary; Wang Bi and other versions are comparative notes. Human Design is presented only as a personalized “native pattern” result, never as a bodygraph and never as a deterministic verdict.
+- Use Mawangdui Silk Text B as the primary textual witness. Preserve its literal variant characters in the original-text block, label supplied text where the witness is damaged, and explain common collations separately rather than silently normalizing or mixing editions. Wang Bi and other versions are comparative notes.
+- Use `人生说明书 / Life manual`, not `出厂设置 / Native pattern`, for the personalized Human Design layer. Never render a bodygraph in Wendao and never present a personalized result as a deterministic verdict.
 - The product philosophy is “真实自己，流动人生 / True to yourself. Flow with life.” Personalization should widen choices rather than prescribe them.
 
 ## Keyboard Rule

@@ -19,11 +19,14 @@
 - Typography: Noto Serif SC continues to match the selected literati reading style. Tone-marked Pinyin is set in Noto Sans SC at 8 px, aligned above each Han character without competing with the scripture.
 - Spacing and layout: the fixed reading controls preserve the source header proportions. Extra vertical space introduced by Pinyin is consistent and keeps the original text dominant.
 - Colors and tokens: deep teal, antique gold, ivory paper, and ink-mountain tones remain consistent with the source.
-- Image quality: the generated xuan-paper and ink-mountain background remains sharp at the 393 × 852 target viewport with no stretching or visible seams.
+- Image quality: the xuan-paper and ink-mountain artwork is now a single fixed, non-repeating viewport layer over a seamless paper color. At `scrollTop: 650` and `scrollTop: 1370`, computed `background-repeat` remained `no-repeat, no-repeat` and visual review found no horizontal join.
 - Copy and content: Pinyin appears only on Chinese original scripture; explanations, personalized guidance, and English mode remain unchanged.
 - Textual completeness: all three prototype chapters now display the complete selected-edition text rather than a leading excerpt, with a visible `全文 · N句` marker. Chapter 8 contains all nine displayed lines through `夫唯不争，故无尤。`.
-- Edition labeling: the primary reading is identified as a silk-text collation. Chapter 8 follows the supplied comparison book's `上善如水 / 有静` reading, while the Silk A, Silk B, and Wang Bi opening variants are stated separately.
+- Edition labeling: the primary reading is now the Mawangdui Silk Text B witness. Chapter 8 directly preserves `上善如水 / 有争 / 所亚 / 正善治`; the common collation and Wang Bi variants are stated separately. Lacunae in Chapter 1 are explicitly labeled as supplied from Silk Text A rather than silently normalized.
 - Interaction state: after scrolling 44 px, the composer transitions to 50% opacity and returns to full opacity on hover or focus. The top action area remains fixed and usable.
+- Theme state: day and night modes both preserve readable scripture contrast. The corrected computed verse colors are `rgb(18, 63, 73)` in day mode and `rgb(219, 231, 227)` in night mode.
+- Personal space: the right drawer exposes Life Manual profile entry/editing, the external Pluto Human Design interpretation, persistent night mode, About, and Feedback. The profile form states that its data is stored in the current browser; no BodyGraph illustration is rendered.
+- Terminology: every visible occurrence of `你的出厂设置` has been replaced with `你的人生说明书`.
 - Responsive behavior: the reading surface fills the mobile viewport without horizontal overflow; on desktop it remains a restrained 720 px column rather than stretching the scripture across the window.
 - Accessibility: controls retain semantic button labels, Chinese and English modes preserve language attributes, and no content is hidden by the fixed header or composer.
 - Browser console: no errors or warnings.
@@ -52,5 +55,8 @@
 - Switch back to Chinese and confirm all Pinyin returns.
 - Confirm the public surface contains no device preview controls or phone-frame markup.
 - Open the H5 directory sheet, select a chapter, submit a question through the native input, and read the AI response sheet.
+- Open and close the right drawer at desktop and `393 × 852`; enter the Life Manual form; navigate to About and Feedback; confirm no horizontal overflow.
+- Toggle night reading on and off and verify the theme-aware scripture, drawer, header, and composer surfaces.
+- Scroll the long Chapter 8 interpretation through the previously visible seam location and confirm the fixed background remains continuous.
 
 final result: passed
