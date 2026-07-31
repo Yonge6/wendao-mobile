@@ -3,6 +3,7 @@ import { markReconstructionSupplies, reconstructedTokens, requiredSupplyDetails 
 import { literalTranslationFor } from "./chapter-literal-translations.mjs";
 import { pinyinLinesForChapter } from "./chapter-pinyin.mjs";
 import { AUTO_FIX_NOTE } from "./silk-auto-proofread-core.mjs";
+import { inspirationFor } from "./chapter-inspirations.mjs";
 
 const ACCESS_DATE = "2026-08-01";
 const TAOLIB_URL = "https://raw.githubusercontent.com/xinetzone/tao/main/docs/general/philosophy/laozi-boshu/appendix/phonetic.md";
@@ -224,6 +225,7 @@ function chapterCopy(id, silkOrder, reading, literal, received, english) {
     throw new Error(`Chapter ${id}: ${lineByLineTranslation.length} translations for ${reconstructedVerse.length} reconstructed lines`);
   }
   const [topicZh, topicEn] = topics[id - 1];
+  const inspiration = inspirationFor(id);
   const anchor = correctedReading[0].replace(/[。！？；]/g, "").slice(0, 12);
   // Chapter 16's visible-witness correction must not rewrite the already
   // published modern interpretation or life-practice copy in this audit.
@@ -272,6 +274,7 @@ function chapterCopy(id, silkOrder, reading, literal, received, english) {
         { title: "关系｜把人与当下的行为分开", body: `别用一次反应定义整个人。围绕“${topicZh}”只谈可观察的事实、需要和边界，让关系仍有变化的空间。` },
         { title: "选择｜辨认哪个选项更少违背自己", body: `不只比较哪个选项更快、更光鲜，也比较它们是否与“${topicZh}”相容，是否需要你长期扮演一个不是自己的人。` },
         { title: "行动｜先做最小可逆的一步", body: `把“${topicZh}”变成一个可观察的小实验：不急着一次到位，先做一步，再用实际反馈决定下一步。` },
+        { title: "对我们的启发", body: inspiration.zh },
         { title: "你的人生说明书", body: `这一章的个人化镜头是“${topicZh}”。验证后的人类图会把你的类型、策略、权威与侧写带入这一主题，用来拓宽选择，不替你做决定。` },
       ],
       action: `今天用三次慢呼吸读一遍“${modernCopyAnchor}”，然后写下一个与“${topicZh}”有关的最小行动。`,
@@ -291,6 +294,7 @@ function chapterCopy(id, silkOrder, reading, literal, received, english) {
         { title: "Relationships · Separate a person from one response", body: `Speak about observable facts, needs, and boundaries through the lens of ${topicEn}. Leave room for the relationship and the people in it to change.` },
         { title: "Choice · Notice which option asks for less self-betrayal", body: `Compare more than speed or prestige. Ask which option can live with ${topicEn}, and which would require you to perform a false self for a long time.` },
         { title: "Action · Take the smallest reversible step", body: `Turn ${topicEn} into a small experiment. Take one reversible step, observe the real response, and let that evidence shape the next move.` },
+        { title: "What this teaches us", body: inspiration.en },
         { title: "Your life manual", body: `The personalized lens for this chapter is ${topicEn}. After chart verification, your type, strategy, authority, and profile are brought into this distinct theme to widen choices, never to issue a verdict.` },
       ],
       action: `Read the opening “${modernCopyAnchor}” with three slow breaths, then write one low-effort action related to ${topicEn}.`,

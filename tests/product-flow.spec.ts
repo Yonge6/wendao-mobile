@@ -214,6 +214,7 @@ test("representative supplied chapters expose accessible reading text, copy clea
       await page.getByRole("button", { name: "目录", exact: true }).click();
       await page.locator(`.directory-item[data-chapter-id="${id}"]`).click();
       const chapter = page.locator(`.chapter-current[data-chapter-id="${id}"]`);
+      await expect(chapter.getByRole("heading", { name: "对我们的启发", exact: true })).toBeVisible();
       const lineLabels = await chapter.locator(".verse-line").evaluateAll((lines) => lines.map((line) => line.getAttribute("aria-label")));
       expect(lineLabels.every((line) => line && !/[a-zāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]/i.test(line))).toBe(true);
       const overflow = await page.getByTestId("mobile-scroll").evaluate((element) => element.scrollWidth - element.clientWidth);
@@ -240,6 +241,19 @@ test("representative supplied chapters expose accessible reading text, copy clea
       await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(expectedCopy);
     }
   }
+});
+
+test("shared inspiration is bilingual and remains visible without a life-manual profile", async ({ page }) => {
+  await page.goto("/");
+  const chapter = page.locator('.chapter-current[data-chapter-id="8"]');
+  await expect(chapter.getByRole("heading", { name: "对我们的启发", exact: true })).toBeVisible();
+  await expect(chapter.getByText(/向下不等于失败/)).toBeVisible();
+  await expect(chapter.getByRole("heading", { name: "你的人生说明书", exact: true })).toHaveCount(0);
+
+  await page.getByRole("button", { name: "EN", exact: true }).click();
+  await expect(chapter.getByRole("heading", { name: "What this teaches us", exact: true })).toBeVisible();
+  await expect(chapter.getByText(/going low is not failure/)).toBeVisible();
+  await expect(chapter.getByRole("heading", { name: "Your life manual", exact: true })).toHaveCount(0);
 });
 
 for (const width of [320, 390, 720]) {
