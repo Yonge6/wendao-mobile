@@ -82,3 +82,43 @@ test("refreshes progressive reading after language and text-size changes", async
   await expect(page.locator("article.chapter")).toHaveCount(1);
   await expect.poll(async () => reading.evaluate((element) => element.scrollTop)).toBeLessThan(4);
 });
+
+test("covers all 81 chapters through contents, chance, and progressive reading", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator("article.chapter")).toHaveCount(1);
+  await expect(page.locator("article.chapter")).toHaveAttribute("data-chapter-id", "8");
+
+  await page.getByRole("button", { name: "目录", exact: true }).click();
+  const directoryItems = page.locator(".directory-item");
+  await expect(directoryItems).toHaveCount(81);
+  const ids = await directoryItems.evaluateAll((items) => items.map((item) => Number(item.getAttribute("data-chapter-id"))).sort((a, b) => a - b));
+  expect(ids).toEqual(Array.from({ length: 81 }, (_, index) => index + 1));
+
+  await page.locator('.directory-item[data-chapter-id="80"]').click();
+  await expect(page.locator("article.chapter")).toHaveCount(1);
+  await expect(page.locator("article.chapter")).toHaveAttribute("data-chapter-id", "80");
+
+  await page.getByRole("button", { name: "偶遇一章", exact: true }).click();
+  await expect(page.locator("article.chapter")).toHaveCount(1);
+  await expect(page.locator('article.chapter[data-chapter-id="80"]')).toHaveCount(0);
+
+  const reading = page.getByTestId("mobile-scroll");
+  await reading.evaluate((element) => { element.scrollTop = element.scrollHeight; });
+  await expect(page.locator("article.chapter")).toHaveCount(2);
+});
+
+for (const width of [320, 390, 720]) {
+  test(`${width}px reading has no horizontal overflow or detached punctuation`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/");
+    await expect(page.locator("article.chapter")).toHaveCount(1);
+    const overflow = await page.evaluate(() => ({
+      document: document.documentElement.scrollWidth - window.innerWidth,
+      reading: document.querySelector<HTMLElement>("[data-testid='mobile-scroll']")!.scrollWidth
+        - document.querySelector<HTMLElement>("[data-testid='mobile-scroll']")!.clientWidth,
+    }));
+    expect(overflow.document).toBeLessThanOrEqual(0);
+    expect(overflow.reading).toBeLessThanOrEqual(0);
+    await expect(page.locator(".verse-line-ruby > .verse-punctuation")).toHaveCount(0);
+  });
+}

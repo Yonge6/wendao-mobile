@@ -1,0 +1,40 @@
+{
+  "accessed": "2026-07-31",
+  "editorialPolicy": "Silk Text B is the primary witness. Readable text, supplies, literal witness, and received comparisons remain separate layers.",
+  "sources": [
+    {
+      "title": "Chinese Text Project: Mawangdui Laozi B",
+      "url": "https://ctext.org/mawangdui/laozi-b",
+      "role": "canonical online witness and parallel-text locator"
+    },
+    {
+      "title": "Silk B literal transcription mirror",
+      "url": "https://github.com/changlinli/daoist_similarities",
+      "role": "machine-auditable literal segments retaining lacuna markers"
+    },
+    {
+      "title": "Hunan Museum / Mawangdui collection context",
+      "url": "https://www.hnmuseum.com/",
+      "role": "institutional provenance and collection context"
+    },
+    {
+      "title": "Wang Bi received-text commentary (public-domain digital witness)",
+      "url": "https://github.com/shjwudp/shu/blob/61aa02363241bcf32574708f1ff06ed698fb646b/books/%E5%85%88%E7%A7%A6/%E9%81%93%E5%BE%B7%E7%BB%8F.txt",
+      "role": "received-text comparison; not used to overwrite Silk B silently"
+    },
+    {
+      "title": "Silk-text-order phonetic reading aid",
+      "url": "https://raw.githubusercontent.com/xinetzone/tao/main/docs/general/philosophy/laozi-boshu/appendix/phonetic.md",
+      "role": "reading-edition alignment and pronunciation cross-check; corrected where its chapter label conflicts with the text"
+    },
+    {
+      "title": "James Legge public-domain English translation",
+      "url": "https://www.gutenberg.org/ebooks/216",
+      "role": "English received-text comparison, openly distinguished from damaged Silk B"
+    }
+  ],
+  "knownSourceCorrections": [
+    "The reading aid labels its silk-order chapter 30 as received chapter 67; the text is received chapter 80 (Small state, few people). The import corrects it to 80 and the validator enforces unique chapters 1-81.",
+    "Automated received-text character alignment is an index for manual collation, not a scholarly critical apparatus."
+  ]
+}

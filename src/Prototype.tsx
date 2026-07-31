@@ -31,6 +31,7 @@ import {
   foundationalReading,
   type HumanDesignReadingChart,
 } from "./humanDesignReading";
+import { chapters, type ChapterCopy, type RelatedItem } from "./data/chapters";
 
 type Language = "zh" | "en";
 type Theme = "light" | "dark";
@@ -65,29 +66,6 @@ type AdminOverview = {
   feedback: Array<Record<string, unknown>>;
   conversations: Array<Record<string, unknown>>;
   eventBreakdown: Record<string, number>;
-};
-
-type RelatedItem = {
-  title: string;
-  body: string;
-};
-
-type ChapterCopy = {
-  eyebrow: string;
-  title: string;
-  verse: string[];
-  pinyin?: string[][];
-  variant: string;
-  explanation: RelatedItem[];
-  related: RelatedItem[];
-  action: string;
-};
-
-type Chapter = {
-  id: number;
-  silkOrder: string;
-  zh: ChapterCopy;
-  en: ChapterCopy;
 };
 
 const API_BASE = "https://pluto-human-design-api.vercel.app";
@@ -346,7 +324,7 @@ function personalizedAdvice(chapterId: number, chapter: ChapterCopy, chart: Char
     if (chapterId === 1) {
       return `Labels such as ${type} and ${authority} can help you observe yourself, but they are not your final name. Practice ${strategy} as an experiment rather than an identity: describe what your body is showing now, and leave room for tomorrow to reveal something different.`;
     }
-    return `Read “${chapter.title}” through your lived experiment as a ${type}: begin with ${strategy}, give ${authority} room to become clear, and test the chapter’s insight against what actually happens in your life.`;
+    return `For you as a ${type}, “${chapter.title}” becomes a distinct experiment: use ${strategy} to notice where this chapter's movement is already present, then let ${authority} clarify whether your next step belongs to its theme. Try the chapter's practice—“${chapter.action}”—and judge the insight by what actually changes, not by the label alone.`;
   }
   if (chapterId === 8) {
     return `对${type}的你来说，“如水”可以先从“${strategy}”开始：让局面来到面前，再把力量给真正有回应的方向。结合${authority}辨认哪一道缝隙有自然的流动。这里的柔软不是退让，而是改变形态，却不背离自己的方向。`;
@@ -357,7 +335,7 @@ function personalizedAdvice(chapterId: number, chapter: ChapterCopy, chart: Char
   if (chapterId === 1) {
     return `${type}、${authority}这些名字可以帮助你观察自己，却不是你的最终定义。把“${strategy}”当作一种生活实验，而不是新的身份标签：描述此刻身体正在呈现什么，也给明天的自己留下变化的空间。`;
   }
-  return `读《${chapter.title}》时，可以把它放回${type}的真实生活实验：从“${strategy}”开始，给${authority}足够的澄清空间，再用实际发生的经验检验这一章给你的启发。`;
+  return `对${type}的你，《${chapter.title}》是一项只属于本章主题的生活实验：先用“${strategy}”观察这股变化已经在哪里发生，再让${authority}澄清下一步是否真的与本章相应。试做“${chapter.action}”，用实际变化而不是身份标签检验它。`;
 }
 
 function questionResponse(question: string, chapter: ChapterCopy, chart: ChartSnapshot, language: Language) {
@@ -386,303 +364,6 @@ function publicPath() {
   const path = window.location.pathname.replace(/admin\/?$/, "");
   return path || "/";
 }
-
-const chapters: Chapter[] = [
-  {
-    id: 8,
-    silkOrder: "44",
-    zh: {
-      eyebrow: "帛书乙本校读 · 对应今本第八章",
-      title: "上善如水",
-      verse: [
-        "上善如水。",
-        "水善利万物而有静，",
-        "居众人之所恶，",
-        "故几于道矣。",
-        "居善地，心善渊，",
-        "予善天，言善信，",
-        "政善治，事善能，",
-        "动善时。",
-        "夫唯不争，故无尤。",
-      ],
-      pinyin: [
-        ["shàng", "shàn", "rú", "shuǐ"],
-        ["shuǐ", "shàn", "lì", "wàn", "wù", "ér", "yǒu", "jìng"],
-        ["jū", "zhòng", "rén", "zhī", "suǒ", "wù"],
-        ["gù", "jī", "yú", "dào", "yǐ"],
-        ["jū", "shàn", "dì", "xīn", "shàn", "yuān"],
-        ["yǔ", "shàn", "tiān", "yán", "shàn", "xìn"],
-        ["zhèng", "shàn", "zhì", "shì", "shàn", "néng"],
-        ["dòng", "shàn", "shí"],
-        ["fū", "wéi", "bù", "zhēng", "gù", "wú", "yóu"],
-      ],
-      variant: "校读说明：乙本字形作“有争 / 所亚 / 正善治”，本页依文义读作“有静 / 所恶 / 政善治” · 王弼本作“若水 / 不争 / 处众人之所恶”",
-      explanation: [
-        {
-          title: "直译｜水为什么近于道",
-          body: "最高层次的善像水：滋养万物而保持沉静，停留在众人厌恶的低处，所以接近于道。它居处得宜，内心深沉，给予顺应天时，言语守信，治理有序，做事有能力，行动合时。",
-        },
-        {
-          title: "思想｜柔软不是没有方向",
-          body: "水改变形态，却不丢失向低处流动、滋养万物的本性。这里的“不争”不是回避责任，而是减少无谓对抗，把力量留给真正重要的事情。",
-        },
-        {
-          title: "校读｜把字形与读法分开",
-          body: "帛书乙本保留早期借字。为了让初学者顺畅朗读，本页正文采用校读字“静、恶、政”，并在版本说明中保留乙本字形“争、亚、正”，不把校读结果冒充成帛书原貌。",
-        },
-      ],
-      related: [
-        {
-          title: "焦虑｜先回到低处",
-          body: "当焦虑催你立刻向上、向前、向别人证明时，先回到身体和眼前这一步。低处不是失败的位置，而是重新蓄水、看清方向的地方。",
-        },
-        {
-          title: "关系｜柔软，也守边界",
-          body: "你不必立刻赢得关系。先让局面重新流动，再决定靠近或离开；涉及核心价值和真实边界时，也要清楚表达。柔软不是委屈自己。",
-        },
-        {
-          title: "选择｜变形，不变心",
-          body: "适应不是没有原则。水可以成为溪流、雨雾或湖泊，改变的是路径和形态，不变的是它持续流动的本性。形式走不通时，换一种走法。",
-        },
-        {
-          title: "行动｜等水势形成",
-          body: "有些行动太早会耗散，太晚会错过。先观察信息是否足够、身体是否准备好、关系里是否出现了可以流动的缝隙，再把力量用出去。",
-        },
-        {
-          title: "你的人生说明书",
-          body: "你习惯先回应世界，再照顾自己。把一小部分注意力留给内心真正的水位：此刻的顺应来自清醒，还是来自害怕失去？个性化结果会帮助你辨认两者，而不会替你做决定。",
-        },
-      ],
-      action: "慢三次呼吸，再回应。把答案放慢一点，让真实的自己先出现。",
-    },
-    en: {
-      eyebrow: "Silk Text B reading edition · Received Chapter 8",
-      title: "The Highest Good Is Like Water",
-      verse: [
-        "The highest good is like water.",
-        "Water benefits all things and remains still.",
-        "It dwells where people do not wish to stay,",
-        "and so comes close to the Way.",
-        "In dwelling, it favors low ground; in heart, depth.",
-        "In giving, it follows Heaven; in speech, trust.",
-        "In governance, order; in affairs, ability.",
-        "In movement, the right time.",
-        "Because it does not contend, it incurs no blame.",
-      ],
-      variant: "Reading note: Silk B writes the graphs rendered as “contention / base / correct”; this page reads them contextually as “stillness / what is disliked / govern” · Wang Bi has “like water / does not contend”",
-      explanation: [
-        { title: "Plain reading · Why water is near the Way", body: "The highest goodness resembles water: it benefits all things, remains still, and settles in the low places people dislike. Its dwelling, depth, giving, speech, governance, work, and movement are each appropriate to their time and place." },
-        { title: "Thought · Softness still has direction", body: "Water changes form without losing its tendency to flow low and nourish life. Non-contention is not avoidance; it is spending less strength on needless resistance and keeping more for what matters." },
-        { title: "Collation · Separate graphs from reading", body: "Silk Text B preserves early loan graphs. The reading text uses accessible characters while the note above discloses the manuscript graphs instead of presenting a normalized text as a literal transcription." },
-      ],
-      related: [
-        {
-          title: "Anxiety · Return to low ground",
-          body: "When anxiety pushes you upward, faster, and toward proving yourself, return to your body and the next visible step. Low ground can be where strength gathers and direction becomes clear.",
-        },
-        {
-          title: "Relationships · Soft, with boundaries",
-          body: "You do not have to win the relationship today. Let the situation move before deciding whether to come closer or step away, and speak clearly when a real boundary is involved. Softness is not self-erasure.",
-        },
-        {
-          title: "Choice · Change form, keep your nature",
-          body: "Adaptation is not the absence of principle. Water may become stream, mist, or lake; the route and form change while its living movement remains. When one form fails, find another way through.",
-        },
-        {
-          title: "Action · Let the current gather",
-          body: "Acting too early can scatter energy; acting too late can miss the opening. Notice whether the information, your body, and the relationship have formed enough of a channel before committing force.",
-        },
-        {
-          title: "Your life manual",
-          body: "You may respond to the world before checking on yourself. Keep attention on your inner waterline: is this adaptation coming from clarity, or fear of loss? Personalization can help you distinguish them without deciding for you.",
-        },
-      ],
-      action: "Take three slow breaths before replying. Let your truest response arrive first.",
-    },
-  },
-  {
-    id: 9,
-    silkOrder: "45",
-    zh: {
-      eyebrow: "帛书乙本校读 · 对应今本第九章",
-      title: "持而盈之",
-      verse: [
-        "持而盈之，不若其已；",
-        "揣而锐之，不可长保也。",
-        "金玉盈室，莫之能守也；",
-        "贵富而骄，自遗咎也。",
-        "功遂身退，天之道也。",
-      ],
-      pinyin: [
-        ["chí", "ér", "yíng", "zhī", "bù", "ruò", "qí", "yǐ"],
-        ["zhuī", "ér", "ruì", "zhī", "bù", "kě", "cháng", "bǎo", "yě"],
-        ["jīn", "yù", "yíng", "shì", "mò", "zhī", "néng", "shǒu", "yě"],
-        ["guì", "fù", "ér", "jiāo", "zì", "yí", "jiù", "yě"],
-        ["gōng", "suì", "shēn", "tuì", "tiān", "zhī", "dào", "yě"],
-      ],
-      variant: "校读说明：乙本字形作“植 / 锻而允 / 葆”，本页读作“持 / 揣而锐 / 保” · 仍保留乙本“金玉盈室 / 贵富 / 功遂身退”",
-      explanation: [
-        { title: "直译｜知止，比继续加码更难", body: "已经满了还要继续加，不如及时停止；把锋刃反复锤炼得过于锐利，也无法长久。金玉满室守不住，富贵而骄会留下祸患。事情完成后懂得退身，合乎天道。" },
-        { title: "思想｜完成不等于继续占有", body: "这一章不是否定成就，而是提醒人识别由盛转衰的临界点。功成之后退一步，是给成果留下独立生长的空间，也让自己不被成功、财富和身份反过来占有。" },
-        { title: "校读｜保留乙本，帮助朗读", body: "乙本写作“植、锻、允、葆”。本页按句义校读为“持、揣、锐、保”，其中“揣”在这里读 zhuī，指捶击、锤炼；乙本独有的句式和词序仍保留在正文中。" },
-      ],
-      related: [
-        {
-          title: "焦虑｜识别“还不够”",
-          body: "焦虑常把“再多一点”伪装成安全感。先问：真正缺少的是关键条件，还是我暂时无法接受事情已经完成？",
-        },
-        {
-          title: "关系｜给彼此留白",
-          body: "爱不是把彼此的空间全部填满。适当的留白，会让靠近重新成为选择，而不是义务。",
-        },
-        {
-          title: "选择｜设定足够线",
-          body: "如果你已经得到核心结果，下一步也许不是扩张，而是整理、巩固与放下。",
-        },
-        {
-          title: "行动｜完成之后退一步",
-          body: "完成最重要的部分，然后停下来检查：继续投入仍在创造价值，还是只因为不敢结束？把后续空间交还给事情本身。",
-        },
-        {
-          title: "你的人生说明书",
-          body: "当你很容易把责任揽到自己身上，“功遂身退”是在练习信任：事情可以在没有你持续控制时继续运转。",
-        },
-      ],
-      action: "今天为一件事设定“足够线”，到线就停，不再追加证明。",
-    },
-    en: {
-      eyebrow: "Silk Text B reading edition · Received Chapter 9",
-      title: "Holding Until It Overflows",
-      verse: [
-        "Hold and fill it—better to stop.",
-        "Temper an edge too sharp—it cannot last.",
-        "Gold and jade fill the hall; no one can guard it.",
-        "Wealth and rank joined with pride leave their own blame.",
-        "The work complete, step back: this is the Way of Heaven.",
-      ],
-      variant: "Reading note: Silk B writes graphs corresponding to “plant / forge and allow / preserve”; this page reads them as “hold / hammer and sharpen / keep” while retaining Silk B's distinctive syntax",
-      explanation: [
-        { title: "Plain reading · Know when to stop", body: "Adding to what is already full is worse than stopping. A blade hammered too sharp cannot last; a hall of treasure cannot be guarded forever; rank joined with pride leaves trouble. When the work is complete, step back." },
-        { title: "Thought · Completion is not possession", body: "The chapter does not reject achievement. It asks us to recognize the point where increase becomes damage. Stepping back gives the work room to live and keeps success from possessing its maker." },
-        { title: "Collation · A readable Silk B edition", body: "The main text reads several early Silk B graphs by their contextual words while preserving Silk B's distinctive phrases, order, and completion formula. The manuscript forms remain disclosed above." },
-      ],
-      related: [
-        {
-          title: "Anxiety · Notice “not enough”",
-          body: "Anxiety can disguise “one more thing” as safety. Ask whether a real condition is missing, or whether you are simply finding it hard to accept that the work is complete.",
-        },
-        {
-          title: "Relationships · Leave room",
-          body: "Care does not need to fill every inch of space. A little room lets closeness become a choice again, rather than an obligation.",
-        },
-        {
-          title: "Choice · Define enough",
-          body: "If the essential result is already here, the next move may be to consolidate, organize, and release—not expand.",
-        },
-        { title: "Action · Step back after completion", body: "Complete what matters, then ask whether more effort is still creating value or merely avoiding an ending. Return some space to the work itself." },
-        {
-          title: "Your life manual",
-          body: "If you tend to carry every responsibility, stepping back is a practice of trust: life can continue without your constant control.",
-        },
-      ],
-      action: "Set an “enough line” for one task today. When you reach it, stop adding proof.",
-    },
-  },
-  {
-    id: 1,
-    silkOrder: "1",
-    zh: {
-      eyebrow: "帛书乙本校补、校读 · 对应今本第一章",
-      title: "道可道也",
-      verse: [
-        "道可道也，非恒道也。",
-        "名可名也，非恒名也。",
-        "无名万物之始也；",
-        "有名万物之母也。",
-        "故恒无欲也，以观其妙；",
-        "恒有欲也，以观其所徼。",
-        "两者同出，异名同谓。",
-        "玄之又玄，众妙之门。",
-      ],
-      pinyin: [
-        ["dào", "kě", "dào", "yě", "fēi", "héng", "dào", "yě"],
-        ["míng", "kě", "míng", "yě", "fēi", "héng", "míng", "yě"],
-        ["wú", "míng", "wàn", "wù", "zhī", "shǐ", "yě"],
-        ["yǒu", "míng", "wàn", "wù", "zhī", "mǔ", "yě"],
-        ["gù", "héng", "wú", "yù", "yě", "yǐ", "guān", "qí", "miào"],
-        ["héng", "yǒu", "yù", "yě", "yǐ", "guān", "qí", "suǒ", "jiào"],
-        ["liǎng", "zhě", "tóng", "chū", "yì", "míng", "tóng", "wèi"],
-        ["xuán", "zhī", "yòu", "xuán", "zhòng", "miǎo", "zhī", "mén"],
-      ],
-      variant: "校读说明：乙本首段与“以观其妙”处有缺损，据甲本补；乙本字形作“又 / 噭 / 胃 / 眇”，本页读作“有 / 徼 / 谓 / 妙”",
-      explanation: [
-        { title: "直译｜能说出的不是全部", body: "可以被说出的道，不是恒久不变的道；可以被命名的名，也不是恒久不变的名。无名是万物的开始，有名是万物的母体：没有欲求时观察其幽微，有所欲求时观察它所抵达的边界。" },
-        { title: "思想｜名字是入口，不是终点", body: "命名帮助我们辨认世界，却也可能把流动的现实固定成标签。“无”与“有”不是互相排斥的答案，而是观看同一生成过程的两个角度；保持两种视角，才更接近“玄”。" },
-        { title: "校读｜缺损必须看得见", body: "乙本首段和“以观其妙”处缺损，本页只在有甲本依据时补入；“又、噭、胃、眇”按文义读作“有、徼、谓、妙”。缺损、校补与借字均在版本说明中公开。" },
-      ],
-      related: [
-        {
-          title: "焦虑｜允许暂时不知道",
-          body: "你不需要立刻为每一种不确定找到名字。允许暂时不知道，往往比仓促下结论更接近事实。",
-        },
-        {
-          title: "关系｜先描述，再定义",
-          body: "当你把对方定义成“他就是这样的人”，关系也会停止变化。先描述发生了什么，再判断它意味着什么。",
-        },
-        {
-          title: "选择｜给变化留下空间",
-          body: "职业、性格和关系身份都是真实的一部分，却没有任何一个标签等于完整的你。让今天的选择回应今天的事实，而不是维护旧定义。",
-        },
-        { title: "行动｜把标签改成观察", body: "把“我就是这样的人”改写成“我最近常这样反应”。前一句封闭变化，后一句让你看见条件、例外和新的可能。" },
-        {
-          title: "你的人生说明书",
-          body: "人类图等工具可以成为观察你的镜子，却不应成为限制你的围墙。结果用来增加选择，不是替你做决定。",
-        },
-      ],
-      action: "把一个“我就是……”改写成“我最近常常……”，给自己留出变化的余地。",
-    },
-    en: {
-      eyebrow: "Silk Text B, supplied and read · Received Chapter 1",
-      title: "A Way That Can Be Spoken",
-      verse: [
-        "A way that can be spoken is not the enduring Way.",
-        "A name that can be named is not the enduring name.",
-        "The unnamed is the beginning of all things.",
-        "The named is the mother of all things.",
-        "Thus, enduringly without desire, observe its subtlety.",
-        "Enduringly with desire, observe its boundary.",
-        "The two arise together and differ only in name.",
-        "Mystery within mystery: the gate of all subtleties.",
-      ],
-      variant: "Reading note: gaps in Silk B are supplied only where Silk A supports them; early graphs for “have / boundary / say / subtle” are normalized for reading and disclosed here",
-      explanation: [
-        { title: "Plain reading · What can be said is not the whole", body: "A way that can be spoken is not the enduring Way, and a name that can be named is not the enduring name. The unnamed begins things; the named nurtures them. Without desire we see subtlety; with desire we see the boundary reached." },
-        { title: "Thought · A name is an entrance", body: "Names help us recognize the world, but they can freeze what is still changing. The unnamed and the named are two views of one unfolding process, not rival answers." },
-        { title: "Collation · Make every gap visible", body: "Silk B is damaged in the opening and near the line about observing subtlety. This page supplies only text supported by Silk A and normalizes early loan graphs for reading while disclosing both decisions." },
-      ],
-      related: [
-        {
-          title: "Anxiety · Allow not knowing",
-          body: "You do not need to name every uncertainty immediately. Allowing yourself not to know can be more truthful than a hurried conclusion.",
-        },
-        {
-          title: "Relationships · Describe before defining",
-          body: "When you decide “this is simply who they are,” the relationship loses room to change. Describe what happened before deciding what it means.",
-        },
-        {
-          title: "Choice · Leave room for change",
-          body: "Work, personality, and relationship roles are real parts of you, but no label is the whole person. Let today's choice answer today's facts instead of protecting an old definition.",
-        },
-        { title: "Action · Turn labels into observations", body: "Rewrite “I am this kind of person” as “Lately I often respond this way.” The second sentence leaves room to notice conditions, exceptions, and change." },
-        {
-          title: "Your life manual",
-          body: "Human Design and similar tools can be mirrors, not walls. Use the result to widen your choices—not to make the choice for you.",
-        },
-      ],
-      action: "Rewrite one “I am…” as “Lately, I often…”. Leave yourself room to change.",
-    },
-  },
-];
 
 function validatePinyinReadings() {
   for (const chapter of chapters) {
@@ -1857,6 +1538,7 @@ export default function Prototype() {
               <article
                 className={`chapter ${chapterIndex === 0 ? "chapter-current" : "chapter-continuation"}`}
                 key={chapter.id}
+                data-chapter-id={chapter.id}
                 aria-labelledby={`chapter-${chapter.id}-${language}`}
               >
                 {chapterIndex > 0 ? (
@@ -1888,7 +1570,7 @@ export default function Prototype() {
                       <h1 id={`chapter-${chapter.id}-${language}`}>{copy.title}</h1>
                       <div className="verse">
                         {copy.verse.map((line, lineIndex) => (
-                          <p className={isZh ? "verse-line verse-line-ruby" : "verse-line"} key={line}>
+                          <p className={isZh ? "verse-line verse-line-ruby" : "verse-line"} key={`${chapter.id}-${lineIndex}`}>
                             {isZh && copy.pinyin
                               ? renderPinyinLine(line, copy.pinyin[lineIndex])
                               : line}
@@ -1997,6 +1679,7 @@ export default function Prototype() {
                 type="button"
                 className={chapter.id === chapterId ? "directory-item is-current" : "directory-item"}
                 key={chapter.id}
+                data-chapter-id={chapter.id}
                 onClick={() => selectChapter(chapter.id)}
               >
                 <span className="directory-number">{String(chapter.silkOrder).padStart(2, "0")}</span>
