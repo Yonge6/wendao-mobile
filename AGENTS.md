@@ -64,6 +64,9 @@ See `src/mobile/COMPONENTS.md` for the full component and gesture contract.
 - Chapter-level `你的人生说明书 / Your life manual` copy must combine the reader’s verified Human Design result with that chapter’s distinct theme and practice. Do not reuse one generic personalized paragraph across chapters.
 - The canonical public URL is `https://wendao.wonderelian.com/`; the private admin URL is `https://wendao.wonderelian.com/admin/`.
 - Support a persistent day/night reading mode. Both modes must retain the paper-and-ink character and meet comfortable long-form reading contrast.
+- Support persistent small, medium, and large reading sizes from `你的空间 / Your space`. Scale scripture and long-form interpretation while keeping navigation and controls stable.
+- When a verified life manual already exists, show its result first with a compact saved-birth summary. Reveal the full birth form only after the reader explicitly chooses `修改出生信息 / Edit birth details`.
+- In `关于问道 / About Wendao`, place the three product-method principles before `我们的生命观 / Our philosophy of life`.
 - Keep the AI composer visually quiet and fixed above the safe area or simulated keyboard. Hide it whenever a phone-scoped bottom sheet is open.
 - Keep the top reading controls fixed while the scripture scrolls. When the reader moves down the text, lower the AI composer's opacity until it is hovered or focused.
 - Display small tone-marked Hanyu Pinyin above every Chinese character in the original scripture text; do not add pinyin to translations or the English reading mode.

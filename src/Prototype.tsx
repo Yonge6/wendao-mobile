@@ -34,6 +34,7 @@ import {
 
 type Language = "zh" | "en";
 type Theme = "light" | "dark";
+type ReadingSize = "small" | "medium" | "large";
 type DrawerView = "home" | "profile" | "profile-detail" | "about" | "feedback";
 
 type LifeProfile = {
@@ -93,6 +94,7 @@ const API_BASE = "https://pluto-human-design-api.vercel.app";
 const PROFILE_STORAGE_KEY = "wendao-life-profile";
 const CHART_STORAGE_KEY = "wendao-chart-snapshot";
 const THEME_STORAGE_KEY = "wendao-theme";
+const READING_SIZE_STORAGE_KEY = "wendao-reading-size";
 const CLIENT_ID_KEY = "wendao-client-id";
 const ADMIN_TOKEN_KEY = "wendao-admin-token";
 const APP_VERSION = "2026.07.31";
@@ -123,6 +125,12 @@ function loadChart(): ChartSnapshot | null {
   } catch {
     return null;
   }
+}
+
+function loadReadingSize(): ReadingSize {
+  if (typeof window === "undefined") return "medium";
+  const stored = window.localStorage.getItem(READING_SIZE_STORAGE_KEY);
+  return stored === "small" || stored === "large" ? stored : "medium";
 }
 
 function stableId(storageKey: string) {
@@ -764,6 +772,8 @@ type SideDrawerProps = {
   onViewChange: (view: DrawerView) => void;
   theme: Theme;
   onThemeChange: (theme: Theme) => void;
+  readingSize: ReadingSize;
+  onReadingSizeChange: (size: ReadingSize) => void;
   profile: LifeProfile;
   profileDraft: LifeProfile;
   onProfileDraftChange: Dispatch<SetStateAction<LifeProfile>>;
@@ -790,6 +800,8 @@ function SideDrawer({
   onViewChange,
   theme,
   onThemeChange,
+  readingSize,
+  onReadingSizeChange,
   profile,
   profileDraft,
   onProfileDraftChange,
@@ -809,6 +821,8 @@ function SideDrawer({
 }: SideDrawerProps) {
   const isZh = language === "zh";
   const profileComplete = Boolean(chart?.chartHash);
+  const [profileEditing, setProfileEditing] = useState(false);
+  const drawerScrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -818,6 +832,17 @@ function SideDrawer({
     document.addEventListener("keydown", closeOnEscape);
     return () => document.removeEventListener("keydown", closeOnEscape);
   }, [onClose, open]);
+
+  useEffect(() => {
+    if (!open) return;
+    drawerScrollRef.current?.scrollTo({ top: 0, behavior: "auto" });
+  }, [open, view]);
+
+  useEffect(() => {
+    if (!open || view !== "profile" || (profileState === "saved" && profileComplete)) {
+      setProfileEditing(false);
+    }
+  }, [open, profileComplete, profileState, view]);
 
   if (!open) return null;
 
@@ -875,7 +900,7 @@ function SideDrawer({
           </button>
         </header>
 
-        <div className="drawer-scroll">
+        <div className="drawer-scroll" ref={drawerScrollRef}>
           {view === "home" ? (
             <>
               <section className="life-manual-card">
@@ -918,6 +943,26 @@ function SideDrawer({
                     <span />
                   </button>
                 </div>
+                <div className="drawer-nav-row text-size-row">
+                  <span className="drawer-nav-icon text-size-icon" aria-hidden="true">字</span>
+                  <span>
+                    <strong>{isZh ? "阅读字号" : "Text size"}</strong>
+                    <small>{isZh ? "放大经文与解读正文" : "Adjust scripture and reading text"}</small>
+                  </span>
+                  <div className="text-size-control" role="group" aria-label={isZh ? "选择阅读字号" : "Choose text size"}>
+                    {(["small", "medium", "large"] as ReadingSize[]).map((size, index) => (
+                      <button
+                        type="button"
+                        className={readingSize === size ? "is-active" : ""}
+                        aria-pressed={readingSize === size}
+                        onClick={() => onReadingSizeChange(size)}
+                        key={size}
+                      >
+                        {isZh ? ["小", "中", "大"][index] : ["S", "M", "L"][index]}
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 <button type="button" onClick={() => onViewChange("about")}>
                   <span className="drawer-nav-icon"><InfoCircledIcon /></span>
                   <span>
@@ -939,69 +984,91 @@ function SideDrawer({
           ) : null}
 
           {view === "profile" ? (
-            <form className="drawer-form" onSubmit={onProfileSave}>
-              <p className="drawer-intro">
-                {isZh
-                  ? "问道会根据出生地点自动识别当地时区，并在产品内完成计算；只呈现类型、策略、权威等结果，不绘制人类图。出生时间越准确，解读越可靠。"
-                  : "Wendao identifies the local time zone from your birthplace and calculates your result here. It shows only the useful reading—never a BodyGraph. A precise birth time gives a more reliable result."}
-              </p>
-              <label>
-                <span>{isZh ? "姓名或称呼" : "Name"}</span>
-                <input
-                  required
-                  value={profileDraft.name}
-                  onChange={(event) => onProfileDraftChange((current) => ({ ...current, name: event.target.value }))}
-                  placeholder={isZh ? "我们该如何称呼你" : "How should we address you?"}
-                />
-              </label>
-              <div className="drawer-form-grid">
-                <label>
-                  <span>{isZh ? "出生日期" : "Birth date"}</span>
-                  <input
-                    required
-                    type="date"
-                    value={profileDraft.birthDate}
-                    onChange={(event) => onProfileDraftChange((current) => ({ ...current, birthDate: event.target.value }))}
-                  />
-                </label>
-                <label>
-                  <span>{isZh ? "出生时间" : "Birth time"}</span>
-                  <input
-                    required
-                    type="time"
-                    value={profileDraft.birthTime}
-                    onChange={(event) => onProfileDraftChange((current) => ({ ...current, birthTime: event.target.value }))}
-                  />
-                </label>
-              </div>
-              <label>
-                <span>{isZh ? "出生地点" : "Birth place"}</span>
-                <input
-                  required
-                  value={profileDraft.birthPlace}
-                  onChange={(event) => onProfileDraftChange((current) => ({ ...current, birthPlace: event.target.value }))}
-                  placeholder={isZh ? "如：武汉市 / Paris, France" : "e.g. Paris, France"}
-                />
-                <small className="field-hint">
-                  {isZh
-                    ? "时区会根据出生地点自动识别，请尽量填写“城市 + 国家或地区”。"
-                    : "The time zone is identified automatically. Include the city and country or region where possible."}
-                </small>
-              </label>
-              <p className="privacy-note">
-                {isZh
-                  ? "隐私说明：出生地点会发送至地点查询服务以识别当地时区；出生资料将安全传送至问道，用于计算、保存你的人生说明书和改善产品，不会公开，也不会绘制人类图。"
-                  : "Privacy: your birthplace is sent to a location service to identify its time zone. Your birth details are securely sent to Wendao to calculate and save your life manual and improve the product. They are not public, and no BodyGraph is rendered."}
-              </p>
-              <button type="submit" className="drawer-primary drawer-save" disabled={profileState === "saving"}>
-                {profileState === "saved" ? <CheckIcon /> : <PersonIcon />}
-                {profileState === "saving"
-                  ? (isZh ? "正在识别并计算…" : "Locating and calculating…")
-                  : profileState === "saved"
-                    ? (isZh ? "说明书已更新" : "Manual updated")
-                    : (isZh ? "生成我的人生说明书" : "Create my life manual")}
-              </button>
-              {profileError ? <p className="form-message is-error">{profileError}</p> : null}
+            <form className={`drawer-form ${profileComplete && !profileEditing ? "is-result-only" : ""}`} onSubmit={onProfileSave}>
+              {profileComplete && !profileEditing ? (
+                <section className="profile-saved-summary" aria-label={isZh ? "已保存的出生信息" : "Saved birth details"}>
+                  <div>
+                    <span>{isZh ? "出生资料已完成" : "Birth details complete"}</span>
+                    <strong>{profile.name || (isZh ? "你" : "You")}</strong>
+                    <small>{profile.birthDate} · {profile.birthTime} · {profile.birthPlace}</small>
+                  </div>
+                  <button
+                    type="button"
+                    className="profile-edit-button"
+                    onClick={() => {
+                      onProfileDraftChange({ ...profile });
+                      setProfileEditing(true);
+                    }}
+                  >
+                    {isZh ? "修改出生信息" : "Edit birth details"}
+                  </button>
+                </section>
+              ) : (
+                <>
+                  <p className="drawer-intro">
+                    {isZh
+                      ? "问道会根据出生地点自动识别当地时区，并在产品内完成计算；只呈现类型、策略、权威等结果，不绘制人类图。出生时间越准确，解读越可靠。"
+                      : "Wendao identifies the local time zone from your birthplace and calculates your result here. It shows only the useful reading—never a BodyGraph. A precise birth time gives a more reliable result."}
+                  </p>
+                  <label>
+                    <span>{isZh ? "姓名或称呼" : "Name"}</span>
+                    <input
+                      required
+                      value={profileDraft.name}
+                      onChange={(event) => onProfileDraftChange((current) => ({ ...current, name: event.target.value }))}
+                      placeholder={isZh ? "我们该如何称呼你" : "How should we address you?"}
+                    />
+                  </label>
+                  <div className="drawer-form-grid">
+                    <label>
+                      <span>{isZh ? "出生日期" : "Birth date"}</span>
+                      <input
+                        required
+                        type="date"
+                        value={profileDraft.birthDate}
+                        onChange={(event) => onProfileDraftChange((current) => ({ ...current, birthDate: event.target.value }))}
+                      />
+                    </label>
+                    <label>
+                      <span>{isZh ? "出生时间" : "Birth time"}</span>
+                      <input
+                        required
+                        type="time"
+                        value={profileDraft.birthTime}
+                        onChange={(event) => onProfileDraftChange((current) => ({ ...current, birthTime: event.target.value }))}
+                      />
+                    </label>
+                  </div>
+                  <label>
+                    <span>{isZh ? "出生地点" : "Birth place"}</span>
+                    <input
+                      required
+                      value={profileDraft.birthPlace}
+                      onChange={(event) => onProfileDraftChange((current) => ({ ...current, birthPlace: event.target.value }))}
+                      placeholder={isZh ? "如：武汉市 / Paris, France" : "e.g. Paris, France"}
+                    />
+                    <small className="field-hint">
+                      {isZh
+                        ? "时区会根据出生地点自动识别，请尽量填写“城市 + 国家或地区”。"
+                        : "The time zone is identified automatically. Include the city and country or region where possible."}
+                    </small>
+                  </label>
+                  <p className="privacy-note">
+                    {isZh
+                      ? "隐私说明：出生地点会发送至地点查询服务以识别当地时区；出生资料将安全传送至问道，用于计算、保存你的人生说明书和改善产品，不会公开，也不会绘制人类图。"
+                      : "Privacy: your birthplace is sent to a location service to identify its time zone. Your birth details are securely sent to Wendao to calculate and save your life manual and improve the product. They are not public, and no BodyGraph is rendered."}
+                  </p>
+                  <button type="submit" className="drawer-primary drawer-save" disabled={profileState === "saving"}>
+                    {profileState === "saved" ? <CheckIcon /> : <PersonIcon />}
+                    {profileState === "saving"
+                      ? (isZh ? "正在识别并计算…" : "Locating and calculating…")
+                      : profileState === "saved"
+                        ? (isZh ? "说明书已更新" : "Manual updated")
+                        : (isZh ? "生成我的人生说明书" : "Create my life manual")}
+                  </button>
+                  {profileError ? <p className="form-message is-error">{profileError}</p> : null}
+                </>
+              )}
               {chart ? (
                 <section className="profile-result" aria-label={isZh ? "人类图解读结果" : "Human Design result"}>
                   <div className="profile-result-heading">
@@ -1083,6 +1150,11 @@ function SideDrawer({
                   ? "解释帮助初学者进入原典；“与你有关”把思想放回焦虑、关系与人生选择；人生说明书只用于增加理解和选择，不替任何人决定。"
                   : "Meaning helps newcomers enter the text; For You brings it into anxiety, relationships, and choice. Your life manual widens understanding without deciding for you."}
               </p>
+              <div className="about-method">
+                <span>01</span><p>{isZh ? "原典与版本透明" : "Transparent textual witnesses"}</p>
+                <span>02</span><p>{isZh ? "解释清楚但不简化思想" : "Clarity without flattening the thought"}</p>
+                <span>03</span><p>{isZh ? "启发行动但不制造依赖" : "Actionable guidance without dependence"}</p>
+              </div>
               <section className="life-philosophy">
                 <span className="drawer-kicker">{isZh ? "我们的生命观" : "Our philosophy of life"}</span>
                 <h4>
@@ -1131,11 +1203,6 @@ function SideDrawer({
                     : "We hope to accompany one another through valleys and peaks, exploring healthier ways to work and live: facing self and world truthfully, treating life with kindness, and creating and appreciating beauty."}
                 </p>
               </section>
-              <div className="about-method">
-                <span>01</span><p>{isZh ? "原典与版本透明" : "Transparent textual witnesses"}</p>
-                <span>02</span><p>{isZh ? "解释清楚但不简化思想" : "Clarity without flattening the thought"}</p>
-                <span>03</span><p>{isZh ? "启发行动但不制造依赖" : "Actionable guidance without dependence"}</p>
-              </div>
               <div className="contact-section">
                 <span className="drawer-kicker">{isZh ? "联系我们" : "Contact"}</span>
                 <div className="contact-list">
@@ -1445,6 +1512,7 @@ export default function Prototype() {
   const [submittedQuestion, setSubmittedQuestion] = useState("");
   const [isReadingScrolled, setIsReadingScrolled] = useState(false);
   const [theme, setTheme] = useState<Theme>(loadTheme);
+  const [readingSize, setReadingSize] = useState<ReadingSize>(loadReadingSize);
   const [profile, setProfile] = useState<LifeProfile>(loadProfile);
   const [profileDraft, setProfileDraft] = useState<LifeProfile>(loadProfile);
   const [chart, setChart] = useState<ChartSnapshot | null>(loadChart);
@@ -1484,6 +1552,11 @@ export default function Prototype() {
     window.localStorage.setItem(THEME_STORAGE_KEY, theme);
     document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "dark" ? "#10191b" : "#f7f1e6");
   }, [theme]);
+
+  useEffect(() => {
+    document.documentElement.dataset.readingSize = readingSize;
+    window.localStorage.setItem(READING_SIZE_STORAGE_KEY, readingSize);
+  }, [readingSize]);
 
   useEffect(() => {
     if (appOpenTracked.current) return;
@@ -1899,6 +1972,11 @@ export default function Prototype() {
         onViewChange={setDrawerView}
         theme={theme}
         onThemeChange={changeTheme}
+        readingSize={readingSize}
+        onReadingSizeChange={(size) => {
+          setReadingSize(size);
+          trackEvent("reading_size_change", { value: size });
+        }}
         profile={profile}
         profileDraft={profileDraft}
         onProfileDraftChange={setProfileDraft}
