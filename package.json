@@ -5,6 +5,9 @@
   "type": "module",
   "scripts": {
     "data:chapters": "node scripts/build-chapter-data.mjs",
+    "audit:silk": "node scripts/audit-silk-additions.mjs",
+    "fix:silk": "node scripts/apply-silk-auto-fixes.mjs",
+    "report:silk": "node scripts/report-silk-proofread.mjs",
     "check:silk": "node scripts/check-silk-integrity.mjs",
     "test:silk": "node --test tests/silk-integrity.test.mjs",
     "validate:chapters": "node scripts/validate-chapters.mjs && npm run check:silk && npm run test:silk",
@@ -16,7 +19,8 @@
     "dev": "vite",
     "prebuild": "npm run check:runtime && npm run validate:chapters",
     "build": "tsc && vite build && node scripts/prepare-sites-build.mjs",
-    "build:pages": "npm run check:runtime && tsc && vite build --base=/ && node scripts/prepare-pages-build.mjs"
+    "build:pages": "npm run check:runtime && tsc && vite build --base=/ && node scripts/prepare-pages-build.mjs",
+    "test": "node --test tests/*.test.mjs"
   },
   "dependencies": {
     "@fontsource/noto-sans-sc": "^5.3.0",

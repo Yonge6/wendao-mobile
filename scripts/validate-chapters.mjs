@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { inspectChapterIntegrity } from "./silk-integrity-core.mjs";
+import { pinyinLinesForChapter } from "./chapter-pinyin.mjs";
 
 const chapters = JSON.parse(await readFile(new URL("../src/data/chapters.json", import.meta.url), "utf8"));
 const errors = [];
@@ -27,10 +28,12 @@ for (const chapter of chapters) {
   });
   if (hanziCount(chapter.zh.reconstructedVerse.join("")) < hanziCount(chapter.sources?.receivedReference ?? "") * 0.6) errors.push(`${prefix}: reading text is unexpectedly short against received comparison`);
   if (chapter.zh.reconstructedVerse.length !== chapter.zh.pinyin?.length) errors.push(`${prefix}: Chinese line/Pinyin line mismatch`);
+  const expectedPinyin = pinyinLinesForChapter(chapter.id, chapter.zh.reconstructedVerse);
   chapter.zh.reconstructedVerse.forEach((line, index) => {
     const syllables = chapter.zh.pinyin[index] ?? [];
     if (hanziCount(line) !== syllables.length) errors.push(`${prefix} line ${index + 1}: ${hanziCount(line)} Hanzi vs ${syllables.length} Pinyin`);
     if (syllables.some((syllable) => !hasTone(syllable) && !/^[aeiouü]$/i.test(syllable))) errors.push(`${prefix} line ${index + 1}: untoned Pinyin syllable`);
+    if (JSON.stringify(syllables) !== JSON.stringify(expectedPinyin[index])) errors.push(`${prefix} line ${index + 1}: Pinyin does not match the actual reconstructed characters`);
   });
   for (const language of ["zh", "en"]) {
     const copy = chapter[language];

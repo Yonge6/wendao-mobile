@@ -63,6 +63,14 @@ test("representative chapters keep brackets outside Pinyin counting and supply P
   }
 });
 
+test("chapter 16 keeps visible Silk B 督 instead of imported 甲本式 or received wording", () => {
+  const chapter16 = chapters.find((chapter) => chapter.id === 16);
+  assert.ok(chapter16.sources.silkBTranscription.includes("守靜督也"));
+  assert.ok(chapter16.zh.reconstructedVerse[0].includes("守静督也"));
+  assert.equal(chapter16.zh.reconstructedVerse[0].includes("守情表也"), false);
+  assert.equal(chapter16.zh.reconstructedVerse[0].includes("守静笃"), false);
+});
+
 test("every supplied graph has position, source, and review confidence metadata", () => {
   const additions = chapters.flatMap((chapter) => chapter.zh.additions);
   assert.equal(additions.length, 741);

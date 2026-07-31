@@ -7,6 +7,9 @@
 - `scripts/build-chapter-data.mjs` 重建快照；它在 `sources.silkBTranscription` 保留乙本 `□/○` 缺损符号，在 `zh.reconstructedVerse` 以 `〔〕` 标出恢复字，在 `zh.additions` 记录每个校补字的位置、对齐依据、参考范围与复核状态，并对来源中误标为第 67 章的“小邦寡民”按正文纠为第 80 章。
 - `scripts/chapter-literal-translations.mjs` 保存原创现代汉语逐句直译；生成后进入 `zh.lineByLineTranslation`，必须与 `zh.reconstructedVerse` 一句对一句、顺序完全一致。
 - `scripts/check-silk-integrity.mjs` 阻断高风险通行本措辞、缺失的三层字段和未标记的新增文字。
+- `scripts/audit-silk-additions.mjs` 对 741 个 `zh.additions` 做只读初校，生成 `generated/silk-auto-proofread-plan.json/.md`；与传世本同字只记录为倒灌风险，不视为乙本或甲本证据。
+- `scripts/apply-silk-auto-fixes.mjs` 默认 dry-run，只有 `--write` 才会应用计划中 `allowedToAutoFix: true` 的条目；冲突版本和证据不足条目永远不自动处理。
+- `scripts/report-silk-proofread.mjs` 生成逐条最终 JSON、CSV 与 Markdown 报告，保留修改前后、版本冲突和图版复核队列。
 - `scripts/validate-chapters.mjs` 是构建总门槛：章数和章号唯一性、正文长度对照、每行汉字/拼音严格等数、声调、中英结构、三层解释、四个生活视角、人生说明书、今日一练与帛书严谨性检查。
 
 编辑原则：
@@ -18,11 +21,17 @@
 5. `直译` 先按“校读原句 → 现代汉语”完整列出每一句，再进入思想结构；不能用章节主题摘要代替翻译。直译对象是校读恢复文本，须同时声明 `〔〕` 仍是校补，不是乙本原字。
 6. 自动的逐位差异和缺损对齐只是人工复核索引，不是学术校勘记，也不宣称代表惟一的王弼定本。
 7. 英文原典层使用 James Legge 公共领域译文作传世文本对照，页内明示它不是对每一个残损乙本字形的直译。
+8. 自动初校不得升级 `confidence`。仓库没有逐字甲本释文或原始图版时，即使校补字与传世本相同，也只能记录为潜在传世本依赖；不能据此自动修改或宣称学术确认。
 
 重建与校验：
 
 ```bash
 npm run data:chapters
+npm run audit:silk
+npm run fix:silk -- --dry-run
+# 只有计划中存在 allowedToAutoFix: true 时才写入
+npm run fix:silk -- --write
+npm run report:silk
 npm run validate:chapters
 npm run check:silk
 npm run test:silk
@@ -30,4 +39,4 @@ npm run test:runtime
 npm run build:pages
 ```
 
-人工校读优先修正 `scripts/build-chapter-data.mjs` 中的审校覆盖和古汉语多音字规则，然后重建快照；不要直接改生成的 JSON 而不留依据。
+人工校读优先修正 `scripts/build-chapter-data.mjs` 中的审校覆盖和 `scripts/chapter-pinyin.mjs` 中的古汉语多音字规则，然后重建快照；不要直接改生成的 JSON 而不留依据。

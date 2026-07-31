@@ -179,6 +179,11 @@ export function inspectChapterIntegrity(chapter) {
     }
 
     if (Array.isArray(chapter?.zh?.additions)) {
+      const absolutePositions = chapter.zh.additions.map((addition) => addition.absolutePosition);
+      const duplicatePositions = absolutePositions.filter((position, index) => absolutePositions.indexOf(position) !== index);
+      if (duplicatePositions.length) {
+        issues.push({ severity: "P0", message: `${prefix}: 校补来源元数据存在重复位置 ${[...new Set(duplicatePositions)].join("、")}` });
+      }
       const additionsByPosition = new Map(chapter.zh.additions.map((addition) => [addition.absolutePosition, addition]));
       for (const { index, basis, sourceMarker } of required) {
         const token = target[index];
@@ -200,7 +205,7 @@ export function inspectChapterIntegrity(chapter) {
           || !Array.isArray(addition.references)
           || !addition.references.includes("silkA")
           || !addition.references.includes("receivedReference")
-          || !["review-required", "low", "medium", "high"].includes(addition.confidence)
+          || addition.confidence !== "review-required"
           || !addition.note
         ) {
           issues.push({ severity: "P0", message: `${prefix}: 校补字“${token.character}”的来源元数据与正文位置不一致` });
@@ -208,6 +213,11 @@ export function inspectChapterIntegrity(chapter) {
       }
       if (chapter.zh.additions.length !== required.length) {
         issues.push({ severity: "P0", message: `${prefix}: 校补来源元数据数量 ${chapter.zh.additions.length}/${required.length} 不一致` });
+      }
+      for (const addition of chapter.zh.additions) {
+        if (!required.some(({ index }) => index + 1 === addition.absolutePosition)) {
+          issues.push({ severity: "P0", message: `${prefix}: 校补字“${addition.character}”记录在非校补位置 ${addition.absolutePosition}` });
+        }
       }
     }
   }

@@ -207,31 +207,38 @@ test("renders a source-aligned modern Chinese translation for every line", async
 
 test("representative supplied chapters expose accessible reading text, copy cleanly, and do not overflow", async ({ page, context }) => {
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
-  await page.setViewportSize({ width: 320, height: 900 });
-  await page.goto("/");
-  for (const id of [1, 16, 38, 41, 67, 81]) {
-    await page.getByRole("button", { name: "目录", exact: true }).click();
-    await page.locator(`.directory-item[data-chapter-id="${id}"]`).click();
-    const chapter = page.locator(`.chapter-current[data-chapter-id="${id}"]`);
-    const lineLabels = await chapter.locator(".verse-line").evaluateAll((lines) => lines.map((line) => line.getAttribute("aria-label")));
-    expect(lineLabels.every((line) => line && !/[a-zāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]/i.test(line))).toBe(true);
-    const overflow = await page.getByTestId("mobile-scroll").evaluate((element) => element.scrollWidth - element.clientWidth);
-    expect(overflow, `Chapter ${id} horizontal overflow`).toBeLessThanOrEqual(0);
-    if (id !== 81) await expect(chapter.locator(".verse-supply-bracket").first()).toBeVisible();
+  for (const width of [320, 390, 720]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/");
+    for (const id of [1, 16, 38, 41, 67, 81]) {
+      await page.getByRole("button", { name: "目录", exact: true }).click();
+      await page.locator(`.directory-item[data-chapter-id="${id}"]`).click();
+      const chapter = page.locator(`.chapter-current[data-chapter-id="${id}"]`);
+      const lineLabels = await chapter.locator(".verse-line").evaluateAll((lines) => lines.map((line) => line.getAttribute("aria-label")));
+      expect(lineLabels.every((line) => line && !/[a-zāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]/i.test(line))).toBe(true);
+      const overflow = await page.getByTestId("mobile-scroll").evaluate((element) => element.scrollWidth - element.clientWidth);
+      expect(overflow, `Chapter ${id} at ${width}px horizontal overflow`).toBeLessThanOrEqual(0);
+      if (id !== 81) await expect(chapter.locator(".verse-supply-bracket").first()).toBeVisible();
+      if (id === 16) {
+        const firstLine = chapter.locator(".verse-line").first();
+        await expect(firstLine).toHaveAttribute("aria-label", "至虚极也，守静督也。");
+        expect(await firstLine.locator("rt").allTextContents()).toEqual(["zhì", "xū", "jí", "yě", "shǒu", "jìng", "dū", "yě"]);
+      }
 
-    const copyLine = id === 81
-      ? chapter.locator(".verse-line").first()
-      : chapter.locator('.verse-line[data-copy-text*="〔"]').first();
-    const expectedCopy = await copyLine.getAttribute("data-copy-text");
-    await copyLine.evaluate((element) => {
-      const range = document.createRange();
-      range.selectNodeContents(element);
-      const selection = window.getSelection();
-      selection?.removeAllRanges();
-      selection?.addRange(range);
-    });
-    await page.keyboard.press(process.platform === "darwin" ? "Meta+C" : "Control+C");
-    await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(expectedCopy);
+      const copyLine = id === 81
+        ? chapter.locator(".verse-line").first()
+        : chapter.locator('.verse-line[data-copy-text*="〔"]').first();
+      const expectedCopy = await copyLine.getAttribute("data-copy-text");
+      await copyLine.evaluate((element) => {
+        const range = document.createRange();
+        range.selectNodeContents(element);
+        const selection = window.getSelection();
+        selection?.removeAllRanges();
+        selection?.addRange(range);
+      });
+      await page.keyboard.press(process.platform === "darwin" ? "Meta+C" : "Control+C");
+      await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(expectedCopy);
+    }
   }
 });
 

@@ -22196,14 +22196,14 @@
     "sources": {
       "silkBTranscription": "至虛極也，守靜督也。萬物旁作，吾以觀其復也。天物𥘟𥘟，各復歸於其根，曰靜。靜，是胃復命。復命，常也；知常，明也；不知常，芒；芒，作凶；知常容，容乃公，公乃王，□□天，天乃道，道乃沒身不殆。",
       "receivedReference": "致虚极，守静笃。万物并作，吾以观其复。夫物芸芸，各复归其根。归根曰静，静曰复命，复命曰常，知常曰明。不知常，妄作，凶。知常容，容乃公，公乃王，王乃天，天乃道，道乃久，役身不始。",
-      "reconstructionNotes": "缺损记录：乙本转写保留 2 个缺损符号（□/○）。校补位置：第3行 〔根〕；第4行 〔归〕；第8行 〔王乃〕、〔久〕，共 5 字。补字依据：帛书甲本及传世本互校；逐字归属仍以校勘原始图版为最终依据。",
+      "reconstructionNotes": "缺损记录：乙本转写保留 2 个缺损符号（□/○）。校补位置：第3行 〔根〕；第4行 〔归〕；第8行 〔王乃〕、〔久〕，共 5 字。补字依据：帛书甲本及传世本互校；逐字归属仍以校勘原始图版为最终依据。 Codex 自动初校：校读首行原作“守情表也”，与乙本转写可见“守靜督也”不一致；已依据仓库乙本转写、Chinese Text Project 乙本文本及学术校读改为“守静督也”。尚未核对原始图版，仍待图版复核。",
       "accessed": "2026-08-01"
     },
     "zh": {
       "eyebrow": "帛书乙本底本校读 · 对应今本第十六章",
-      "title": "至虚极也，守情表也",
+      "title": "至虚极也，守静督也",
       "reconstructedVerse": [
-        "至虚极也，守情表也。",
+        "至虚极也，守静督也。",
         "万物旁作，吾以观其复也。",
         "夫物芸芸，各复归于其〔根〕。",
         "〔归〕根曰静，静，是谓复命。",
@@ -22306,8 +22306,8 @@
           "jí",
           "yě",
           "shǒu",
-          "qíng",
-          "biǎo",
+          "jìng",
+          "dū",
           "yě"
         ],
         [
@@ -22391,7 +22391,7 @@
           "dài"
         ]
       ],
-      "variant": "版本参照：以马王堆帛书乙本为底本，残缺处参考甲本及传世本校补。这是整理后的校读版本，不是影印转写。乙本本章可见 2 个缺损符号（□/○）；校读层以〔〕标出 5 个据上下文恢复或超出转写字位的字。补字参考帛书甲本及传世本，具体字位仍需据图版逐项复核。 传世参照的主要逐位差异（校勘索引，需结合王弼注本人工复核）：至/致、也/守、守/静、情/笃、表/万、也/物、万/并、物/作；字数 74/68。",
+      "variant": "版本参照：以马王堆帛书乙本为底本，残缺处参考甲本及传世本校补。这是整理后的校读版本，不是影印转写。乙本本章可见 2 个缺损符号（□/○）；校读层以〔〕标出 5 个据上下文恢复或超出转写字位的字。补字参考帛书甲本及传世本，具体字位仍需据图版逐项复核。 传世参照的主要逐位差异（校勘索引，需结合王弼注本人工复核）：至/致、也/守、守/静、静/笃、督/万、也/物、万/并、物/作；字数 74/68。",
       "explanation": [
         {
           "title": "直译｜逐句读懂这一章",
@@ -22446,7 +22446,7 @@
         "In that likeness to heaven he possesses the Tao.",
         "Possessed of the Tao, he endures long; and to the end of his bodily life, is exempt from all danger of decay."
       ],
-      "variant": "Received-text reference: this is a Silk B Based Reconstruction, not a facsimile transcription. Silk B contains 2 visible lacuna signs (□/○) here. The reconstruction marks 5 restored or additional graphs with 〔〕; they are checked against Silk A and received texts and are not literal Silk B graphs. Received-text alignment differences: 至/致、也/守、守/静、情/笃、表/万、也/物、万/并、物/作；字数 74/68. The English scripture uses James Legge's public-domain received-text translation as a transparent comparison, so it must not be treated as a literal translation of every damaged Silk B graph.",
+      "variant": "Received-text reference: this is a Silk B Based Reconstruction, not a facsimile transcription. Silk B contains 2 visible lacuna signs (□/○) here. The reconstruction marks 5 restored or additional graphs with 〔〕; they are checked against Silk A and received texts and are not literal Silk B graphs. Received-text alignment differences: 至/致、也/守、守/静、静/笃、督/万、也/物、万/并、物/作；字数 74/68. The English scripture uses James Legge's public-domain received-text translation as a transparent comparison, so it must not be treated as a literal translation of every damaged Silk B graph.",
       "explanation": [
         {
           "title": "Plain reading · Read the movement of the whole chapter",

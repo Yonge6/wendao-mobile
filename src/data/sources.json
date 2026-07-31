@@ -35,6 +35,7 @@
   ],
   "knownSourceCorrections": [
     "The reading aid labels its silk-order chapter 30 as received chapter 67; the text is received chapter 80 (Small state, few people). The import corrects it to 80 and the validator enforces unique chapters 1-81.",
-    "Automated received-text character alignment is an index for manual collation, not a scholarly critical apparatus."
+    "Automated received-text character alignment is an index for manual collation, not a scholarly critical apparatus.",
+    "Received chapter 16: the imported reading “守情表也” was corrected to Silk B visible wording “守静督也” from the repository transcription and CText; transmitted “笃” remains comparison only. Image verification is still pending."
   ]
 }

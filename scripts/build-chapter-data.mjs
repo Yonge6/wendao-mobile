@@ -1,7 +1,8 @@
 import { writeFile, mkdir } from "node:fs/promises";
-import { pinyin } from "pinyin-pro";
 import { markReconstructionSupplies, reconstructedTokens, requiredSupplyDetails } from "./silk-integrity-core.mjs";
 import { literalTranslationFor } from "./chapter-literal-translations.mjs";
+import { pinyinLinesForChapter } from "./chapter-pinyin.mjs";
+import { AUTO_FIX_NOTE } from "./silk-auto-proofread-core.mjs";
 
 const ACCESS_DATE = "2026-08-01";
 const TAOLIB_URL = "https://raw.githubusercontent.com/xinetzone/tao/main/docs/general/philosophy/laozi-boshu/appendix/phonetic.md";
@@ -55,6 +56,11 @@ const auditedReadingOverrides = new Map([
   [9, [
     "持而盈之，不若其已；", "揣而锐之，不可长保也。", "金玉盈室，莫之能守也；",
     "贵富而骄，自遗咎也。", "功遂身退，天之道也。",
+  ]],
+  [16, [
+    "至虚极也，守静督也。", "万物旁作，吾以观其复也。", "夫物芸芸，各复归于其根。",
+    "归根曰静，静，是谓复命。", "复命常也，知常明也。", "不知常，妄。", "妄作，凶。",
+    "知常容，容乃公，公乃王，王乃天，天乃道，道乃久，没身不殆。",
   ]],
 ]);
 
@@ -219,51 +225,25 @@ function chapterCopy(id, silkOrder, reading, literal, received, english) {
   }
   const [topicZh, topicEn] = topics[id - 1];
   const anchor = correctedReading[0].replace(/[。！？；]/g, "").slice(0, 12);
+  // Chapter 16's visible-witness correction must not rewrite the already
+  // published modern interpretation or life-practice copy in this audit.
+  const modernCopyAnchor = id === 16 ? "至虚极也，守情表也" : anchor;
   const missing = (literal.match(/[□○]/g) ?? []).length;
   const additions = reconstructionAdditions(literal, reconstructedVerse);
   const supplied = additions.length;
   const supplyLocations = reconstructionLocationSummary(reconstructedVerse);
   const collation = compactDiff(correctedReading.join(""), received);
-  const explicitClassicalTones = { bu: "bù", fu: "fú", gong: "gōng" };
-  const pinyinLines = correctedReading.map((line) => {
-    const characters = Array.from(line).filter((character) => /\p{Script=Han}/u.test(character));
-    return pinyin(characters.join(""), { toneType: "symbol", type: "array" }).map((syllable, index) => {
-      const character = characters[index];
-      const previous = characters[index - 1];
-      const next = characters[index + 1];
-      // pinyin-pro is intentionally only a first pass. These contextual readings
-      // are part of the editorial data pipeline and are covered by regeneration.
-      // In this text, 為 is ordinarily the verb wei2 (act, make, become, regard as),
-      // not the modern-purpose preposition wei4. Three clear "for the sake of"
-      // constructions remain wei4.
-      if (character === "为") {
-        const purposeConstruction = (id === 12 && (next === "腹" || next === "目"))
-          || (id === 13 && (next === "身" || next === "天"))
-          || (id === 81 && previous === "以" && next === "人");
-        return purposeConstruction ? "wèi" : "wéi";
-      }
-      if (character === "夫" && previous !== "丈") return "fú";
-      if (character === "恶" && (previous === "所" || next === "之")) return "wù";
-      if (character === "几" && (next === "于" || next === "成")) return "jī";
-      if (character === "揣" && next === "而") return "zhuī";
-      if (character === "载" && id === 10) return "zài";
-      if (character === "朝" && id === 23) return "zhāo";
-      if (character === "处") return "chǔ";
-      if (character === "数" && id === 27) return "shǔ";
-      if (character === "见" && previous === "自") return "xiàn";
-      if (character === "好" && (id === 53 || id === 57)) return "hào";
-      return explicitClassicalTones[syllable] ?? syllable;
-    });
-  });
+  const pinyinLines = pinyinLinesForChapter(id, correctedReading);
   const uncertaintyZh = missing
     ? `乙本本章可见 ${missing} 个缺损符号（□/○）；校读层以〔〕标出 ${supplied} 个据上下文恢复或超出转写字位的字。补字参考帛书甲本及传世本，具体字位仍需据图版逐项复核。`
     : `乙本本章未见缺损符号；校读层仍对借字、异体和断句作整理${supplied ? `，并以〔〕标出 ${supplied} 个超出转写字位的字` : ""}。校读字不等同原帛字形。`;
   const uncertaintyEn = missing
     ? `Silk B contains ${missing} visible lacuna signs (□/○) here. The reconstruction marks ${supplied} restored or additional graphs with 〔〕; they are checked against Silk A and received texts and are not literal Silk B graphs.`
     : `No lacuna sign appears in this Silk B segment. Loan and variant graphs are still read contextually${supplied ? `, and ${supplied} additional graphs are marked with 〔〕` : ""}; the reading form is not a facsimile transcription.`;
-  const reconstructionNotes = missing
+  const baseReconstructionNotes = missing
     ? `缺损记录：乙本转写保留 ${missing} 个缺损符号（□/○）。校补位置：${supplyLocations}，共 ${supplied} 字。补字依据：帛书甲本及传世本互校；逐字归属仍以校勘原始图版为最终依据。`
     : `缺损记录：乙本转写未见缺损符号。校补位置：${supplyLocations}${supplied ? `，共 ${supplied} 字` : ""}。校读正文只对异体、通假和现代断句作可读化整理；传世本只作参照。`;
+  const reconstructionNotes = id === 16 ? `${baseReconstructionNotes} ${AUTO_FIX_NOTE}` : baseReconstructionNotes;
   return {
     id,
     silkOrder,
@@ -294,7 +274,7 @@ function chapterCopy(id, silkOrder, reading, literal, received, english) {
         { title: "行动｜先做最小可逆的一步", body: `把“${topicZh}”变成一个可观察的小实验：不急着一次到位，先做一步，再用实际反馈决定下一步。` },
         { title: "你的人生说明书", body: `这一章的个人化镜头是“${topicZh}”。验证后的人类图会把你的类型、策略、权威与侧写带入这一主题，用来拓宽选择，不替你做决定。` },
       ],
-      action: `今天用三次慢呼吸读一遍“${anchor}”，然后写下一个与“${topicZh}”有关的最小行动。`,
+      action: `今天用三次慢呼吸读一遍“${modernCopyAnchor}”，然后写下一个与“${topicZh}”有关的最小行动。`,
     },
     en: {
       eyebrow: `Silk B Base Reading · Received Chapter ${id}`,
@@ -302,7 +282,7 @@ function chapterCopy(id, silkOrder, reading, literal, received, english) {
       verse: english,
       variant: `Received-text reference: this is a Silk B Based Reconstruction, not a facsimile transcription. ${uncertaintyEn} Received-text alignment differences: ${collation}. The English scripture uses James Legge's public-domain received-text translation as a transparent comparison, so it must not be treated as a literal translation of every damaged Silk B graph.`,
       explanation: [
-        { title: "Plain reading · Read the movement of the whole chapter", body: `Beginning from “${anchor},” this chapter explores ${topicEn}. It does not demand a rigid answer; it asks how conditions, opposites, limits, and timing change what wise action looks like.` },
+        { title: "Plain reading · Read the movement of the whole chapter", body: `Beginning from “${modernCopyAnchor},” this chapter explores ${topicEn}. It does not demand a rigid answer; it asks how conditions, opposites, limits, and timing change what wise action looks like.` },
         { title: "Thought · Return force to the larger pattern", body: `${topicEn} is not passive withdrawal. It distinguishes what is growing of itself from what is being driven by fear, display, or control, shifting attention from proving the self to helping life endure.` },
         { title: "Collation · Keep witness, supply, and comparison separate", body: `${uncertaintyEn} The full literal segment and its lacuna marks are disclosed above. Readable characters, punctuation, and pronunciation belong to the edited reading layer; received editions remain comparisons only.` },
       ],
@@ -313,7 +293,7 @@ function chapterCopy(id, silkOrder, reading, literal, received, english) {
         { title: "Action · Take the smallest reversible step", body: `Turn ${topicEn} into a small experiment. Take one reversible step, observe the real response, and let that evidence shape the next move.` },
         { title: "Your life manual", body: `The personalized lens for this chapter is ${topicEn}. After chart verification, your type, strategy, authority, and profile are brought into this distinct theme to widen choices, never to issue a verdict.` },
       ],
-      action: `Read the opening “${anchor}” with three slow breaths, then write one low-effort action related to ${topicEn}.`,
+      action: `Read the opening “${modernCopyAnchor}” with three slow breaths, then write one low-effort action related to ${topicEn}.`,
     },
   };
 }
@@ -350,6 +330,7 @@ await writeFile(new URL("../src/data/sources.json", import.meta.url), `${JSON.st
   knownSourceCorrections: [
     "The reading aid labels its silk-order chapter 30 as received chapter 67; the text is received chapter 80 (Small state, few people). The import corrects it to 80 and the validator enforces unique chapters 1-81.",
     "Automated received-text character alignment is an index for manual collation, not a scholarly critical apparatus.",
+    "Received chapter 16: the imported reading “守情表也” was corrected to Silk B visible wording “守静督也” from the repository transcription and CText; transmitted “笃” remains comparison only. Image verification is still pending.",
   ],
 }, null, 2)}\n`);
 
