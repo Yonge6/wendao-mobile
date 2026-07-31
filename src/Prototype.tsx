@@ -1721,7 +1721,24 @@ export default function Prototype() {
                       <div className="interpretation-layer-heading">
                         {isZh ? "第三层｜现代解读" : "Layer 3 · Modern interpretation"}
                       </div>
-                      {copy.explanation.map((item) => (
+                      {isZh ? (
+                        <div className="explanation-item line-by-line-reading">
+                          <h2>{chapter.zh.explanation[0].title}</h2>
+                          <p className="line-reading-intro">{chapter.zh.explanation[0].body}</p>
+                          <ol>
+                            {chapter.zh.reconstructedVerse.map((line, lineIndex) => (
+                              <li key={`${chapter.id}-translation-${lineIndex}`} data-line-index={lineIndex + 1}>
+                                <div className="line-reading-source">
+                                  <span>{String(lineIndex + 1).padStart(2, "0")}</span>
+                                  <q>{line}</q>
+                                </div>
+                                <p>{chapter.zh.lineByLineTranslation[lineIndex]}</p>
+                              </li>
+                            ))}
+                          </ol>
+                        </div>
+                      ) : null}
+                      {copy.explanation.slice(isZh ? 1 : 0).map((item) => (
                         <div className="explanation-item" key={item.title}>
                           <h2>{item.title}</h2>
                           <p>{item.body}</p>

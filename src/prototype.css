@@ -557,6 +557,70 @@ textarea {
   margin: 0;
 }
 
+.line-by-line-reading {
+  margin-bottom: 28px;
+}
+
+.line-by-line-reading .line-reading-intro {
+  margin-bottom: 15px;
+  color: var(--ink-soft);
+  font-family: var(--sans);
+  font-size: calc(var(--reading-note-size) * 0.94);
+  line-height: 1.75;
+  letter-spacing: 0.025em;
+}
+
+.line-by-line-reading ol {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid color-mix(in srgb, var(--gold) 18%, transparent);
+}
+
+.line-by-line-reading li {
+  min-width: 0;
+  padding: 15px 0 16px;
+  border-bottom: 1px solid color-mix(in srgb, var(--gold) 15%, transparent);
+}
+
+.line-reading-source {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  gap: 9px;
+  align-items: start;
+  margin-bottom: 6px;
+}
+
+.line-reading-source > span {
+  padding-top: 2px;
+  color: var(--gold);
+  font-family: var(--sans);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  line-height: 1.7;
+}
+
+.line-reading-source q {
+  min-width: 0;
+  color: var(--ink-soft);
+  font-size: calc(var(--reading-body-size) * 0.83);
+  line-height: 1.75;
+  overflow-wrap: anywhere;
+}
+
+.line-reading-source q::before,
+.line-reading-source q::after {
+  color: var(--gold);
+}
+
+.line-by-line-reading li > p {
+  padding-left: 35px;
+  line-height: 1.9;
+  overflow-wrap: anywhere;
+}
+
 .explanation-section p {
   margin: 0 0 16px;
 }

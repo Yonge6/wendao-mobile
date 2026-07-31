@@ -33,6 +33,7 @@ export type ReconstructionAddition = {
 
 export type ChineseChapterCopy = ChapterCopyBase & {
   reconstructedVerse: string[];
+  lineByLineTranslation: string[];
   additions: ReconstructionAddition[];
   pinyin: string[][];
 };

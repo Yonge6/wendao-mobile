@@ -1,6 +1,7 @@
 import { writeFile, mkdir } from "node:fs/promises";
 import { pinyin } from "pinyin-pro";
 import { markReconstructionSupplies, reconstructedTokens, requiredSupplyDetails } from "./silk-integrity-core.mjs";
+import { literalTranslationFor } from "./chapter-literal-translations.mjs";
 
 const ACCESS_DATE = "2026-08-01";
 const TAOLIB_URL = "https://raw.githubusercontent.com/xinetzone/tao/main/docs/general/philosophy/laozi-boshu/appendix/phonetic.md";
@@ -212,6 +213,10 @@ function chapterCopy(id, silkOrder, reading, literal, received, english) {
     .replace("万物并作", "万物旁作")
     .replace("大方无隅", "大方无禺"));
   const reconstructedVerse = markReconstructionSupplies(literal, correctedReading);
+  const lineByLineTranslation = literalTranslationFor(id);
+  if (lineByLineTranslation.length !== reconstructedVerse.length) {
+    throw new Error(`Chapter ${id}: ${lineByLineTranslation.length} translations for ${reconstructedVerse.length} reconstructed lines`);
+  }
   const [topicZh, topicEn] = topics[id - 1];
   const anchor = correctedReading[0].replace(/[。！？；]/g, "").slice(0, 12);
   const missing = (literal.match(/[□○]/g) ?? []).length;
@@ -273,11 +278,12 @@ function chapterCopy(id, silkOrder, reading, literal, received, english) {
       eyebrow: `帛书乙本底本校读 · 对应今本第${chineseNumber(id)}章`,
       title: anchor,
       reconstructedVerse,
+      lineByLineTranslation,
       additions,
       pinyin: pinyinLines,
       variant: `版本参照：以马王堆帛书乙本为底本，残缺处参考甲本及传世本校补。这是整理后的校读版本，不是影印转写。${uncertaintyZh} 传世参照的主要逐位差异（校勘索引，需结合王弼注本人工复核）：${collation}。`,
       explanation: [
-        { title: "直译｜先读懂这一章", body: `本章从“${anchor}”展开，讨论${topicZh}。通篇不是要求一个僵硬的答案，而是让人看见事物的条件、反面与转化，在适当的时候停止强求。` },
+        { title: "直译｜逐句读懂这一章", body: "以下今译逐句对应上方校读正文；〔〕中的校补字也参与翻译，但不因此变成帛书乙本原字。" },
         { title: "思想｜让力量回到结构里", body: `“${topicZh}”不是消极退让，而是辨认什么正在自然生成，什么只是由恐惧、虚荣或控制推动。老子把注意力从“我要证明”移向“事情如何长久”。` },
         { title: "校读｜原字、缺损与参照分层", body: `${uncertaintyZh} 上方已公开完整乙本字符段，“□”保留缺损；主文的可读字、拼音与断句属校读层。传世差异仅作参照，不倒灌成“帛书原文”。` },
       ],

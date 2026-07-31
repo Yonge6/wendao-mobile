@@ -81,3 +81,16 @@ test("every supplied graph has position, source, and review confidence metadata"
     assert.deepEqual(inspectChapterIntegrity(chapter), []);
   }
 });
+
+test("all 513 reconstructed lines have an original modern Chinese translation", () => {
+  let lineCount = 0;
+  for (const chapter of chapters) {
+    assert.equal(chapter.zh.lineByLineTranslation.length, chapter.zh.reconstructedVerse.length, `Chapter ${chapter.id}`);
+    chapter.zh.lineByLineTranslation.forEach((translation, index) => {
+      assert.match(translation, /\p{Script=Han}{2}/u, `Chapter ${chapter.id}, line ${index + 1}`);
+      assert.equal(translation.includes("本章从"), false, `Chapter ${chapter.id}, line ${index + 1} must not use the old summary template`);
+    });
+    lineCount += chapter.zh.lineByLineTranslation.length;
+  }
+  assert.equal(lineCount, 513);
+});

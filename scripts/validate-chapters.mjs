@@ -20,6 +20,11 @@ for (const chapter of chapters) {
   errors.push(...inspectChapterIntegrity(chapter).map((issue) => `${issue.severity} ${issue.message}`));
   if (hanziCount(chapter.sources?.receivedReference ?? "") < 20) errors.push(`${prefix}: received comparison appears incomplete`);
   if (!chapter.zh?.reconstructedVerse?.length || hanziCount(chapter.zh.reconstructedVerse.join("")) < 10) errors.push(`${prefix}: Chinese scripture appears incomplete`);
+  if (chapter.zh?.lineByLineTranslation?.length !== chapter.zh?.reconstructedVerse?.length) errors.push(`${prefix}: line-by-line translation must align with every reconstructed line`);
+  chapter.zh?.lineByLineTranslation?.forEach((line, index) => {
+    if (hanziCount(line) < 2) errors.push(`${prefix} translation ${index + 1}: modern Chinese translation is empty or too short`);
+    if (line.includes("本章从")) errors.push(`${prefix} translation ${index + 1}: chapter-summary template is not a line translation`);
+  });
   if (hanziCount(chapter.zh.reconstructedVerse.join("")) < hanziCount(chapter.sources?.receivedReference ?? "") * 0.6) errors.push(`${prefix}: reading text is unexpectedly short against received comparison`);
   if (chapter.zh.reconstructedVerse.length !== chapter.zh.pinyin?.length) errors.push(`${prefix}: Chinese line/Pinyin line mismatch`);
   chapter.zh.reconstructedVerse.forEach((line, index) => {

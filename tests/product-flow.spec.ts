@@ -194,6 +194,17 @@ test("renders the three textual layers and copies reconstructed text without Pin
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(expected);
 });
 
+test("renders a source-aligned modern Chinese translation for every line", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "目录", exact: true }).click();
+  await page.locator('.directory-item[data-chapter-id="8"]').click();
+  const chapter = page.locator('.chapter-current[data-chapter-id="8"]');
+  await expect(chapter.getByText("直译｜逐句读懂这一章", { exact: true })).toBeVisible();
+  await expect(chapter.locator(".line-by-line-reading li")).toHaveCount(9);
+  await expect(chapter.getByText("最高的善像水。", { exact: true })).toBeVisible();
+  await expect(chapter.getByText("正因为不争，所以没有过失和怨尤。", { exact: true })).toBeVisible();
+});
+
 test("representative supplied chapters expose accessible reading text, copy cleanly, and do not overflow", async ({ page, context }) => {
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   await page.setViewportSize({ width: 320, height: 900 });
