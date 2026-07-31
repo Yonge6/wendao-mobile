@@ -1115,6 +1115,15 @@ textarea {
   gap: 10px;
 }
 
+.field-hint {
+  display: block;
+  margin-top: 6px;
+  color: color-mix(in srgb, var(--ink-soft) 74%, transparent);
+  font-family: var(--sans);
+  font-size: 10px;
+  line-height: 1.65;
+}
+
 .privacy-note {
   margin: -2px 0 1px;
   color: color-mix(in srgb, var(--ink-soft) 78%, transparent);

@@ -28,6 +28,7 @@
 - Personal space: the right drawer exposes in-product Life Manual profile entry/editing, persistent night mode, About, and Feedback. It no longer links to Pluto. The dedicated API returns an engine-verified result and the H5 shows type, strategy, authority, profile, definition, and incarnation cross without rendering a BodyGraph.
 - Conditional personalization: with no verified `chartHash`, all three chapters contain no `你的人生说明书` heading. Submitting a question opens the birth-information form. After the live calculation returned Generator / 2/4 / Emotional Authority, all chapters gained a chapter-specific Life Manual paragraph and the response sheet disclosed the same basis.
 - Mobile forms: at `393 × 852`, birth date and time measured as separate stacked rows (`300.8 px` wide each) with no overlap. Composer, form, feedback, and admin password inputs compute to `16 px`, preventing iOS focus zoom without disabling page zoom.
+- Birthplace time zone: the Life Manual form no longer exposes an IANA time-zone field. Mainland China, Hong Kong, Macau, and Taiwan use direct address inference; other places use Photon with ArcGIS fallback and `tz-lookup`. At `393 × 852`, both `武汉` and `Paris, France` completed the production Human Design calculation successfully.
 - Product data: a synthetic profile, question, feedback, and allowlisted events were written through the production API, appeared in the password-protected phone console, and were removed after acceptance. The console showed overview, user, conversation, feedback, and event tabs.
 - Contact surface: About contains the supplied email and seven social links. The Video Channel button opened the supplied `686 × 624` QR image in an in-product modal.
 - Terminology: every visible occurrence of `你的出厂设置` has been replaced with `你的人生说明书`.
@@ -61,6 +62,7 @@
 - Open the H5 directory sheet and select a chapter.
 - Submit a question without a verified profile and confirm Wendao opens the Life Manual form instead of generating a generic answer.
 - Generate a real Human Design result through the production API, confirm the result-only interpretation appears, close the drawer, and verify chapter-level personalization becomes visible.
+- Confirm the Life Manual form has no time-zone input, then calculate successfully with both a Chinese birthplace and an overseas birthplace.
 - Submit a question after setup and confirm the response references the calculated type, profile, and authority.
 - Open and close the right drawer at desktop and `393 × 852`; verify stacked date/time fields and no horizontal overflow.
 - Submit feedback inside Wendao and confirm the success state does not navigate to GitHub.

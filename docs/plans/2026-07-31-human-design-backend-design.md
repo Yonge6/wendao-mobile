@@ -8,7 +8,7 @@ Reading remains primary. Human Design is a quiet personalization layer, not a se
 
 1. The reader can browse the complete scripture, explanation, and general life guidance without entering personal information.
 2. Asking the AI for a personalized response before setup opens the life-manual form.
-3. The form collects a name, birth date, exact time, place, and IANA time zone.
+3. The form collects a name, birth date, exact time, and place. It resolves the IANA time zone automatically from the birthplace using the same location flow as the Human Design project.
 4. Wendao calls its dedicated calculation API and receives a versioned snapshot containing a chart hash, type, strategy, authority, profile, definition, incarnation cross, defined centers, channels, and variables.
 5. The H5 stores the profile and snapshot locally for continuity and sends the consented profile plus result summary to the Wendao product backend.
 6. Personalized chapter guidance and question responses disclose their basis and remain non-prescriptive.

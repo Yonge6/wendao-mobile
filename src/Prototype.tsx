@@ -8,6 +8,7 @@ import {
   useRef,
   useState,
 } from "react";
+import tzLookup from "tz-lookup";
 import {
   ArrowLeftIcon,
   ArrowRightIcon,
@@ -98,15 +99,12 @@ const THEME_STORAGE_KEY = "wendao-theme";
 const CLIENT_ID_KEY = "wendao-client-id";
 const ADMIN_TOKEN_KEY = "wendao-admin-token";
 const APP_VERSION = "2026.07.31";
-const browserTimezone = typeof Intl === "undefined"
-  ? "Asia/Shanghai"
-  : Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Shanghai";
 const emptyProfile: LifeProfile = {
   name: "",
   birthDate: "",
   birthTime: "",
   birthPlace: "",
-  timezone: browserTimezone,
+  timezone: "",
 };
 
 function loadProfile(): LifeProfile {
@@ -152,6 +150,129 @@ async function apiRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
     throw new Error(payload.error?.message || "服务暂时不可用，请稍后再试。");
   }
   return payload.data;
+}
+
+const MAINLAND_MARKERS = [
+  "中国", "中华人民共和国",
+  "北京", "天津", "上海", "重庆",
+  "河北", "山西", "辽宁", "吉林", "黑龙江", "江苏", "浙江", "安徽", "福建", "江西", "山东", "河南", "湖北", "湖南",
+  "广东", "海南", "四川", "贵州", "云南", "陕西", "甘肃", "青海", "内蒙古", "广西", "西藏", "宁夏", "新疆",
+];
+
+const COUNTRY_CODES: Record<string, string> = {
+  CHN: "CN",
+  HKG: "HK",
+  MAC: "MO",
+  TWN: "TW",
+};
+
+type PlaceFeature = {
+  properties?: { countrycode?: string };
+  geometry?: { coordinates?: number[] };
+};
+
+function compactAddress(value: string) {
+  return value.trim().replace(/[\s,，、/]+/g, "");
+}
+
+function inferTimezoneFromAddress(value: string) {
+  const address = compactAddress(value);
+  if (!address) return null;
+  if (/香港|Hong\s*Kong/i.test(value)) return "Asia/Hong_Kong";
+  if (/澳门|澳門|Macao|Macau/i.test(value)) return "Asia/Macau";
+  if (/台湾|臺灣|Taiwan/i.test(value)) return "Asia/Taipei";
+  if (MAINLAND_MARKERS.some((marker) => address.includes(marker))) return "Asia/Shanghai";
+  return null;
+}
+
+function preparePhotonQuery(query: string) {
+  const spaced = query.trim().replace(/([省市区县州旗])(?=[\u3400-\u9fff])/g, "$1 ");
+  const timezone = inferTimezoneFromAddress(query);
+  return timezone === "Asia/Shanghai" && !/中国|中华人民共和国/.test(query)
+    ? `${spaced} 中国`
+    : spaced;
+}
+
+function arcgisCandidatesToFeatures(data: {
+  candidates?: Array<{
+    attributes?: { Country?: string };
+    location?: { x?: number; y?: number };
+  }>;
+}) {
+  return (data.candidates ?? []).map((candidate) => ({
+    properties: {
+      countrycode: COUNTRY_CODES[candidate.attributes?.Country ?? ""] ?? candidate.attributes?.Country ?? "",
+    },
+    geometry: {
+      coordinates: [candidate.location?.x, candidate.location?.y].filter((value): value is number => Number.isFinite(value)),
+    },
+  })).filter((feature) => feature.geometry.coordinates.length === 2);
+}
+
+function timezoneFromFeature(feature: PlaceFeature) {
+  const coordinates = feature.geometry?.coordinates;
+  if (!coordinates || coordinates.length < 2) return null;
+  const [longitude, latitude] = coordinates;
+  if (!Number.isFinite(longitude) || !Number.isFinite(latitude)) return null;
+
+  const countryCode = feature.properties?.countrycode?.toUpperCase();
+  if (countryCode === "CN") return "Asia/Shanghai";
+  if (countryCode === "HK") return "Asia/Hong_Kong";
+  if (countryCode === "MO") return "Asia/Macau";
+  if (countryCode === "TW") return "Asia/Taipei";
+
+  try {
+    return tzLookup(latitude, longitude);
+  } catch {
+    return null;
+  }
+}
+
+async function fetchPhotonPlaces(query: string, signal: AbortSignal) {
+  const url = new URL("https://photon.komoot.io/api/");
+  url.search = new URLSearchParams({ q: preparePhotonQuery(query), limit: "7" }).toString();
+  const response = await fetch(url, { signal });
+  if (!response.ok) throw new Error("Photon unavailable");
+  const data = await response.json() as { features?: PlaceFeature[] };
+  return data.features ?? [];
+}
+
+async function fetchArcgisPlaces(query: string, signal: AbortSignal) {
+  const url = new URL("https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates");
+  url.search = new URLSearchParams({
+    SingleLine: query,
+    maxLocations: "7",
+    outFields: "Country",
+    forStorage: "false",
+    f: "json",
+  }).toString();
+  const response = await fetch(url, { signal });
+  if (!response.ok) throw new Error("ArcGIS unavailable");
+  return arcgisCandidatesToFeatures(await response.json());
+}
+
+async function resolveBirthplaceTimezone(query: string) {
+  const inferred = inferTimezoneFromAddress(query);
+  if (inferred) return inferred;
+
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 12_000);
+  try {
+    for (const search of [fetchPhotonPlaces, fetchArcgisPlaces]) {
+      try {
+        const features = await search(query, controller.signal);
+        for (const feature of features) {
+          const timezone = timezoneFromFeature(feature);
+          if (timezone) return timezone;
+        }
+      } catch (error) {
+        if (controller.signal.aborted) throw error;
+      }
+    }
+  } finally {
+    window.clearTimeout(timeout);
+  }
+  throw new Error("BIRTHPLACE_NOT_FOUND");
 }
 
 const humanDesignLabels: Record<string, { zh: string; en: string }> = {
@@ -814,8 +935,8 @@ function SideDrawer({
             <form className="drawer-form" onSubmit={onProfileSave}>
               <p className="drawer-intro">
                 {isZh
-                  ? "问道会在产品内完成计算，只呈现类型、策略、权威等结果，不绘制人类图。出生时间越准确，解读越可靠。"
-                  : "Wendao calculates your result here and shows only the useful reading—never a BodyGraph. A precise birth time gives a more reliable result."}
+                  ? "问道会根据出生地点自动识别当地时区，并在产品内完成计算；只呈现类型、策略、权威等结果，不绘制人类图。出生时间越准确，解读越可靠。"
+                  : "Wendao identifies the local time zone from your birthplace and calculates your result here. It shows only the useful reading—never a BodyGraph. A precise birth time gives a more reliable result."}
               </p>
               <label>
                 <span>{isZh ? "姓名或称呼" : "Name"}</span>
@@ -852,29 +973,23 @@ function SideDrawer({
                   required
                   value={profileDraft.birthPlace}
                   onChange={(event) => onProfileDraftChange((current) => ({ ...current, birthPlace: event.target.value }))}
-                  placeholder={isZh ? "城市、区县或地区" : "City, district, or region"}
+                  placeholder={isZh ? "如：武汉市 / Paris, France" : "e.g. Paris, France"}
                 />
-              </label>
-              <label>
-                <span>{isZh ? "出生地时区" : "Birth-place time zone"}</span>
-                <input
-                  required
-                  value={profileDraft.timezone}
-                  onChange={(event) => onProfileDraftChange((current) => ({ ...current, timezone: event.target.value }))}
-                  placeholder="Asia/Shanghai"
-                  autoCapitalize="none"
-                  spellCheck={false}
-                />
+                <small className="field-hint">
+                  {isZh
+                    ? "时区会根据出生地点自动识别，请尽量填写“城市 + 国家或地区”。"
+                    : "The time zone is identified automatically. Include the city and country or region where possible."}
+                </small>
               </label>
               <p className="privacy-note">
                 {isZh
-                  ? "隐私说明：提交即同意将出生资料安全传送至问道服务，用于计算、保存你的人生说明书和改善产品；不会公开，也不会绘制人类图。"
-                  : "Privacy: submitting securely sends these details to Wendao to calculate and save your life manual and improve the product. They are not public, and no BodyGraph is rendered."}
+                  ? "隐私说明：出生地点会发送至地点查询服务以识别当地时区；出生资料将安全传送至问道，用于计算、保存你的人生说明书和改善产品，不会公开，也不会绘制人类图。"
+                  : "Privacy: your birthplace is sent to a location service to identify its time zone. Your birth details are securely sent to Wendao to calculate and save your life manual and improve the product. They are not public, and no BodyGraph is rendered."}
               </p>
               <button type="submit" className="drawer-primary drawer-save" disabled={profileState === "saving"}>
                 {profileState === "saved" ? <CheckIcon /> : <PersonIcon />}
                 {profileState === "saving"
-                  ? (isZh ? "正在计算…" : "Calculating…")
+                  ? (isZh ? "正在识别并计算…" : "Locating and calculating…")
                   : profileState === "saved"
                     ? (isZh ? "说明书已更新" : "Manual updated")
                     : (isZh ? "生成我的人生说明书" : "Create my life manual")}
@@ -1342,16 +1457,17 @@ export default function Prototype() {
 
   const saveProfile = async (event: FormEvent) => {
     event.preventDefault();
-    const nextProfile = {
+    const profileInput = {
       name: profileDraft.name.trim(),
       birthDate: profileDraft.birthDate,
       birthTime: profileDraft.birthTime,
       birthPlace: profileDraft.birthPlace.trim(),
-      timezone: profileDraft.timezone.trim(),
     };
     setProfileState("saving");
     setProfileError("");
     try {
+      const timezone = await resolveBirthplaceTimezone(profileInput.birthPlace);
+      const nextProfile: LifeProfile = { ...profileInput, timezone };
       const nextChart = await apiRequest<ChartSnapshot>("/v1/charts", {
         method: "POST",
         body: JSON.stringify({
@@ -1386,7 +1502,12 @@ export default function Prototype() {
       trackEvent("chart_calculated", { value: nextChart.core.type });
     } catch (nextError) {
       setProfileState("error");
-      setProfileError(nextError instanceof Error ? nextError.message : "计算失败，请稍后再试。");
+      const message = nextError instanceof Error ? nextError.message : "";
+      setProfileError(message === "BIRTHPLACE_NOT_FOUND" || nextError instanceof DOMException
+        ? (isZh
+          ? "暂时无法识别这个出生地点，请填写更完整的“城市 + 国家或地区”后重试。"
+          : "We couldn't identify this birthplace. Add the city and country or region, then try again.")
+        : (message || (isZh ? "计算失败，请稍后再试。" : "Calculation failed. Please try again.")));
     }
   };
 
