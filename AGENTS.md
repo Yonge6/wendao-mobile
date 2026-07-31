@@ -72,6 +72,10 @@ See `src/mobile/COMPONENTS.md` for the full component and gesture contract.
 - Display small tone-marked Hanyu Pinyin above every Chinese character in the original scripture text; do not add pinyin to translations or the English reading mode.
 - Never present a chapter excerpt as the chapter's original text. Every chapter screen must show the complete selected-edition text, identify whether it is a literal witness or an edited collation, and keep a visible full-text line count.
 - Use Mawangdui Silk Text B as the primary textual witness. Preserve its literal variant characters in the original-text block, label supplied text where the witness is damaged, and explain common collations separately rather than silently normalizing or mixing editions. Wang Bi and other versions are comparative notes.
+- For the beginner-facing scripture block, use a clearly labelled Silk Text B reading edition: render readable collation characters and pronunciations in the main text, then disclose the literal Silk B graphs, loans, lacunae, and Wang Bi comparison immediately below. Never mix literal graphs and normalized readings without saying which layer the reader is seeing.
+- Standardize each chapter’s `解释 / Meaning` as three layers (plain reading, philosophical structure, textual collation) and `与你有关 / For you` as four life lenses (anxiety, relationships, choice, action), followed by verified personalization when available and one concrete daily practice.
+- Render only the selected chapter initially. Append each next chapter only after the reader reaches the chapter-end continuation trigger; directory and chance selections reset the reading surface to one chapter.
+- Keep the 01 / 02 / 03 section-rail labels transparent in both day and night modes; do not place a tinted block behind the numbers or labels.
 - Use `人生说明书 / Life manual`, not `出厂设置 / Native pattern`, for the personalized Human Design layer. Never render a bodygraph in Wendao and never present a personalized result as a deterministic verdict.
 - The product philosophy is “真实自己，流动人生 / True to yourself. Flow with life.” Personalization should widen choices rather than prescribe them.
 

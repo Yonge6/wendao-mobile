@@ -78,7 +78,7 @@ type ChapterCopy = {
   verse: string[];
   pinyin?: string[][];
   variant: string;
-  explanation: string[];
+  explanation: RelatedItem[];
   related: RelatedItem[];
   action: string;
 };
@@ -373,23 +373,23 @@ const chapters: Chapter[] = [
     id: 8,
     silkOrder: "44",
     zh: {
-      eyebrow: "帛书乙本 · 对应今本第八章",
+      eyebrow: "帛书乙本校读 · 对应今本第八章",
       title: "上善如水",
       verse: [
         "上善如水。",
-        "水善利万物而有争，",
-        "居众人之所亚，",
+        "水善利万物而有静，",
+        "居众人之所恶，",
         "故几于道矣。",
         "居善地，心善渊，",
         "予善天，言善信，",
-        "正善治，事善能，",
+        "政善治，事善能，",
         "动善时。",
         "夫唯不争，故无尤。",
       ],
       pinyin: [
         ["shàng", "shàn", "rú", "shuǐ"],
-        ["shuǐ", "shàn", "lì", "wàn", "wù", "ér", "yǒu", "zhēng"],
-        ["jū", "zhòng", "rén", "zhī", "suǒ", "yà"],
+        ["shuǐ", "shàn", "lì", "wàn", "wù", "ér", "yǒu", "jìng"],
+        ["jū", "zhòng", "rén", "zhī", "suǒ", "wù"],
         ["gù", "jī", "yú", "dào", "yǐ"],
         ["jū", "shàn", "dì", "xīn", "shàn", "yuān"],
         ["yǔ", "shàn", "tiān", "yán", "shàn", "xìn"],
@@ -397,12 +397,20 @@ const chapters: Chapter[] = [
         ["dòng", "shàn", "shí"],
         ["fū", "wéi", "bù", "zhēng", "gù", "wú", "yóu"],
       ],
-      variant: "乙本原文保留“有争 / 所亚 / 正善治” · 通行校读多作“不争 / 所恶 / 政善治” · 王弼本作“若水”",
+      variant: "校读说明：乙本字形作“有争 / 所亚 / 正善治”，本页依文义读作“有静 / 所恶 / 政善治” · 王弼本作“若水 / 不争 / 处众人之所恶”",
       explanation: [
-        "最接近道的善，像水。它滋养万物，却不与万物争先；它总是流向低处，安静地停在人们不愿停留的位置。",
-        "为什么用水来讲“道”？水没有固定形状，却始终保有自己的性质；它能顺着环境改变路径，也能用漫长而持续的力量改变环境。柔软在这里不是脆弱，而是一种不被单一姿态困住的能力。",
-        "“居、心、予、言、政、事、动”把水的品性展开到生活的七个面向：所处的位置、内心的深度、给予的尺度、说话的可信、处理秩序的能力、做事的效能，以及行动的时机。道不只是一种观念，它最终要落实在这些具体选择里。",
-        "“不争”也不是放弃立场。水不与万物争夺同一种形状，却始终朝自己的方向流动；它减少无谓对抗，把力量留给真正重要的事。因此“不争”带来的不是被动，而是更少怨尤、更少内耗。",
+        {
+          title: "直译｜水为什么近于道",
+          body: "最高层次的善像水：滋养万物而保持沉静，停留在众人厌恶的低处，所以接近于道。它居处得宜，内心深沉，给予顺应天时，言语守信，治理有序，做事有能力，行动合时。",
+        },
+        {
+          title: "思想｜柔软不是没有方向",
+          body: "水改变形态，却不丢失向低处流动、滋养万物的本性。这里的“不争”不是回避责任，而是减少无谓对抗，把力量留给真正重要的事情。",
+        },
+        {
+          title: "校读｜把字形与读法分开",
+          body: "帛书乙本保留早期借字。为了让初学者顺畅朗读，本页正文采用校读字“静、恶、政”，并在版本说明中保留乙本字形“争、亚、正”，不把校读结果冒充成帛书原貌。",
+        },
       ],
       related: [
         {
@@ -410,24 +418,16 @@ const chapters: Chapter[] = [
           body: "当焦虑催你立刻向上、向前、向别人证明时，先回到身体和眼前这一步。低处不是失败的位置，而是重新蓄水、看清方向的地方。",
         },
         {
-          title: "关系｜柔而不僵",
-          body: "你不必立刻赢得关系。先让局面重新流动，再决定靠近或离开。柔软不是委屈自己，而是不把一时的对抗变成永久的僵局。",
-        },
-        {
-          title: "行动｜让价值流出去",
-          body: "水的力量不靠占有来证明，而在于它让生命得到滋养。今天可以问：我做的这件事，除了让我被看见，还让谁真正受益？",
+          title: "关系｜柔软，也守边界",
+          body: "你不必立刻赢得关系。先让局面重新流动，再决定靠近或离开；涉及核心价值和真实边界时，也要清楚表达。柔软不是委屈自己。",
         },
         {
           title: "选择｜变形，不变心",
           body: "适应不是没有原则。水可以成为溪流、雨雾或湖泊，改变的是路径和形态，不变的是它持续流动的本性。形式走不通时，换一种走法。",
         },
         {
-          title: "边界｜不争不是退缩",
-          body: "不必参与每一场比较，也不必回应每一种挑衅；但涉及核心价值和真实边界时，你仍可以清楚表达。省下争胜的力气，用来守住真正重要的东西。",
-        },
-        {
-          title: "时机｜等水势形成",
-          body: "有些行动太早会耗散，太晚会错过。先观察局面是否已经具备条件：信息够不够、身体是否准备好、关系里是否出现了可以流动的缝隙。",
+          title: "行动｜等水势形成",
+          body: "有些行动太早会耗散，太晚会错过。先观察信息是否足够、身体是否准备好、关系里是否出现了可以流动的缝隙，再把力量用出去。",
         },
         {
           title: "你的人生说明书",
@@ -437,7 +437,7 @@ const chapters: Chapter[] = [
       action: "慢三次呼吸，再回应。把答案放慢一点，让真实的自己先出现。",
     },
     en: {
-      eyebrow: "Mawangdui Silk Text B · Received Chapter 8",
+      eyebrow: "Silk Text B reading edition · Received Chapter 8",
       title: "The Highest Good Is Like Water",
       verse: [
         "The highest good is like water.",
@@ -450,12 +450,11 @@ const chapters: Chapter[] = [
         "In movement, the right time.",
         "Because it does not contend, it incurs no blame.",
       ],
-      variant: "Silk B preserves “there is contention / what people disdain” · Common collation reads “without contention” · Wang Bi begins “as water”",
+      variant: "Reading note: Silk B writes the graphs rendered as “contention / base / correct”; this page reads them contextually as “stillness / what is disliked / govern” · Wang Bi has “like water / does not contend”",
       explanation: [
-        "The goodness closest to the Way behaves like water. It nourishes everything without racing to be first, and quietly settles in the low places others avoid.",
-        "Why does water illuminate the Way? It has no fixed shape, yet never loses its nature. It changes course with its surroundings and, through patient continuity, also changes those surroundings. Here, softness means freedom from being trapped in a single posture.",
-        "Dwelling, heart, giving, speech, governance, affairs, and movement extend water's qualities into seven areas of life: where you stand, how deeply you listen, what you offer, whether your word can be trusted, how you create order, how capably you act, and whether the time is right.",
-        "Not contending does not mean having no position. Water does not compete to hold one shape, yet it keeps moving in its own direction. It spends less strength on needless resistance and keeps more for what matters.",
+        { title: "Plain reading · Why water is near the Way", body: "The highest goodness resembles water: it benefits all things, remains still, and settles in the low places people dislike. Its dwelling, depth, giving, speech, governance, work, and movement are each appropriate to their time and place." },
+        { title: "Thought · Softness still has direction", body: "Water changes form without losing its tendency to flow low and nourish life. Non-contention is not avoidance; it is spending less strength on needless resistance and keeping more for what matters." },
+        { title: "Collation · Separate graphs from reading", body: "Silk Text B preserves early loan graphs. The reading text uses accessible characters while the note above discloses the manuscript graphs instead of presenting a normalized text as a literal transcription." },
       ],
       related: [
         {
@@ -463,24 +462,16 @@ const chapters: Chapter[] = [
           body: "When anxiety pushes you upward, faster, and toward proving yourself, return to your body and the next visible step. Low ground can be where strength gathers and direction becomes clear.",
         },
         {
-          title: "Relationships · Soft, not rigid",
-          body: "You do not have to win the relationship today. Let the situation move again before deciding whether to come closer or step away. Softness is not self-erasure; it keeps a temporary conflict from becoming permanent.",
-        },
-        {
-          title: "Action · Let value flow outward",
-          body: "Water does not prove its power by possessing. Its strength appears in what it nourishes. Ask: beyond making me visible, who genuinely benefits from what I am doing?",
+          title: "Relationships · Soft, with boundaries",
+          body: "You do not have to win the relationship today. Let the situation move before deciding whether to come closer or step away, and speak clearly when a real boundary is involved. Softness is not self-erasure.",
         },
         {
           title: "Choice · Change form, keep your nature",
           body: "Adaptation is not the absence of principle. Water may become stream, mist, or lake; the route and form change while its living movement remains. When one form fails, find another way through.",
         },
         {
-          title: "Boundaries · Non-contention is not retreat",
-          body: "You need not enter every comparison or answer every provocation. You can still speak clearly when a core value or real boundary is involved. Save the energy of winning for protecting what matters.",
-        },
-        {
-          title: "Timing · Let the current gather",
-          body: "Acting too early can scatter energy; acting too late can miss the opening. Notice whether the information, your body, and the relationship have formed enough of a channel for movement.",
+          title: "Action · Let the current gather",
+          body: "Acting too early can scatter energy; acting too late can miss the opening. Notice whether the information, your body, and the relationship have formed enough of a channel before committing force.",
         },
         {
           title: "Your life manual",
@@ -494,39 +485,44 @@ const chapters: Chapter[] = [
     id: 9,
     silkOrder: "45",
     zh: {
-      eyebrow: "帛书乙本 · 对应今本第九章",
-      title: "植而盈之",
+      eyebrow: "帛书乙本校读 · 对应今本第九章",
+      title: "持而盈之",
       verse: [
-        "植而盈之，不若其已；",
-        "锻而允之，不可长葆也。",
+        "持而盈之，不若其已；",
+        "揣而锐之，不可长保也。",
         "金玉盈室，莫之能守也；",
         "贵富而骄，自遗咎也。",
         "功遂身退，天之道也。",
       ],
       pinyin: [
-        ["zhí", "ér", "yíng", "zhī", "bù", "ruò", "qí", "yǐ"],
-        ["duàn", "ér", "yǔn", "zhī", "bù", "kě", "cháng", "bǎo", "yě"],
+        ["chí", "ér", "yíng", "zhī", "bù", "ruò", "qí", "yǐ"],
+        ["zhuī", "ér", "ruì", "zhī", "bù", "kě", "cháng", "bǎo", "yě"],
         ["jīn", "yù", "yíng", "shì", "mò", "zhī", "néng", "shǒu", "yě"],
         ["guì", "fù", "ér", "jiāo", "zì", "yí", "jiù", "yě"],
         ["gōng", "suì", "shēn", "tuì", "tiān", "zhī", "dào", "yě"],
       ],
-      variant: "本页直录乙本“植 / 锻而允 / 长葆 / 贵富” · 王弼本作“持 / 揣而锐 / 长保 / 富贵”",
+      variant: "校读说明：乙本字形作“植 / 锻而允 / 葆”，本页读作“持 / 揣而锐 / 保” · 仍保留乙本“金玉盈室 / 贵富 / 功遂身退”",
       explanation: [
-        "已经满了还要继续加，锋芒已经很盛还要反复磨砺，都难以长久。老子提醒的不是拒绝成就，而是识别“够了”的时刻。",
-        "完成之后懂得退一步，是给成果留下生长的空间，也是让自己免于被成功反过来占有。",
+        { title: "直译｜知止，比继续加码更难", body: "已经满了还要继续加，不如及时停止；把锋刃反复锤炼得过于锐利，也无法长久。金玉满室守不住，富贵而骄会留下祸患。事情完成后懂得退身，合乎天道。" },
+        { title: "思想｜完成不等于继续占有", body: "这一章不是否定成就，而是提醒人识别由盛转衰的临界点。功成之后退一步，是给成果留下独立生长的空间，也让自己不被成功、财富和身份反过来占有。" },
+        { title: "校读｜保留乙本，帮助朗读", body: "乙本写作“植、锻、允、葆”。本页按句义校读为“持、揣、锐、保”，其中“揣”在这里读 zhuī，指捶击、锤炼；乙本独有的句式和词序仍保留在正文中。" },
       ],
       related: [
         {
-          title: "工作",
-          body: "不必用每一次加班证明价值。完成最重要的部分，然后停下来检查：继续投入是在创造，还是只是不敢结束？",
+          title: "焦虑｜识别“还不够”",
+          body: "焦虑常把“再多一点”伪装成安全感。先问：真正缺少的是关键条件，还是我暂时无法接受事情已经完成？",
         },
         {
-          title: "关系",
+          title: "关系｜给彼此留白",
           body: "爱不是把彼此的空间全部填满。适当的留白，会让靠近重新成为选择，而不是义务。",
         },
         {
-          title: "选择",
+          title: "选择｜设定足够线",
           body: "如果你已经得到核心结果，下一步也许不是扩张，而是整理、巩固与放下。",
+        },
+        {
+          title: "行动｜完成之后退一步",
+          body: "完成最重要的部分，然后停下来检查：继续投入仍在创造价值，还是只因为不敢结束？把后续空间交还给事情本身。",
         },
         {
           title: "你的人生说明书",
@@ -536,7 +532,7 @@ const chapters: Chapter[] = [
       action: "今天为一件事设定“足够线”，到线就停，不再追加证明。",
     },
     en: {
-      eyebrow: "Mawangdui Silk Text B · Received Chapter 9",
+      eyebrow: "Silk Text B reading edition · Received Chapter 9",
       title: "Holding Until It Overflows",
       verse: [
         "Hold and fill it—better to stop.",
@@ -545,24 +541,26 @@ const chapters: Chapter[] = [
         "Wealth and rank joined with pride leave their own blame.",
         "The work complete, step back: this is the Way of Heaven.",
       ],
-      variant: "The silk and Wang Bi texts differ in several characters and pauses",
+      variant: "Reading note: Silk B writes graphs corresponding to “plant / forge and allow / preserve”; this page reads them as “hold / hammer and sharpen / keep” while retaining Silk B's distinctive syntax",
       explanation: [
-        "Adding to what is already full, or sharpening what is already keen, cannot last. The point is not to reject achievement, but to recognize the moment when it is enough.",
-        "Stepping back after completion gives the work space to live—and keeps success from possessing the person who made it.",
+        { title: "Plain reading · Know when to stop", body: "Adding to what is already full is worse than stopping. A blade hammered too sharp cannot last; a hall of treasure cannot be guarded forever; rank joined with pride leaves trouble. When the work is complete, step back." },
+        { title: "Thought · Completion is not possession", body: "The chapter does not reject achievement. It asks us to recognize the point where increase becomes damage. Stepping back gives the work room to live and keeps success from possessing its maker." },
+        { title: "Collation · A readable Silk B edition", body: "The main text reads several early Silk B graphs by their contextual words while preserving Silk B's distinctive phrases, order, and completion formula. The manuscript forms remain disclosed above." },
       ],
       related: [
         {
-          title: "Work",
-          body: "You do not have to prove your value with every extra hour. Complete what matters, then ask whether more effort is creating value or merely avoiding an ending.",
+          title: "Anxiety · Notice “not enough”",
+          body: "Anxiety can disguise “one more thing” as safety. Ask whether a real condition is missing, or whether you are simply finding it hard to accept that the work is complete.",
         },
         {
-          title: "Relationships",
+          title: "Relationships · Leave room",
           body: "Care does not need to fill every inch of space. A little room lets closeness become a choice again, rather than an obligation.",
         },
         {
-          title: "Choice",
+          title: "Choice · Define enough",
           body: "If the essential result is already here, the next move may be to consolidate, organize, and release—not expand.",
         },
+        { title: "Action · Step back after completion", body: "Complete what matters, then ask whether more effort is still creating value or merely avoiding an ending. Return some space to the work itself." },
         {
           title: "Your life manual",
           body: "If you tend to carry every responsibility, stepping back is a practice of trust: life can continue without your constant control.",
@@ -575,7 +573,7 @@ const chapters: Chapter[] = [
     id: 1,
     silkOrder: "1",
     zh: {
-      eyebrow: "帛书乙本校补 · 对应今本第一章",
+      eyebrow: "帛书乙本校补、校读 · 对应今本第一章",
       title: "道可道也",
       verse: [
         "道可道也，非恒道也。",
@@ -583,9 +581,9 @@ const chapters: Chapter[] = [
         "无名万物之始也；",
         "有名万物之母也。",
         "故恒无欲也，以观其妙；",
-        "恒又欲也，以观其所噭。",
-        "两者同出，异名同胃。",
-        "玄之又玄，众眇之门。",
+        "恒有欲也，以观其所徼。",
+        "两者同出，异名同谓。",
+        "玄之又玄，众妙之门。",
       ],
       pinyin: [
         ["dào", "kě", "dào", "yě", "fēi", "héng", "dào", "yě"],
@@ -593,28 +591,30 @@ const chapters: Chapter[] = [
         ["wú", "míng", "wàn", "wù", "zhī", "shǐ", "yě"],
         ["yǒu", "míng", "wàn", "wù", "zhī", "mǔ", "yě"],
         ["gù", "héng", "wú", "yù", "yě", "yǐ", "guān", "qí", "miào"],
-        ["héng", "yòu", "yù", "yě", "yǐ", "guān", "qí", "suǒ", "jiào"],
+        ["héng", "yǒu", "yù", "yě", "yǐ", "guān", "qí", "suǒ", "jiào"],
         ["liǎng", "zhě", "tóng", "chū", "yì", "míng", "tóng", "wèi"],
         ["xuán", "zhī", "yòu", "xuán", "zhòng", "miǎo", "zhī", "mén"],
       ],
-      variant: "乙本有缺损，本页据甲本校补缺字；保留乙本“又 / 噭 / 胃 / 眇” · 王弼本作“有 / 徼 / 谓 / 妙”",
+      variant: "校读说明：乙本首段与“以观其妙”处有缺损，据甲本补；乙本字形作“又 / 噭 / 胃 / 眇”，本页读作“有 / 徼 / 谓 / 妙”",
       explanation: [
-        "能够被说清楚的道理，都只是此刻的一个切面；能够被命名的身份，也不能涵盖一个生命的全部。",
-        "名字帮助我们理解世界，却也容易把世界固定。保留一点“不急着定义”的空间，变化才有可能被看见。",
+        { title: "直译｜能说出的不是全部", body: "可以被说出的道，不是恒久不变的道；可以被命名的名，也不是恒久不变的名。无名是万物的开始，有名是万物的母体：没有欲求时观察其幽微，有所欲求时观察它所抵达的边界。" },
+        { title: "思想｜名字是入口，不是终点", body: "命名帮助我们辨认世界，却也可能把流动的现实固定成标签。“无”与“有”不是互相排斥的答案，而是观看同一生成过程的两个角度；保持两种视角，才更接近“玄”。" },
+        { title: "校读｜缺损必须看得见", body: "乙本首段和“以观其妙”处缺损，本页只在有甲本依据时补入；“又、噭、胃、眇”按文义读作“有、徼、谓、妙”。缺损、校补与借字均在版本说明中公开。" },
       ],
       related: [
         {
-          title: "认识自己",
-          body: "性格、职业、关系身份都是真实的一部分，但没有任何一个标签等于完整的你。你可以认识自己，而不把自己锁死。",
+          title: "焦虑｜允许暂时不知道",
+          body: "你不需要立刻为每一种不确定找到名字。允许暂时不知道，往往比仓促下结论更接近事实。",
         },
         {
-          title: "关系",
+          title: "关系｜先描述，再定义",
           body: "当你把对方定义成“他就是这样的人”，关系也会停止变化。先描述发生了什么，再判断它意味着什么。",
         },
         {
-          title: "焦虑",
-          body: "你不需要立刻为不确定找到一个名字。允许暂时不知道，往往比仓促下结论更接近事实。",
+          title: "选择｜给变化留下空间",
+          body: "职业、性格和关系身份都是真实的一部分，却没有任何一个标签等于完整的你。让今天的选择回应今天的事实，而不是维护旧定义。",
         },
+        { title: "行动｜把标签改成观察", body: "把“我就是这样的人”改写成“我最近常这样反应”。前一句封闭变化，后一句让你看见条件、例外和新的可能。" },
         {
           title: "你的人生说明书",
           body: "人类图等工具可以成为观察你的镜子，却不应成为限制你的围墙。结果用来增加选择，不是替你做决定。",
@@ -623,7 +623,7 @@ const chapters: Chapter[] = [
       action: "把一个“我就是……”改写成“我最近常常……”，给自己留出变化的余地。",
     },
     en: {
-      eyebrow: "Mawangdui Silk Text B, lacunae supplied · Received Chapter 1",
+      eyebrow: "Silk Text B, supplied and read · Received Chapter 1",
       title: "A Way That Can Be Spoken",
       verse: [
         "A way that can be spoken is not the enduring Way.",
@@ -635,24 +635,26 @@ const chapters: Chapter[] = [
         "The two arise together and differ only in name.",
         "Mystery within mystery: the gate of all subtleties.",
       ],
-      variant: "The silk text uses “enduring”; Wang Bi’s received text uses “constant”",
+      variant: "Reading note: gaps in Silk B are supplied only where Silk A supports them; early graphs for “have / boundary / say / subtle” are normalized for reading and disclosed here",
       explanation: [
-        "Any truth we can fully explain is only one view from this moment. Any identity we can name is never the whole of a life.",
-        "Names help us understand the world, yet they can also freeze it. Leave a little room before defining, and change becomes visible.",
+        { title: "Plain reading · What can be said is not the whole", body: "A way that can be spoken is not the enduring Way, and a name that can be named is not the enduring name. The unnamed begins things; the named nurtures them. Without desire we see subtlety; with desire we see the boundary reached." },
+        { title: "Thought · A name is an entrance", body: "Names help us recognize the world, but they can freeze what is still changing. The unnamed and the named are two views of one unfolding process, not rival answers." },
+        { title: "Collation · Make every gap visible", body: "Silk B is damaged in the opening and near the line about observing subtlety. This page supplies only text supported by Silk A and normalizes early loan graphs for reading while disclosing both decisions." },
       ],
       related: [
         {
-          title: "Knowing yourself",
-          body: "Personality, work, and relationship roles are real parts of you, but no label is the whole person. Self-knowledge can be a doorway rather than a cage.",
+          title: "Anxiety · Allow not knowing",
+          body: "You do not need to name every uncertainty immediately. Allowing yourself not to know can be more truthful than a hurried conclusion.",
         },
         {
-          title: "Relationships",
+          title: "Relationships · Describe before defining",
           body: "When you decide “this is simply who they are,” the relationship loses room to change. Describe what happened before deciding what it means.",
         },
         {
-          title: "Anxiety",
-          body: "You do not need to name every uncertainty immediately. Allowing yourself not to know can be more truthful than a hurried conclusion.",
+          title: "Choice · Leave room for change",
+          body: "Work, personality, and relationship roles are real parts of you, but no label is the whole person. Let today's choice answer today's facts instead of protecting an old definition.",
         },
+        { title: "Action · Turn labels into observations", body: "Rewrite “I am this kind of person” as “Lately I often respond this way.” The second sentence leaves room to notice conditions, exceptions, and change." },
         {
           title: "Your life manual",
           body: "Human Design and similar tools can be mirrors, not walls. Use the result to widen your choices—not to make the choice for you.",
@@ -1511,6 +1513,7 @@ export default function Prototype() {
   const [question, setQuestion] = useState("");
   const [submittedQuestion, setSubmittedQuestion] = useState("");
   const [isReadingScrolled, setIsReadingScrolled] = useState(false);
+  const [visibleChapterCount, setVisibleChapterCount] = useState(1);
   const [theme, setTheme] = useState<Theme>(loadTheme);
   const [readingSize, setReadingSize] = useState<ReadingSize>(loadReadingSize);
   const [profile, setProfile] = useState<LifeProfile>(loadProfile);
@@ -1528,6 +1531,7 @@ export default function Prototype() {
   const clientId = useRef(stableId(CLIENT_ID_KEY));
   const sessionId = useRef(window.crypto.randomUUID());
   const appOpenTracked = useRef(false);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
   const orderedChapters = useMemo(() => reorderFrom(chapterId), [chapterId]);
   const isZh = language === "zh";
   const activeCopy = chapters.find((chapter) => chapter.id === chapterId)?.[language] ?? chapters[0][language];
@@ -1574,8 +1578,23 @@ export default function Prototype() {
     return () => scroll.removeEventListener("scroll", updateReadingState);
   }, []);
 
+  useEffect(() => {
+    const root = document.querySelector<HTMLElement>("[data-testid='mobile-scroll']");
+    const trigger = loadMoreRef.current;
+    if (!root || !trigger || visibleChapterCount >= orderedChapters.length) return;
+
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return;
+      setVisibleChapterCount((current) => Math.min(current + 1, orderedChapters.length));
+    }, { root, threshold: 0.72 });
+
+    observer.observe(trigger);
+    return () => observer.disconnect();
+  }, [orderedChapters, visibleChapterCount]);
+
   const selectChapter = (id: number) => {
     setChapterId(id);
+    setVisibleChapterCount(1);
     setDirectoryOpen(false);
     trackEvent("chapter_view", { source: "directory" }, id);
     scrollReadingToTop();
@@ -1585,6 +1604,7 @@ export default function Prototype() {
     const candidates = chapters.filter((chapter) => chapter.id !== chapterId);
     const next = candidates[Math.floor(Math.random() * candidates.length)];
     setChapterId(next.id);
+    setVisibleChapterCount(1);
     trackEvent("chance_chapter", { target: String(next.id) }, next.id);
     scrollReadingToTop();
   };
@@ -1788,7 +1808,7 @@ export default function Prototype() {
             {isZh ? "真实自己，流动人生" : "True to yourself. Flow with life."}
           </p>
 
-          {orderedChapters.map((chapter, chapterIndex) => {
+          {orderedChapters.slice(0, visibleChapterCount).map((chapter, chapterIndex) => {
             const copy = chapter[language];
             return (
               <article
@@ -1844,7 +1864,12 @@ export default function Prototype() {
                       <span className="rail-line rail-fill" />
                     </aside>
                     <div className="section-copy">
-                      {copy.explanation.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+                      {copy.explanation.map((item) => (
+                        <div className="explanation-item" key={item.title}>
+                          <h2>{item.title}</h2>
+                          <p>{item.body}</p>
+                        </div>
+                      ))}
                     </div>
                   </section>
 
@@ -1875,6 +1900,14 @@ export default function Prototype() {
               </article>
             );
           })}
+
+          {visibleChapterCount < orderedChapters.length ? (
+            <div className="chapter-load-trigger" ref={loadMoreRef} role="status">
+              <span aria-hidden="true" />
+              <small>{isZh ? "继续向下，进入下一章" : "Continue down to the next chapter"}</small>
+              <strong>{orderedChapters[visibleChapterCount][language].title}</strong>
+            </div>
+          ) : null}
 
           <footer className="reading-footer">
             <span>{isZh ? "认识 · 接纳 · 成为 · 活出" : "Know · Accept · Become · Live"}</span>
