@@ -121,6 +121,24 @@ test("starts at the former default size and offers two larger reading steps", as
   await expect(page.locator(".verse-line-ruby > .verse-punctuation")).toHaveCount(0);
 });
 
+test("shares Wendao from the drawer with the native-or-web share contract", async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "share", {
+      configurable: true,
+      value: async (payload: ShareData) => {
+        window.sessionStorage.setItem("wendao-test-share", JSON.stringify(payload));
+      },
+    });
+  });
+  await page.goto("/");
+  await page.getByRole("button", { name: "打开更多功能" }).click();
+  await page.getByRole("button", { name: "分享三慢问道" }).click();
+  await expect(page.getByText("已打开系统分享", { exact: true })).toBeVisible();
+  const payload = await page.evaluate(() => JSON.parse(window.sessionStorage.getItem("wendao-test-share") || "{}"));
+  expect(payload.url).toBe("https://wendao.wonderelian.com/");
+  expect(payload.title).toBe("三慢问道");
+});
+
 test("About separates the textual lineage from claims of direct descent", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "打开更多功能" }).click();

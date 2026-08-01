@@ -22,6 +22,7 @@ import {
   MagnifyingGlassIcon,
   MoonIcon,
   PersonIcon,
+  Share1Icon,
   SunIcon,
 } from "@radix-ui/react-icons";
 import "@fontsource/noto-sans-sc/400.css";
@@ -34,6 +35,7 @@ import {
   type HumanDesignReadingChart,
 } from "./humanDesignReading";
 import { chapters, type ChapterCopyBase, type RelatedItem } from "./data/chapters";
+import { initializeNativeShell, nativeImpact, runtimeSurface, shareWendao, syncNativeTheme } from "./native";
 
 type Language = "zh" | "en";
 type Theme = "light" | "dark";
@@ -582,6 +584,8 @@ type SideDrawerProps = {
   onFeedbackSubmit: (event: FormEvent) => void;
   onContactClick: (target: string) => void;
   onVideoChannelOpen: () => void;
+  onShare: () => void;
+  shareFeedback: string;
 };
 
 function SideDrawer({
@@ -610,6 +614,8 @@ function SideDrawer({
   onFeedbackSubmit,
   onContactClick,
   onVideoChannelOpen,
+  onShare,
+  shareFeedback,
 }: SideDrawerProps) {
   const isZh = language === "zh";
   const profileComplete = Boolean(chart?.chartHash);
@@ -755,6 +761,14 @@ function SideDrawer({
                     ))}
                   </div>
                 </div>
+                <button type="button" onClick={onShare}>
+                  <span className="drawer-nav-icon"><Share1Icon /></span>
+                  <span>
+                    <strong>{shareFeedback || (isZh ? "分享三慢问道" : "Share Wendao")}</strong>
+                    <small>{isZh ? "把这一份慢读分享给朋友" : "Share this slower way of reading"}</small>
+                  </span>
+                  <ChevronRightIcon />
+                </button>
                 <button type="button" onClick={() => onViewChange("about")}>
                   <span className="drawer-nav-icon"><InfoCircledIcon /></span>
                   <span>
@@ -1349,6 +1363,7 @@ export default function Prototype() {
   const [feedbackState, setFeedbackState] = useState<SaveState>("idle");
   const [feedbackError, setFeedbackError] = useState("");
   const [responseText, setResponseText] = useState("");
+  const [shareFeedback, setShareFeedback] = useState("");
   const [videoChannelOpen, setVideoChannelOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(isAdminLocation);
   const clientId = useRef(stableId(CLIENT_ID_KEY));
@@ -1387,7 +1402,12 @@ export default function Prototype() {
     document.documentElement.dataset.theme = theme;
     window.localStorage.setItem(THEME_STORAGE_KEY, theme);
     document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "dark" ? "#10191b" : "#f7f1e6");
+    void syncNativeTheme(theme);
   }, [theme]);
+
+  useEffect(() => {
+    void initializeNativeShell(theme);
+  }, []);
 
   useEffect(() => {
     document.documentElement.dataset.readingSize = readingSize;
@@ -1397,7 +1417,7 @@ export default function Prototype() {
   useEffect(() => {
     if (appOpenTracked.current) return;
     appOpenTracked.current = true;
-    trackEvent("app_open", { source: "web" });
+    trackEvent("app_open", { source: runtimeSurface() });
   }, []);
 
   useEffect(() => {
@@ -1419,6 +1439,7 @@ export default function Prototype() {
       if (!entry.isIntersecting || chapterOpeningRef.current) return;
       chapterOpeningRef.current = true;
       setIsOpeningNextChapter(true);
+      nativeImpact("light");
       const openingDelay = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 720;
       chapterOpeningTimerRef.current = window.setTimeout(() => {
         setVisibleChapterCount((current) => Math.min(current + 1, orderedChapters.length));
@@ -1445,6 +1466,7 @@ export default function Prototype() {
 
   const selectChapter = (id: number) => {
     resetChapterOpening();
+    nativeImpact("light");
     setChapterId(id);
     setVisibleChapterCount(1);
     setDirectoryOpen(false);
@@ -1455,6 +1477,7 @@ export default function Prototype() {
 
   const meetAChapter = () => {
     resetChapterOpening();
+    nativeImpact("medium");
     const candidates = chapters.filter((chapter) => chapter.id !== chapterId);
     const next = candidates[Math.floor(Math.random() * candidates.length)];
     setChapterId(next.id);
@@ -1606,6 +1629,18 @@ export default function Prototype() {
   const changeTheme = (nextTheme: Theme) => {
     setTheme(nextTheme);
     trackEvent("theme_change", { value: nextTheme });
+  };
+
+  const shareProduct = async () => {
+    const outcome = await shareWendao(language);
+    if (outcome === "cancelled") return;
+    setShareFeedback(outcome === "shared"
+      ? (isZh ? "已打开系统分享" : "Share sheet opened")
+      : outcome === "copied"
+        ? (isZh ? "链接已复制" : "Link copied")
+        : (isZh ? "暂时无法分享" : "Sharing unavailable"));
+    trackEvent("product_share", { outcome });
+    window.setTimeout(() => setShareFeedback(""), 2400);
   };
 
   return (
@@ -1998,6 +2033,8 @@ export default function Prototype() {
           setVideoChannelOpen(true);
           trackEvent("contact_click", { target: "视频号" });
         }}
+        onShare={() => void shareProduct()}
+        shareFeedback={shareFeedback}
       />
       <VideoChannelModal open={videoChannelOpen} onClose={() => setVideoChannelOpen(false)} language={language} />
       <AdminConsole

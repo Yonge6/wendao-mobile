@@ -1,0 +1,50 @@
+name: Check iOS App
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  simulator:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Synchronize shared H5 bundle
+        run: npm run ios:sync
+
+      - name: Build unsigned simulator app
+        run: >-
+          xcodebuild
+          -project ios/App/App.xcodeproj
+          -scheme App
+          -configuration Debug
+          -sdk iphonesimulator
+          -derivedDataPath ios/build
+          CODE_SIGNING_ALLOWED=NO
+          build
+
+      - name: Upload source manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: wendao-ios-build-manifest
+          path: ios/App/App/public/wendao-build.json
