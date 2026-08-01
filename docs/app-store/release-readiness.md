@@ -2,7 +2,8 @@
 
 ## 已锁定的首版技术信息
 
-- App 名称：`三慢问道`（英文 `Wendao`）
+- App 名称：`三慢问道`（英文 `Wendao: Daodejing`）
+- App Store Connect Apple ID：`6796945428`
 - Bundle ID：`com.yonge6.wendao`
 - 版本：`1.0 (1)`
 - 最低系统：iOS 15；首版仅支持 iPhone
@@ -13,7 +14,7 @@
 - 支持网址：`https://wendao.wonderelian.com/`
 - 定价：免费；首版无 App 内购买
 
-在 Apple Developer 后台创建 App ID 或 App Store Connect 记录前，产品名和 Bundle ID 仍可调整；创建后应把它们视为发布身份，不随意更换。
+Apple Developer App ID 与 App Store Connect 应用记录均已创建；产品名、Bundle ID、SKU 和 Apple ID 现为首版发布身份，不随意更换。
 
 ## 商店文案草案
 
@@ -36,12 +37,27 @@
 ## 当前发布进度
 
 - `com.yonge6.wendao` 明确 App ID 已于 2026-08-01 注册完成。
-- 12 张中英文 6.9 英寸商店海报已完成并通过尺寸、透明通道校验。
-- 版本 `1.0 (1)` 的同步归档已成功生成，归档包含 81 章并通过本地构建校验。
+- App Store Connect 应用记录已于 2026-08-01 创建，Apple ID 为 `6796945428`，SKU 为 `WENDAO-IOS-1`。
+- Xcode 托管签名已完成版本 `1.0 (1)` 的归档、导出和 App Store Connect 上传；命令行钥匙串目前仍只枚举到开发证书，因此 `ios:distribution:readiness` 的本地证书与描述文件探测仍会显示 `BLOCKED`，不把实际上传成功静默改写为脚本通过。
+- 12 张中英文 6.9 英寸商店海报已上传，并通过本地尺寸、透明通道与语言分组校验。
+- 中英文名称、副标题、描述、关键词、支持网址、营销网址和隐私政策网址均已保存。
+- 主分类为图书、次分类为生活；年龄分级、内容版权和审核联系信息已配置。
+- App 隐私问卷已发布：姓名、其他联系信息、其他用户内容、用户 ID、产品交互和其他数据按实际用途披露；均不用于跟踪。
+- 定价为免费，供应范围已配置为全部 175 个国家和地区，审核通过后手动发布。
+- 构建版本 `1.0 (1)` 已绑定到 iOS 1.0，内含同一提交生成的 81 章离线阅读内容。
 
-## 仍需完成的外部步骤
+## 当前审核状态
 
-- 在本机创建或导入含私钥的 Apple Distribution 证书（当前仅有开发签名）。
-- 创建对应的 App Store provisioning profile。
-- 在 App Store Connect 创建应用记录，确认名称可用、SKU、分类、年龄分级、隐私问卷和联系人。
-- 完成首版截图、描述、审核联系信息与版权信息后上传构建。
+- App Store Connect 当前仅提示“仍有截屏在上传中”；待 Apple 完成素材处理后即可加入审核并提交。
+- 当前状态不是已上架；提交后仍需等待 Apple 审核，审核通过后按“手动发布”设置由开发者确认上线。
+- 中国大陆虽已列入供应范围，但如审核或当地分发要求补充 ICP/备案等合规材料，需按实际要求处理；此配置不代表已经获得当地分发批准。
+
+## 2026-08-01 回归结果
+
+- `npm run test`：24/24 通过。
+- `npm run validate:chapters`：81/81 章与帛书完整性校验通过。
+- `npm run build`：通过，构建清单为 81 章、提交 `48382f0`。
+- `npm run test:runtime`：24/24 通过；320/390/720 px、目录搜索、连续阅读与中英文结构均在覆盖范围内。
+- `npm run test:sites`：4/4 通过。
+- `npm run ios:assets:validate`：12/12 张中英文海报通过，均为 1290 × 2796 PNG 且无透明通道。
+- `npm run ios:distribution:readiness`：5/7 通过；两个未通过项仅反映命令行无法枚举 Apple Distribution 私钥和 App Store 描述文件，实际 Xcode 托管签名上传已成功。
