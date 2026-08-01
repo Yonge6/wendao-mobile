@@ -1100,7 +1100,7 @@ function SideDrawer({
                 <blockquote>{isZh ? "向内认识自己，向外如水而行。" : "Know yourself within; move through the world like water."}</blockquote>
                 <p className="life-vision">
                   {isZh
-                    ? "我们愿陪伴彼此走进低谷与高峰，探索身心健康的工作与生活方式；真实面对自己与世界，善待自己、他人与生命，并在创造和欣赏中活出生命之美。"
+                    ? "我们愿陪伴彼此走过低谷与高峰，探索身心健康的工作与生活方式；真实面对自己与世界，善待自己、他人与生命，并在创造和欣赏中活出生命之美。"
                     : "We hope to accompany one another through valleys and peaks, exploring healthier ways to work and live: facing self and world truthfully, treating life with kindness, and creating and appreciating beauty."}
                 </p>
               </section>
