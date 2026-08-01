@@ -92,8 +92,8 @@ test("starts at the former default size and offers two larger reading steps", as
 
   await page.getByRole("button", { name: "打开更多功能" }).click();
   await expect(page.getByRole("button", { name: "小", exact: true })).toHaveAttribute("aria-pressed", "true");
-  await expect(page.getByText("夜间阅读", { exact: true })).toHaveCSS("font-size", "15px");
-  await expect(page.getByText("降低亮度，保留纸墨层次", { exact: true })).toHaveCSS("font-size", "10px");
+  await expect(page.getByText("夜读模式", { exact: true })).toHaveCSS("font-size", "15px");
+  await expect(page.getByText("调低光线，让眼睛和心一起慢下来", { exact: true })).toHaveCSS("font-size", "11px");
 
   const sizeControl = page.getByRole("group", { name: "选择阅读字号" });
   await sizeControl.getByRole("button", { name: "中", exact: true }).click();
@@ -132,11 +132,34 @@ test("shares Wendao from the drawer with the native-or-web share contract", asyn
   });
   await page.goto("/");
   await page.getByRole("button", { name: "打开更多功能" }).click();
-  await page.getByRole("button", { name: "分享三慢问道" }).click();
+  await page.getByRole("button", { name: "分享问道" }).click();
   await expect(page.getByText("已打开系统分享", { exact: true })).toBeVisible();
   const payload = await page.evaluate(() => JSON.parse(window.sessionStorage.getItem("wendao-test-share") || "{}"));
   expect(payload.url).toBe("https://wendao.wonderelian.com/");
   expect(payload.title).toBe("三慢问道");
+});
+
+test("drawer presents three bilingual related works with safe external links", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "打开更多功能" }).click();
+  const works = page.getByRole("region", { name: "沿途所作" });
+  await expect(works).toBeVisible();
+  const links = works.getByRole("link");
+  await expect(links).toHaveCount(3);
+  await expect(works.getByRole("link", { name: /虾子曰/ })).toHaveAttribute("href", "https://xiazishuo.com/");
+  await expect(works.getByRole("link", { name: /人类图/ })).toHaveAttribute("href", "https://human-design.wonderelian.com/");
+  await expect(works.getByRole("link", { name: /艺术风格图鉴/ })).toHaveAttribute("href", "https://style-atlas.wonderelian.com/");
+  for (let index = 0; index < 3; index += 1) {
+    await expect(links.nth(index)).toHaveAttribute("target", "_blank");
+    await expect(links.nth(index)).toHaveAttribute("rel", "noreferrer");
+  }
+
+  await page.getByRole("button", { name: "关闭菜单", exact: true }).last().click();
+  await page.getByRole("button", { name: "EN", exact: true }).click();
+  await page.getByRole("button", { name: "Open more", exact: true }).click();
+  await expect(page.getByRole("region", { name: "Works along the way" })).toContainText("Yesterday’s world, daily");
+  await expect(page.getByRole("region", { name: "Works along the way" })).toContainText("A manual for your life");
+  await expect(page.getByRole("region", { name: "Works along the way" })).toContainText("Learn to see a style");
 });
 
 test("About separates the textual lineage from claims of direct descent", async ({ page }) => {

@@ -13,6 +13,7 @@ import tzLookup from "tz-lookup";
 import {
   ArrowLeftIcon,
   ArrowRightIcon,
+  ArrowTopRightIcon,
   ChatBubbleIcon,
   CheckIcon,
   ChevronRightIcon,
@@ -79,7 +80,7 @@ const THEME_STORAGE_KEY = "wendao-theme";
 const READING_SIZE_STORAGE_KEY = "wendao-reading-size-v2";
 const CLIENT_ID_KEY = "wendao-client-id";
 const ADMIN_TOKEN_KEY = "wendao-admin-token";
-const APP_VERSION = "2026.07.31";
+const APP_VERSION = "2026.08.02";
 const emptyProfile: LifeProfile = {
   name: "",
   birthDate: "",
@@ -583,6 +584,7 @@ type SideDrawerProps = {
   feedbackError: string;
   onFeedbackSubmit: (event: FormEvent) => void;
   onContactClick: (target: string) => void;
+  onWorkClick: (target: string) => void;
   onVideoChannelOpen: () => void;
   onShare: () => void;
   shareFeedback: string;
@@ -613,6 +615,7 @@ function SideDrawer({
   feedbackError,
   onFeedbackSubmit,
   onContactClick,
+  onWorkClick,
   onVideoChannelOpen,
   onShare,
   shareFeedback,
@@ -652,7 +655,37 @@ function SideDrawer({
         ? (isZh ? "详细解读" : "Detailed reading")
       : view === "about"
         ? (isZh ? "关于三慢问道" : "About Wendao")
-        : (isZh ? "意见反馈" : "Feedback");
+        : (isZh ? "留下回响" : "Leave a note");
+
+  const works = [
+    {
+      id: "xiazi",
+      href: "https://xiazishuo.com/",
+      name: isZh ? "虾子曰" : "Xiazi Says",
+      tagline: isZh ? "每日昨日世界" : "Yesterday’s world, daily",
+      description: isZh
+        ? "每天用 9 个全球热点与 18 张双语海报，把昨天的复杂世界讲清楚。"
+        : "Nine global stories and eighteen bilingual posters make yesterday’s complex world easier to see.",
+    },
+    {
+      id: "human-design",
+      href: "https://human-design.wonderelian.com/",
+      name: isZh ? "人类图" : "Human Design",
+      tagline: isZh ? "人生使用说明书" : "A manual for your life",
+      description: isZh
+        ? "从出生信息生成中英双语人类图与基础解读，换一个角度认识自己的运行方式。"
+        : "Turn birth details into a bilingual chart and foundational reading—a different lens on how you move through life.",
+    },
+    {
+      id: "style-atlas",
+      href: "https://style-atlas.wonderelian.com/",
+      name: isZh ? "艺术风格图鉴" : "Style Atlas",
+      tagline: isZh ? "学习看懂一种美" : "Learn to see a style",
+      description: isZh
+        ? "沿着艺术与设计风格的脉络，看懂一种美，也找到自己的观看方式。"
+        : "Follow the lineages of art and design, learn to see a style, and discover your own way of looking.",
+    },
+  ];
 
   const contacts = [
     { label: isZh ? "邮箱" : "Email", value: "hustyy986@gmail.com", href: "mailto:hustyy986@gmail.com" },
@@ -706,7 +739,7 @@ function SideDrawer({
                 <h3>
                   {profileComplete
                     ? (isZh ? `${profile.name || "你"}，说明书已生成` : `${profile.name || "Your"} manual is ready`)
-                    : (isZh ? "从认识自己的起点开始" : "Begin with the facts of your birth")}
+                    : (isZh ? "从认识自己开始" : "Begin by knowing yourself")}
                 </h3>
                 <p>
                   {profileComplete
@@ -723,12 +756,12 @@ function SideDrawer({
                 </button>
               </section>
 
-              <nav className="drawer-nav" aria-label={isZh ? "更多功能" : "More features"}>
+              <nav className="drawer-nav" aria-label={isZh ? "你的空间" : "Your space"}>
                 <div className="drawer-nav-row">
                   <span className="drawer-nav-icon">{theme === "dark" ? <MoonIcon /> : <SunIcon />}</span>
                   <span>
-                    <strong>{isZh ? "夜间阅读" : "Night reading"}</strong>
-                    <small>{isZh ? "降低亮度，保留纸墨层次" : "Lower luminance, keep the ink texture"}</small>
+                    <strong>{isZh ? "夜读模式" : "Night mode"}</strong>
+                    <small>{isZh ? "调低光线，让眼睛和心一起慢下来" : "Soften the light and let your eyes slow down"}</small>
                   </span>
                   <button
                     type="button"
@@ -744,8 +777,8 @@ function SideDrawer({
                 <div className="drawer-nav-row text-size-row">
                   <span className="drawer-nav-icon text-size-icon" aria-hidden="true">字</span>
                   <span>
-                    <strong>{isZh ? "阅读字号" : "Text size"}</strong>
-                    <small>{isZh ? "放大经文与解读正文" : "Adjust scripture and reading text"}</small>
+                    <strong>{isZh ? "正文字号" : "Reading size"}</strong>
+                    <small>{isZh ? "选择更舒展、更合眼的阅读尺度" : "Choose the scale that feels easiest to read"}</small>
                   </span>
                   <div className="text-size-control" role="group" aria-label={isZh ? "选择阅读字号" : "Choose text size"}>
                     {(["small", "medium", "large"] as ReadingSize[]).map((size, index) => (
@@ -764,8 +797,8 @@ function SideDrawer({
                 <button type="button" onClick={onShare}>
                   <span className="drawer-nav-icon"><Share1Icon /></span>
                   <span>
-                    <strong>{shareFeedback || (isZh ? "分享三慢问道" : "Share Wendao")}</strong>
-                    <small>{isZh ? "把这一份慢读分享给朋友" : "Share this slower way of reading"}</small>
+                    <strong>{shareFeedback || (isZh ? "分享问道" : "Share Wendao")}</strong>
+                    <small>{isZh ? "把此刻读到的一章递给朋友" : "Pass this slower reading on to a friend"}</small>
                   </span>
                   <ChevronRightIcon />
                 </button>
@@ -773,19 +806,50 @@ function SideDrawer({
                   <span className="drawer-nav-icon"><InfoCircledIcon /></span>
                   <span>
                     <strong>{isZh ? "关于三慢问道" : "About Wendao"}</strong>
-                    <small>{isZh ? "我们如何理解原典与人生" : "How we approach text and life"}</small>
+                    <small>{isZh ? "我们怎样慢读原典，也慢慢认识自己" : "Why we read the classic slowly—and ourselves with it"}</small>
                   </span>
                   <ChevronRightIcon />
                 </button>
                 <button type="button" onClick={() => onViewChange("feedback")}>
                   <span className="drawer-nav-icon"><ChatBubbleIcon /></span>
                   <span>
-                    <strong>{isZh ? "意见反馈" : "Feedback"}</strong>
-                    <small>{isZh ? "告诉我们哪里可以更好" : "Help us make the reading better"}</small>
+                    <strong>{isZh ? "留下回响" : "Leave a note"}</strong>
+                    <small>{isZh ? "告诉我们，哪里还能做得更好" : "Tell us what could feel better"}</small>
                   </span>
                   <ChevronRightIcon />
                 </button>
               </nav>
+
+              <section className="drawer-works" aria-labelledby="drawer-works-title">
+                <header className="drawer-works-header">
+                  <span className="drawer-kicker" id="drawer-works-title">{isZh ? "沿途所作" : "Works along the way"}</span>
+                  <p>{isZh ? "观世界，识自己，也学习看见美。" : "See the world, know yourself, and learn to see beauty."}</p>
+                </header>
+                <div className="drawer-work-list">
+                  {works.map((work, index) => (
+                    <a
+                      className="drawer-work-card"
+                      href={work.href}
+                      key={work.id}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={() => onWorkClick(work.id)}
+                    >
+                      <span className="drawer-work-index" aria-hidden="true">
+                        {isZh ? ["一", "二", "三"][index] : `0${index + 1}`}
+                      </span>
+                      <span className="drawer-work-copy">
+                        <span className="drawer-work-title">
+                          <strong>{work.name}</strong>
+                          <em>{work.tagline}</em>
+                        </span>
+                        <small>{work.description}</small>
+                      </span>
+                      <ArrowTopRightIcon aria-hidden="true" />
+                    </a>
+                  ))}
+                </div>
+              </section>
             </>
           ) : null}
 
@@ -1070,11 +1134,11 @@ function SideDrawer({
             <form className="drawer-feedback" onSubmit={onFeedbackSubmit}>
               <p className="drawer-intro">
                 {isZh
-                  ? "可以告诉我们原文、拼音、解释、设计或使用体验中任何不准确、不舒服的地方。"
-                  : "Tell us what feels inaccurate or uncomfortable in the text, Pinyin, interpretation, design, or interaction."}
+                  ? "原文、拼音、解释、设计或使用体验里，任何不准确、不顺手的地方，都欢迎告诉我们。"
+                  : "If anything in the text, Pinyin, interpretation, design, or experience feels inaccurate or awkward, tell us here."}
               </p>
               <label>
-                <span>{isZh ? "你的反馈" : "Your feedback"}</span>
+                <span>{isZh ? "想说的话" : "Your note"}</span>
                 <textarea
                   rows={7}
                   value={feedback}
@@ -1100,7 +1164,7 @@ function SideDrawer({
                   ? (isZh ? "正在提交…" : "Submitting…")
                   : feedbackState === "saved"
                     ? (isZh ? "已收到，谢谢你" : "Received. Thank you.")
-                    : (isZh ? "提交反馈" : "Submit feedback")}
+                    : (isZh ? "送出回响" : "Send note")}
               </button>
               {feedbackError ? <p className="form-message is-error">{feedbackError}</p> : null}
             </form>
@@ -2029,6 +2093,7 @@ export default function Prototype() {
         feedbackError={feedbackError}
         onFeedbackSubmit={submitFeedback}
         onContactClick={(target) => trackEvent("contact_click", { target })}
+        onWorkClick={(target) => trackEvent("related_product_click", { target })}
         onVideoChannelOpen={() => {
           setVideoChannelOpen(true);
           trackEvent("contact_click", { target: "视频号" });
