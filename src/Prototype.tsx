@@ -1738,7 +1738,7 @@ export default function Prototype() {
                           </ol>
                         </div>
                       ) : null}
-                      {copy.explanation.slice(isZh ? 1 : 0).map((item) => (
+                      {copy.explanation.slice(isZh ? 1 : 0, 2).map((item) => (
                         <div className="explanation-item" key={item.title}>
                           <h2>{item.title}</h2>
                           <p>{item.body}</p>

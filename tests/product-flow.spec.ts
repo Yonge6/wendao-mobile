@@ -203,6 +203,11 @@ test("renders a source-aligned modern Chinese translation for every line", async
   await expect(chapter.locator(".line-by-line-reading li")).toHaveCount(9);
   await expect(chapter.getByText("最高的善像水。", { exact: true })).toBeVisible();
   await expect(chapter.getByText("正因为不争，所以没有过失和怨尤。", { exact: true })).toBeVisible();
+  await expect(chapter.getByRole("heading", { name: "校读｜原字、缺损与参照分层", exact: true })).toHaveCount(0);
+
+  await page.getByRole("button", { name: "EN", exact: true }).click();
+  await expect(chapter.getByRole("heading", { name: "Collation · Keep witness, supply, and comparison separate", exact: true })).toHaveCount(0);
+  await expect(chapter.getByRole("heading", { name: "Thought · Return force to the larger pattern", exact: true })).toBeVisible();
 });
 
 test("representative supplied chapters expose accessible reading text, copy cleanly, and do not overflow", async ({ page, context }) => {
