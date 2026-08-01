@@ -42,6 +42,7 @@ type Language = "zh" | "en";
 type Theme = "light" | "dark";
 type ReadingSize = "small" | "medium" | "large";
 type DrawerView = "home" | "profile" | "profile-detail" | "about" | "feedback";
+type ChapterEntrySource = "daily" | "directory" | "chance";
 
 type LifeProfile = {
   name: string;
@@ -417,6 +418,20 @@ validatePinyinReadings();
 function reorderFrom(id: number) {
   const index = chapters.findIndex((chapter) => chapter.id === id);
   return [...chapters.slice(index), ...chapters.slice(0, index)];
+}
+
+function localDateKey(date = new Date()) {
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getDate()).padStart(2, "0"),
+  ].join("-");
+}
+
+function dailyChapterId(dateKey = localDateKey()) {
+  let hash = 0;
+  for (const character of dateKey) hash = (hash * 31 + character.charCodeAt(0)) >>> 0;
+  return chapters[hash % chapters.length].id;
 }
 
 function scrollReadingToTop(behavior: ScrollBehavior = "smooth") {
@@ -1404,7 +1419,9 @@ function AdminConsole({ open, onClose, language }: AdminConsoleProps) {
 
 export default function Prototype() {
   const [language, setLanguage] = useState<Language>("zh");
-  const [chapterId, setChapterId] = useState(8);
+  const [recommendationDate] = useState(localDateKey);
+  const [chapterId, setChapterId] = useState(() => dailyChapterId(recommendationDate));
+  const [chapterEntrySource, setChapterEntrySource] = useState<ChapterEntrySource>("daily");
   const [directoryOpen, setDirectoryOpen] = useState(false);
   const [directoryQuery, setDirectoryQuery] = useState("");
   const [insightOpen, setInsightOpen] = useState(false);
@@ -1532,6 +1549,7 @@ export default function Prototype() {
     resetChapterOpening();
     nativeImpact("light");
     setChapterId(id);
+    setChapterEntrySource("directory");
     setVisibleChapterCount(1);
     setDirectoryOpen(false);
     setDirectoryQuery("");
@@ -1545,6 +1563,7 @@ export default function Prototype() {
     const candidates = chapters.filter((chapter) => chapter.id !== chapterId);
     const next = candidates[Math.floor(Math.random() * candidates.length)];
     setChapterId(next.id);
+    setChapterEntrySource("chance");
     setVisibleChapterCount(1);
     trackEvent("chance_chapter", { target: String(next.id) }, next.id);
     scrollReadingToTop();
@@ -1803,13 +1822,20 @@ export default function Prototype() {
                       <span className="rail-line rail-fill" />
                     </aside>
                     <div className="section-copy">
-                      <div className="text-layer-map" aria-label={isZh ? "文本三层结构" : "Three textual layers"}>
-                        <span>{isZh ? "01 乙本转写" : "01 Silk B transcription"}</span>
-                        <strong>{isZh ? "02 校读正文" : "02 Base reading"}</strong>
-                        <span>{isZh ? "03 现代解读" : "03 Interpretation"}</span>
-                      </div>
                       <div className="chapter-meta">
-                        <p className="chapter-eyebrow">{copy.eyebrow}</p>
+                        <p
+                          className={`chapter-eyebrow ${chapterIndex === 0 && chapterEntrySource === "daily" ? "is-daily" : ""}`}
+                          data-testid={chapterIndex === 0 && chapterEntrySource === "daily" ? "daily-recommendation" : undefined}
+                          data-recommendation-date={chapterIndex === 0 && chapterEntrySource === "daily" ? recommendationDate : undefined}
+                        >
+                          {chapterIndex === 0 && chapterEntrySource === "daily" ? (
+                            <>
+                              <strong>{isZh ? "今日偶遇" : "Today’s encounter"}</strong>
+                              <span className="daily-recommendation-separator" aria-hidden="true">｜</span>
+                              <strong>{copy.eyebrow}</strong>
+                            </>
+                          ) : copy.eyebrow}
+                        </p>
                         <span className="chapter-completeness">
                           {isZh ? `全文 · ${verse.length}句` : `Full text · ${verse.length} lines`}
                         </span>

@@ -183,7 +183,17 @@ test("About separates the textual lineage from claims of direct descent", async 
 test("covers all 81 chapters through contents, chance, and progressive reading", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator("article.chapter")).toHaveCount(1);
-  await expect(page.locator("article.chapter")).toHaveAttribute("data-chapter-id", "8");
+  const firstDailyChapter = Number(await page.locator("article.chapter").getAttribute("data-chapter-id"));
+  expect(firstDailyChapter).toBeGreaterThanOrEqual(1);
+  expect(firstDailyChapter).toBeLessThanOrEqual(81);
+  const dailyRecommendation = page.getByTestId("daily-recommendation");
+  await expect(dailyRecommendation).toContainText(/^今日偶遇｜帛书乙本底本校读 · 对应今本第.+章$/);
+  await page.reload();
+  await expect(page.locator("article.chapter")).toHaveAttribute("data-chapter-id", String(firstDailyChapter));
+
+  await page.getByRole("button", { name: "EN", exact: true }).click();
+  await expect(dailyRecommendation).toContainText(new RegExp(`^Today’s encounter｜Silk B Base Reading · Received Chapter ${firstDailyChapter}$`));
+  await page.getByRole("button", { name: "中", exact: true }).click();
 
   await page.getByRole("button", { name: "目录", exact: true }).click();
   const directoryItems = page.locator(".directory-item");
@@ -194,10 +204,12 @@ test("covers all 81 chapters through contents, chance, and progressive reading",
   await page.locator('.directory-item[data-chapter-id="80"]').click();
   await expect(page.locator("article.chapter")).toHaveCount(1);
   await expect(page.locator("article.chapter")).toHaveAttribute("data-chapter-id", "80");
+  await expect(dailyRecommendation).toHaveCount(0);
 
   await page.getByRole("button", { name: "偶遇一章", exact: true }).click();
   await expect(page.locator("article.chapter")).toHaveCount(1);
   await expect(page.locator('article.chapter[data-chapter-id="80"]')).toHaveCount(0);
+  await expect(dailyRecommendation).toHaveCount(0);
 
   const reading = page.getByTestId("mobile-scroll");
   await reading.evaluate((element) => { element.scrollTop = element.scrollHeight; });
@@ -211,9 +223,9 @@ test("renders the three textual layers and copies reconstructed text without Pin
   await page.locator('.directory-item[data-chapter-id="1"]').click();
 
   const chapter = page.locator('.chapter-current[data-chapter-id="1"]');
-  await expect(chapter.getByText("01 乙本转写", { exact: true })).toBeVisible();
-  await expect(chapter.getByText("02 校读正文", { exact: true })).toBeVisible();
-  await expect(chapter.getByText("03 现代解读", { exact: true })).toBeVisible();
+  await expect(chapter.getByText("01 乙本转写", { exact: true })).toHaveCount(0);
+  await expect(chapter.getByText("02 校读正文", { exact: true })).toHaveCount(0);
+  await expect(chapter.getByText("03 现代解读", { exact: true })).toHaveCount(0);
   await expect(chapter.getByText("第一层｜帛书乙本转写", { exact: true })).toBeVisible();
   await expect(chapter.getByText("第二层｜校读正文", { exact: true })).toBeVisible();
   await expect(chapter.getByText("第三层｜现代解读", { exact: true })).toBeVisible();
@@ -291,6 +303,8 @@ test("representative supplied chapters expose accessible reading text, copy clea
 
 test("shared inspiration is bilingual and remains visible without a life-manual profile", async ({ page }) => {
   await page.goto("/");
+  await page.getByRole("button", { name: "目录", exact: true }).click();
+  await page.locator('.directory-item[data-chapter-id="8"]').click();
   const chapter = page.locator('.chapter-current[data-chapter-id="8"]');
   await expect(chapter.getByRole("heading", { name: "对我们的启发", exact: true })).toBeVisible();
   await expect(chapter.getByText(/向下不等于失败/)).toBeVisible();
