@@ -146,7 +146,10 @@ test("drawer presents three bilingual related works with safe external links", a
   await expect(works).toBeVisible();
   const links = works.getByRole("link");
   await expect(links).toHaveCount(3);
-  await expect(works.getByRole("link", { name: /虾子曰/ })).toHaveAttribute("href", "https://xiazishuo.com/");
+  const xiaziLink = works.getByRole("link", { name: /虾子曰/ });
+  await expect(xiaziLink).toHaveAttribute("href", "https://xiazishuo.com/");
+  await expect(xiaziLink).toContainText("昨日世界");
+  await expect(xiaziLink).not.toContainText("每日昨日世界");
   await expect(works.getByRole("link", { name: /人类图/ })).toHaveAttribute("href", "https://human-design.wonderelian.com/");
   await expect(works.getByRole("link", { name: /艺术风格图鉴/ })).toHaveAttribute("href", "https://style-atlas.wonderelian.com/");
   for (let index = 0; index < 3; index += 1) {
@@ -157,7 +160,7 @@ test("drawer presents three bilingual related works with safe external links", a
   await page.getByRole("button", { name: "关闭菜单", exact: true }).last().click();
   await page.getByRole("button", { name: "EN", exact: true }).click();
   await page.getByRole("button", { name: "Open more", exact: true }).click();
-  await expect(page.getByRole("region", { name: "Works along the way" })).toContainText("Yesterday’s world, daily");
+  await expect(page.getByRole("region", { name: "Works along the way" })).toContainText("Yesterday’s World");
   await expect(page.getByRole("region", { name: "Works along the way" })).toContainText("A manual for your life");
   await expect(page.getByRole("region", { name: "Works along the way" })).toContainText("Learn to see a style");
 });

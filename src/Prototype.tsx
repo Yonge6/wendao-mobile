@@ -677,7 +677,7 @@ function SideDrawer({
       id: "xiazi",
       href: "https://xiazishuo.com/",
       name: isZh ? "虾子曰" : "Xiazi Says",
-      tagline: isZh ? "每日昨日世界" : "Yesterday’s world, daily",
+      tagline: isZh ? "昨日世界" : "Yesterday’s World",
       description: isZh
         ? "每天用 9 个全球热点与 18 张双语海报，把昨天的复杂世界讲清楚。"
         : "Nine global stories and eighteen bilingual posters make yesterday’s complex world easier to see.",
