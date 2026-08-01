@@ -2130,7 +2130,7 @@ export default function Prototype() {
           language={language}
           manualText={chart ? personalizedAdvice(activeChapter.id, activeCopy, chart, language) : undefined}
           profileReady={profileReady}
-          onAction={(action, kind) => trackEvent("chapter_share", { action, kind })}
+          onAction={(action, kind) => trackEvent("product_share", { action, kind })}
         />
       </WebSheet>
 
@@ -2173,7 +2173,7 @@ export default function Prototype() {
         onShare={() => {
           setDrawerOpen(false);
           setShareOpen(true);
-          trackEvent("share_open", { source: "drawer" });
+          trackEvent("product_share", { action: "open", source: "drawer" });
         }}
       />
       <VideoChannelModal open={videoChannelOpen} onClose={() => setVideoChannelOpen(false)} language={language} />
