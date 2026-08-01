@@ -1012,6 +1012,276 @@ textarea {
   line-height: 1.6;
 }
 
+.web-sheet.is-share-sheet {
+  width: min(100%, 820px);
+  max-height: min(94dvh, 900px);
+}
+
+.web-sheet.is-share-sheet .web-sheet-content {
+  max-height: calc(min(94dvh, 900px) - 112px);
+}
+
+.share-card-panel {
+  padding: 2px 0 12px;
+  font-family: var(--sans);
+}
+
+.share-kind-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 5px;
+  padding: 4px;
+  border: 1px solid color-mix(in srgb, var(--gold) 22%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--gold) 5%, transparent);
+}
+
+.share-kind-tabs button {
+  min-width: 0;
+  min-height: 38px;
+  padding: 7px 8px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-soft);
+  font: 500 11px/1.2 var(--sans);
+  cursor: pointer;
+}
+
+.share-kind-tabs button.is-active {
+  background: var(--ink);
+  color: var(--paper);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--ink) 18%, transparent);
+}
+
+.share-kind-tabs button:disabled {
+  cursor: not-allowed;
+  opacity: 0.36;
+}
+
+.share-manual-note {
+  margin: 8px 5px 0;
+  color: var(--ink-soft);
+  font-size: 10px;
+  line-height: 1.55;
+}
+
+.share-card-workspace {
+  display: grid;
+  grid-template-columns: minmax(205px, 254px) minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(22px, 5vw, 46px);
+  margin-top: 18px;
+  padding: 20px clamp(10px, 3vw, 26px);
+  border-top: 1px solid color-mix(in srgb, var(--gold) 18%, transparent);
+}
+
+.share-card-preview {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 18 / 39;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--gold) 34%, transparent);
+  border-radius: 24px;
+  background: #f7f1e6;
+  box-shadow: 0 22px 45px color-mix(in srgb, var(--ink) 16%, transparent);
+}
+
+.share-card-preview img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.share-card-preview figcaption {
+  position: absolute;
+  right: 10px;
+  bottom: 9px;
+  left: 10px;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: rgba(247, 241, 230, 0.86);
+  color: #48666a;
+  font: 500 8px/1.2 var(--sans);
+  letter-spacing: 0.05em;
+  text-align: center;
+  backdrop-filter: blur(7px);
+}
+
+.share-card-rendering {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 13px;
+  color: #48666a;
+  font-size: 10px;
+}
+
+.share-card-rendering span {
+  width: 25px;
+  height: 25px;
+  border: 1px solid rgba(173, 126, 47, 0.3);
+  border-top-color: #ad7e2f;
+  border-radius: 50%;
+  animation: share-card-spin 800ms linear infinite;
+}
+
+@keyframes share-card-spin {
+  to { transform: rotate(360deg); }
+}
+
+.share-card-controls {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 11px;
+}
+
+.share-card-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.share-card-summary span {
+  color: var(--gold);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+}
+
+.share-card-summary strong {
+  color: var(--ink);
+  font: 600 24px/1.25 var(--serif);
+}
+
+.share-card-summary p {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 11px;
+  line-height: 1.65;
+}
+
+.share-card-controls button {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 9px 12px;
+  border: 1px solid color-mix(in srgb, var(--gold) 25%, transparent);
+  border-radius: 13px;
+  background: color-mix(in srgb, var(--paper) 90%, transparent);
+  color: var(--ink);
+  font: 500 11px/1.2 var(--sans);
+  cursor: pointer;
+}
+
+.share-card-controls button svg {
+  width: 15px;
+  height: 15px;
+}
+
+.share-card-controls button:disabled {
+  cursor: wait;
+  opacity: 0.45;
+}
+
+.share-card-controls .share-action-primary {
+  min-height: 50px;
+  border-color: var(--ink);
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 12px;
+}
+
+.share-action-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.share-action-grid button {
+  flex-direction: column;
+  gap: 5px;
+  min-height: 66px;
+  padding: 8px 4px;
+}
+
+.share-action-feedback {
+  min-height: 18px;
+  margin: 0;
+  color: var(--gold);
+  font-size: 10px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+@media (max-width: 560px) {
+  .web-sheet.is-share-sheet {
+    max-height: 96dvh;
+    padding-right: 18px;
+    padding-left: 18px;
+  }
+
+  .web-sheet.is-share-sheet .web-sheet-content {
+    max-height: calc(96dvh - 108px);
+  }
+
+  .share-card-workspace {
+    grid-template-columns: 1fr;
+    gap: 18px;
+    padding: 15px 0 0;
+  }
+
+  .share-card-preview {
+    width: min(54vw, 228px);
+    justify-self: center;
+    border-radius: 21px;
+  }
+
+  .share-card-summary {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: end;
+    gap: 4px 10px;
+    margin-bottom: 2px;
+  }
+
+  .share-card-summary strong {
+    grid-column: 1;
+    grid-row: 1;
+    font-size: 20px;
+  }
+
+  .share-card-summary span {
+    grid-column: 2;
+    grid-row: 1;
+    text-align: right;
+  }
+
+  .share-card-summary p {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 350px) {
+  .share-kind-tabs button {
+    padding-right: 4px;
+    padding-left: 4px;
+    font-size: 10px;
+  }
+
+  .share-card-preview {
+    width: min(58vw, 208px);
+  }
+}
+
 .sheet-overlay {
   background: rgba(17, 35, 38, 0.28);
   backdrop-filter: blur(2px);

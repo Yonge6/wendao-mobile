@@ -121,7 +121,7 @@ test("starts at the former default size and offers two larger reading steps", as
   await expect(page.locator(".verse-line-ruby > .verse-punctuation")).toHaveCount(0);
 });
 
-test("shares Wendao from the drawer with the native-or-web share contract", async ({ page }) => {
+test("creates a focused iPhone share card and shares an exact chapter link", async ({ page }) => {
   await page.addInitScript(() => {
     Object.defineProperty(navigator, "share", {
       configurable: true,
@@ -133,10 +133,57 @@ test("shares Wendao from the drawer with the native-or-web share contract", asyn
   await page.goto("/");
   await page.getByRole("button", { name: "打开更多功能" }).click();
   await page.getByRole("button", { name: "分享问道" }).click();
+  await expect(page.getByRole("heading", { name: "分享这一章" })).toBeVisible();
+  await expect(page.getByRole("tab", { name: "说明书" })).toBeDisabled();
+
+  const preview = page.locator(".share-card-preview img");
+  await expect(preview).toBeVisible();
+  await expect.poll(() => preview.evaluate((image: HTMLImageElement) => [image.naturalWidth, image.naturalHeight])).toEqual([1080, 2340]);
+
+  const shareLink = page.getByRole("button", { name: "分享链接" });
+  const exactUrl = await shareLink.getAttribute("data-share-link");
+  expect(exactUrl).toMatch(/^https:\/\/wendao\.wonderelian\.com\/\?chapter=\d+&section=verse&lang=zh$/);
+  await shareLink.click();
   await expect(page.getByText("已打开系统分享", { exact: true })).toBeVisible();
   const payload = await page.evaluate(() => JSON.parse(window.sessionStorage.getItem("wendao-test-share") || "{}"));
-  expect(payload.url).toBe("https://wendao.wonderelian.com/");
-  expect(payload.title).toBe("三慢问道");
+  expect(payload.url).toBe(exactUrl);
+  expect(payload.title).toMatch(/^三慢问道 · 第\d+章$/);
+});
+
+test("switches all four share-card moments and keeps life-manual details anonymous", async ({ page }) => {
+  await page.addInitScript((storedChart) => {
+    window.localStorage.setItem("wendao-chart-snapshot", JSON.stringify(storedChart));
+    window.localStorage.setItem("wendao-life-profile", JSON.stringify({
+      name: "不应出现在分享卡上的姓名",
+      birthDate: "1990-01-01",
+      birthTime: "12:00",
+      birthPlace: "武汉市",
+      timezone: "Asia/Shanghai",
+    }));
+  }, chartSnapshot);
+  await page.goto("/?chapter=8&lang=zh");
+  await page.getByRole("button", { name: "打开更多功能" }).click();
+  await page.getByRole("button", { name: "分享问道" }).click();
+
+  for (const [tab, section] of [["原文", "verse"], ["解读", "meaning"], ["启发", "inspiration"], ["说明书", "manual"]] as const) {
+    await page.getByRole("tab", { name: tab }).click();
+    await expect(page.locator(".share-card-preview img")).toBeVisible();
+    await expect(page.getByRole("button", { name: "分享链接" })).toHaveAttribute("data-share-link", new RegExp(`chapter=8&section=${section}&lang=zh`));
+  }
+
+  const manualCardLabel = await page.locator(".share-card-preview").getAttribute("aria-label");
+  expect(manualCardLabel).toContain("生产者");
+  expect(manualCardLabel).not.toContain("不应出现在分享卡上的姓名");
+  expect(manualCardLabel).not.toContain("1990-01-01");
+  expect(manualCardLabel).not.toContain("武汉市");
+});
+
+test("opens shared chapter links in the requested language and section", async ({ page }) => {
+  await page.goto("/?chapter=8&section=inspiration&lang=en");
+  await expect(page.locator('.chapter-current[data-chapter-id="8"]')).toBeVisible();
+  await expect(page.getByRole("button", { name: "EN", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByTestId("daily-recommendation")).toHaveCount(0);
+  await expect(page.locator('.chapter-current [data-share-section="inspiration"]')).toBeVisible();
 });
 
 test("drawer presents three bilingual related works with safe external links", async ({ page }) => {
@@ -387,5 +434,25 @@ for (const width of [320, 390, 720]) {
     expect(overflow.document).toBeLessThanOrEqual(0);
     expect(overflow.reading).toBeLessThanOrEqual(0);
     await expect(page.locator(".verse-line-ruby > .verse-punctuation")).toHaveCount(0);
+  });
+
+  test(`${width}px share sheet keeps the iPhone card and controls inside the viewport`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/?chapter=8&lang=zh");
+    await page.getByRole("button", { name: "打开更多功能" }).click();
+    await page.getByRole("button", { name: "分享问道" }).click();
+    await expect(page.locator(".share-card-preview img")).toBeVisible();
+    const overflow = await page.evaluate(() => {
+      const sheet = document.querySelector<HTMLElement>(".web-sheet.is-share-sheet")!;
+      const bounds = sheet.getBoundingClientRect();
+      return {
+        document: document.documentElement.scrollWidth - window.innerWidth,
+        left: Math.min(0, bounds.left),
+        right: Math.max(0, bounds.right - window.innerWidth),
+      };
+    });
+    expect(overflow.document).toBeLessThanOrEqual(0);
+    expect(overflow.left).toBe(0);
+    expect(overflow.right).toBe(0);
   });
 }

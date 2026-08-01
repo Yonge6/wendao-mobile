@@ -1,10 +1,11 @@
 import { Capacitor } from "@capacitor/core";
+import { Directory, Filesystem } from "@capacitor/filesystem";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
 import { Share } from "@capacitor/share";
 import { StatusBar, Style } from "@capacitor/status-bar";
 
 type NativeTheme = "light" | "dark";
-type ShareOutcome = "shared" | "copied" | "cancelled" | "unavailable";
+export type ShareOutcome = "shared" | "copied" | "downloaded" | "cancelled" | "unavailable";
 
 const CANONICAL_URL = "https://wendao.wonderelian.com/";
 
@@ -33,23 +34,18 @@ export function nativeImpact(style: "light" | "medium" = "light"): void {
   void Haptics.impact({ style: style === "medium" ? ImpactStyle.Medium : ImpactStyle.Light });
 }
 
-export async function shareWendao(language: "zh" | "en"): Promise<ShareOutcome> {
-  const title = language === "zh" ? "三慢问道" : "Wendao";
-  const text = language === "zh"
-    ? "一起慢下来，读一章《道德经》。"
-    : "Slow down with one chapter of the Daodejing.";
-
+export async function shareLink(title: string, text: string, url: string): Promise<ShareOutcome> {
   try {
     if (Capacitor.isNativePlatform()) {
-      await Share.share({ title, text, url: CANONICAL_URL, dialogTitle: title });
+      await Share.share({ title, text, url, dialogTitle: title });
       return "shared";
     }
     if (navigator.share) {
-      await navigator.share({ title, text, url: CANONICAL_URL });
+      await navigator.share({ title, text, url });
       return "shared";
     }
     if (navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(CANONICAL_URL);
+      await navigator.clipboard.writeText(url);
       return "copied";
     }
     return "unavailable";
@@ -57,3 +53,71 @@ export async function shareWendao(language: "zh" | "en"): Promise<ShareOutcome> 
     return error instanceof DOMException && error.name === "AbortError" ? "cancelled" : "unavailable";
   }
 }
+
+function downloadDataUrl(dataUrl: string, filename: string) {
+  const anchor = document.createElement("a");
+  anchor.href = dataUrl;
+  anchor.download = filename;
+  anchor.click();
+}
+
+async function dataUrlFile(dataUrl: string, filename: string) {
+  const response = await fetch(dataUrl);
+  const blob = await response.blob();
+  return new File([blob], filename, { type: "image/png" });
+}
+
+export async function shareCardImage(
+  dataUrl: string,
+  filename: string,
+  title: string,
+  text: string,
+  url: string,
+): Promise<ShareOutcome> {
+  try {
+    if (Capacitor.isNativePlatform()) {
+      const base64 = dataUrl.split(",")[1] ?? "";
+      await Filesystem.writeFile({ path: filename, data: base64, directory: Directory.Cache });
+      const { uri } = await Filesystem.getUri({ path: filename, directory: Directory.Cache });
+      try {
+        await Share.share({ title, text, url, files: [uri], dialogTitle: title });
+      } finally {
+        await Filesystem.deleteFile({ path: filename, directory: Directory.Cache }).catch(() => undefined);
+      }
+      return "shared";
+    }
+
+    const file = await dataUrlFile(dataUrl, filename);
+    if (navigator.share && navigator.canShare?.({ files: [file] })) {
+      await navigator.share({ title, text, url, files: [file] });
+      return "shared";
+    }
+
+    downloadDataUrl(dataUrl, filename);
+    return "downloaded";
+  } catch (error) {
+    return error instanceof DOMException && error.name === "AbortError" ? "cancelled" : "unavailable";
+  }
+}
+
+export async function saveCardImage(dataUrl: string, filename: string, title: string): Promise<ShareOutcome> {
+  try {
+    if (Capacitor.isNativePlatform()) {
+      const base64 = dataUrl.split(",")[1] ?? "";
+      await Filesystem.writeFile({ path: filename, data: base64, directory: Directory.Cache });
+      const { uri } = await Filesystem.getUri({ path: filename, directory: Directory.Cache });
+      try {
+        await Share.share({ title, files: [uri], dialogTitle: title });
+      } finally {
+        await Filesystem.deleteFile({ path: filename, directory: Directory.Cache }).catch(() => undefined);
+      }
+      return "shared";
+    }
+    downloadDataUrl(dataUrl, filename);
+    return "downloaded";
+  } catch (error) {
+    return error instanceof DOMException && error.name === "AbortError" ? "cancelled" : "unavailable";
+  }
+}
+
+export { CANONICAL_URL };

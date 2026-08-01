@@ -36,13 +36,15 @@ import {
   type HumanDesignReadingChart,
 } from "./humanDesignReading";
 import { chapters, type ChapterCopyBase, type RelatedItem } from "./data/chapters";
-import { initializeNativeShell, nativeImpact, runtimeSurface, shareWendao, syncNativeTheme } from "./native";
+import ShareCardPanel from "./ShareCardPanel";
+import type { ShareCardKind } from "./shareCard";
+import { initializeNativeShell, nativeImpact, runtimeSurface, syncNativeTheme } from "./native";
 
 type Language = "zh" | "en";
 type Theme = "light" | "dark";
 type ReadingSize = "small" | "medium" | "large";
 type DrawerView = "home" | "profile" | "profile-detail" | "about" | "feedback";
-type ChapterEntrySource = "daily" | "directory" | "chance";
+type ChapterEntrySource = "daily" | "directory" | "chance" | "link";
 
 type LifeProfile = {
   name: string;
@@ -395,6 +397,30 @@ function publicPath() {
   return path || "/";
 }
 
+type InitialReadingRequest = {
+  chapterId: number | null;
+  language: Language;
+  section: ShareCardKind | null;
+};
+
+function initialReadingRequest(): InitialReadingRequest {
+  if (typeof window === "undefined") return { chapterId: null, language: "zh", section: null };
+  const params = new URLSearchParams(window.location.search);
+  const parsedChapter = Number(params.get("chapter"));
+  const chapterId = Number.isInteger(parsedChapter) && chapters.some((chapter) => chapter.id === parsedChapter)
+    ? parsedChapter
+    : null;
+  const language = params.get("lang") === "en" ? "en" : "zh";
+  const requestedSection = params.get("section");
+  const section = requestedSection === "verse"
+    || requestedSection === "meaning"
+    || requestedSection === "inspiration"
+    || requestedSection === "manual"
+    ? requestedSection
+    : null;
+  return { chapterId, language, section };
+}
+
 function validatePinyinReadings() {
   for (const chapter of chapters) {
     const { reconstructedVerse, pinyin } = chapter.zh;
@@ -532,9 +558,10 @@ type WebSheetProps = {
   title: string;
   description?: string;
   children: ReactNode;
+  variant?: "default" | "share";
 };
 
-function WebSheet({ open, onOpenChange, title, description, children }: WebSheetProps) {
+function WebSheet({ open, onOpenChange, title, description, children, variant = "default" }: WebSheetProps) {
   useEffect(() => {
     if (!open) return;
 
@@ -556,7 +583,7 @@ function WebSheet({ open, onOpenChange, title, description, children }: WebSheet
         aria-label="关闭"
         onClick={() => onOpenChange(false)}
       />
-      <section className="bottom-sheet web-sheet" role="dialog" aria-modal="true" aria-labelledby="web-sheet-title">
+      <section className={`bottom-sheet web-sheet ${variant === "share" ? "is-share-sheet" : ""}`} role="dialog" aria-modal="true" aria-labelledby="web-sheet-title">
         <button
           type="button"
           className="web-sheet-close"
@@ -602,7 +629,6 @@ type SideDrawerProps = {
   onWorkClick: (target: string) => void;
   onVideoChannelOpen: () => void;
   onShare: () => void;
-  shareFeedback: string;
 };
 
 function SideDrawer({
@@ -633,7 +659,6 @@ function SideDrawer({
   onWorkClick,
   onVideoChannelOpen,
   onShare,
-  shareFeedback,
 }: SideDrawerProps) {
   const isZh = language === "zh";
   const profileComplete = Boolean(chart?.chartHash);
@@ -812,7 +837,7 @@ function SideDrawer({
                 <button type="button" onClick={onShare}>
                   <span className="drawer-nav-icon"><Share1Icon /></span>
                   <span>
-                    <strong>{shareFeedback || (isZh ? "分享问道" : "Share Wendao")}</strong>
+                    <strong>{isZh ? "分享问道" : "Share Wendao"}</strong>
                     <small>{isZh ? "把此刻读到的一章递给朋友" : "Pass this slower reading on to a friend"}</small>
                   </span>
                   <ChevronRightIcon />
@@ -1418,13 +1443,15 @@ function AdminConsole({ open, onClose, language }: AdminConsoleProps) {
 }
 
 export default function Prototype() {
-  const [language, setLanguage] = useState<Language>("zh");
+  const initialRequest = useRef(initialReadingRequest()).current;
+  const [language, setLanguage] = useState<Language>(initialRequest.language);
   const [recommendationDate] = useState(localDateKey);
-  const [chapterId, setChapterId] = useState(() => dailyChapterId(recommendationDate));
-  const [chapterEntrySource, setChapterEntrySource] = useState<ChapterEntrySource>("daily");
+  const [chapterId, setChapterId] = useState(() => initialRequest.chapterId ?? dailyChapterId(recommendationDate));
+  const [chapterEntrySource, setChapterEntrySource] = useState<ChapterEntrySource>(initialRequest.chapterId ? "link" : "daily");
   const [directoryOpen, setDirectoryOpen] = useState(false);
   const [directoryQuery, setDirectoryQuery] = useState("");
   const [insightOpen, setInsightOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerView, setDrawerView] = useState<DrawerView>("home");
   const [question, setQuestion] = useState("");
@@ -1444,7 +1471,6 @@ export default function Prototype() {
   const [feedbackState, setFeedbackState] = useState<SaveState>("idle");
   const [feedbackError, setFeedbackError] = useState("");
   const [responseText, setResponseText] = useState("");
-  const [shareFeedback, setShareFeedback] = useState("");
   const [videoChannelOpen, setVideoChannelOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(isAdminLocation);
   const clientId = useRef(stableId(CLIENT_ID_KEY));
@@ -1453,9 +1479,11 @@ export default function Prototype() {
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const chapterOpeningRef = useRef(false);
   const chapterOpeningTimerRef = useRef<number | null>(null);
+  const initialSectionHandledRef = useRef(false);
   const orderedChapters = useMemo(() => reorderFrom(chapterId), [chapterId]);
   const isZh = language === "zh";
-  const activeCopy = chapters.find((chapter) => chapter.id === chapterId)?.[language] ?? chapters[0][language];
+  const activeChapter = chapters.find((chapter) => chapter.id === chapterId) ?? chapters[0];
+  const activeCopy = activeChapter[language];
   const profileReady = Boolean(chart?.chartHash);
   const normalizedDirectoryQuery = directoryQuery.trim().toLocaleLowerCase().replace(/\s+/g, "");
   const directoryChapters = useMemo(
@@ -1510,6 +1538,20 @@ export default function Prototype() {
     scroll.addEventListener("scroll", updateReadingState, { passive: true });
     return () => scroll.removeEventListener("scroll", updateReadingState);
   }, []);
+
+  useEffect(() => {
+    if (initialSectionHandledRef.current || !initialRequest.section) return;
+    initialSectionHandledRef.current = true;
+    const timer = window.setTimeout(() => {
+      const chapter = document.querySelector<HTMLElement>(`.chapter[data-chapter-id="${chapterId}"]`);
+      const target = chapter?.querySelector<HTMLElement>(`[data-share-section="${initialRequest.section}"]`)
+        ?? (initialRequest.section === "manual"
+          ? chapter?.querySelector<HTMLElement>('[data-share-section="inspiration"]')
+          : null);
+      target?.scrollIntoView({ block: "start", behavior: "auto" });
+    }, 120);
+    return () => window.clearTimeout(timer);
+  }, [chapterId, initialRequest.section]);
 
   useEffect(() => {
     const root = document.querySelector<HTMLElement>("[data-testid='mobile-scroll']");
@@ -1714,18 +1756,6 @@ export default function Prototype() {
     trackEvent("theme_change", { value: nextTheme });
   };
 
-  const shareProduct = async () => {
-    const outcome = await shareWendao(language);
-    if (outcome === "cancelled") return;
-    setShareFeedback(outcome === "shared"
-      ? (isZh ? "已打开系统分享" : "Share sheet opened")
-      : outcome === "copied"
-        ? (isZh ? "链接已复制" : "Link copied")
-        : (isZh ? "暂时无法分享" : "Sharing unavailable"));
-    trackEvent("product_share", { outcome });
-    window.setTimeout(() => setShareFeedback(""), 2400);
-  };
-
   return (
     <>
       <header
@@ -1811,7 +1841,7 @@ export default function Prototype() {
                 ) : null}
 
                 <div className="chapter-content">
-                  <section className="section-layout original-section">
+                  <section className="section-layout original-section" data-share-section="verse">
                     <aside className="section-marker marker-original" aria-hidden="true">
                       <span className="rail-dot" />
                       <span className="rail-line rail-before-label" />
@@ -1868,7 +1898,7 @@ export default function Prototype() {
                     </div>
                   </section>
 
-                  <section className="section-layout explanation-section" aria-label={isZh ? "解释" : "Meaning"}>
+                  <section className="section-layout explanation-section" aria-label={isZh ? "解释" : "Meaning"} data-share-section="meaning">
                     <aside className="section-marker" aria-hidden="true">
                       <span className="rail-label">
                         <span>02</span>
@@ -1906,7 +1936,7 @@ export default function Prototype() {
                     </div>
                   </section>
 
-                  <section className="section-layout related-section" aria-label={isZh ? "与你有关" : "For you"}>
+                  <section className="section-layout related-section" aria-label={isZh ? "与你有关" : "For you"} data-share-section="inspiration">
                     <aside className="section-marker" aria-hidden="true">
                       <span className="rail-label">
                         <span>03</span>
@@ -1918,7 +1948,7 @@ export default function Prototype() {
                       {copy.related
                         .filter((item) => profileReady || !isLifeManualItem(item))
                         .map((item) => (
-                        <div className="related-item" key={item.title}>
+                        <div className="related-item" data-share-section={isLifeManualItem(item) ? "manual" : undefined} key={item.title}>
                           <h2>{item.title}</h2>
                           <p>{isLifeManualItem(item) && chart ? personalizedAdvice(chapter.id, copy, chart, language) : item.body}</p>
                         </div>
@@ -1961,7 +1991,7 @@ export default function Prototype() {
         </main>
       </div>
 
-      {!directoryOpen && !insightOpen && !drawerOpen ? (
+      {!directoryOpen && !insightOpen && !drawerOpen && !shareOpen ? (
         <form
           className={`ai-composer ${isReadingScrolled ? "is-reading" : ""}`}
           onSubmit={submitQuestion}
@@ -2088,6 +2118,22 @@ export default function Prototype() {
         </div>
       </WebSheet>
 
+      <WebSheet
+        open={shareOpen}
+        onOpenChange={setShareOpen}
+        title={isZh ? "分享这一章" : "Share this chapter"}
+        description={isZh ? "选择一个阅读瞬间，生成 iPhone 长卡" : "Choose one reading moment for an iPhone-length card"}
+        variant="share"
+      >
+        <ShareCardPanel
+          chapter={activeChapter}
+          language={language}
+          manualText={chart ? personalizedAdvice(activeChapter.id, activeCopy, chart, language) : undefined}
+          profileReady={profileReady}
+          onAction={(action, kind) => trackEvent("chapter_share", { action, kind })}
+        />
+      </WebSheet>
+
       <SideDrawer
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
@@ -2124,8 +2170,11 @@ export default function Prototype() {
           setVideoChannelOpen(true);
           trackEvent("contact_click", { target: "视频号" });
         }}
-        onShare={() => void shareProduct()}
-        shareFeedback={shareFeedback}
+        onShare={() => {
+          setDrawerOpen(false);
+          setShareOpen(true);
+          trackEvent("share_open", { source: "drawer" });
+        }}
       />
       <VideoChannelModal open={videoChannelOpen} onClose={() => setVideoChannelOpen(false)} language={language} />
       <AdminConsole

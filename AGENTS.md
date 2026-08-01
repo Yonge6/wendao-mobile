@@ -92,6 +92,7 @@ See `src/mobile/COMPONENTS.md` for the full component and gesture contract.
 - Use `人生说明书 / Life manual`, not `出厂设置 / Native pattern`, for the personalized Human Design layer. Never render a bodygraph in Wendao and never present a personalized result as a deterministic verdict.
 - The product philosophy is “真实自己，流动人生 / True to yourself. Flow with life.” Personalization should widen choices rather than prescribe them.
 - Open the reading surface on a deterministic daily recommendation drawn from all 81 chapters using the reader's local calendar date. Keep the result stable for that day, label it as `今日偶遇 / Today’s encounter`, and let directory or `偶遇一章 / Chance` selections replace the recommendation without changing their existing behavior.
+- Share a focused reading moment rather than an unreadably long chapter screenshot. Offer fixed 9:19.5 (1080 × 2340) original-text, interpretation, inspiration, and verified life-manual cards; pair each image with an exact chapter/layer deep link and QR code. Keep life-manual cards anonymous by default and never place names, birth data, chart hashes, or deterministic claims on them.
 
 ## Keyboard Rule
 
