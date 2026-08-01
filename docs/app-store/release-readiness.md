@@ -5,7 +5,9 @@
 - App 名称：`三慢问道`（英文 `Wendao`）
 - Bundle ID：`com.yonge6.wendao`
 - 版本：`1.0 (1)`
-- 最低系统：iOS 15；支持 iPhone 与 iPad
+- 最低系统：iOS 15；首版仅支持 iPhone
+- 上架范围：全球所有可选国家与地区；若中国大陆单独要求备案材料，则如实保留该地区待办，不影响其他地区提交
+- 发布方式：审核通过后手动发布
 - 主分类：图书（Books）；次分类：生活（Lifestyle）
 - 隐私政策：`https://wendao.wonderelian.com/privacy.html`
 - 支持网址：`https://wendao.wonderelian.com/`
@@ -29,12 +31,17 @@
 2. 运行 `npm run test`、`npm run test:runtime`、`npm run test:sites` 和 `npm run ios:build:simulator`。
 3. 将 H5 发布并验证正式域名；App 二进制使用同一提交创建 Archive。App Store 审核导致的上线时间差不等于代码分叉。
 4. 运行 `npm run ios:distribution:readiness`。所有项目为 PASS 后，才能执行 Archive、Validate App 和 Distribute App。
-5. App Store Connect 中确认隐私问卷与 `PrivacyInfo.xcprivacy` 一致，再上传 6.9 英寸 iPhone 与 13 英寸 iPad 截图。
+5. App Store Connect 中确认隐私问卷与 `PrivacyInfo.xcprivacy` 一致，再上传 6.9 英寸 iPhone 中英文截图。
 
-## 当前外部阻塞
+## 当前发布进度
 
-- 为 `com.yonge6.wendao` 注册明确 App ID。
-- 在本机创建或导入含私钥的 Apple Distribution 证书。
+- `com.yonge6.wendao` 明确 App ID 已于 2026-08-01 注册完成。
+- 12 张中英文 6.9 英寸商店海报已完成并通过尺寸、透明通道校验。
+- 版本 `1.0 (1)` 的同步归档已成功生成，归档包含 81 章并通过本地构建校验。
+
+## 仍需完成的外部步骤
+
+- 在本机创建或导入含私钥的 Apple Distribution 证书（当前仅有开发签名）。
 - 创建对应的 App Store provisioning profile。
 - 在 App Store Connect 创建应用记录，确认名称可用、SKU、分类、年龄分级、隐私问卷和联系人。
 - 完成首版截图、描述、审核联系信息与版权信息后上传构建。
