@@ -70,6 +70,7 @@ See `src/mobile/COMPONENTS.md` for the full component and gesture contract.
 - In `关于三慢问道 / About Wendao`, place the three product-method principles before `我们的生命观 / Our philosophy of life`.
 - In the About version statement, show a compact Guodian → Mawangdui → Heshang Gong → Wang Bi → modern-editions chronology, while explicitly saying it is not a claim of one direct line of transmission.
 - Keep the AI composer visually quiet and fixed above the safe area or simulated keyboard. Hide it whenever a phone-scoped bottom sheet is open.
+- Until the large-model response service is connected, label the composer and result as an honest preview. Set the expectation that future responses will combine the chapter, the reader's question, and verified Human Design information, while remaining reflective guidance rather than a verdict.
 - Keep the top reading controls fixed while the scripture scrolls. When the reader moves down the text, lower the AI composer's opacity until it is hovered or focused.
 - Display small tone-marked Hanyu Pinyin above every Chinese character in the original scripture text; do not add pinyin to translations or the English reading mode.
 - Never present a chapter excerpt as the chapter's original text. Every chapter screen must show the complete selected-edition text, identify whether it is a literal witness or an edited collation, and keep a visible full-text line count.
@@ -83,6 +84,7 @@ See `src/mobile/COMPONENTS.md` for the full component and gesture contract.
 - Render only the selected chapter initially. Append each next chapter only after the reader reaches the chapter-end continuation trigger; directory and chance selections reset the reading surface to one chapter.
 - Make chapter continuation feel ceremonial without interrupting long reading: use a visibly staged threshold, restrained breathing ink/gold motion, a short “opening” state, and a gentle entrance for the appended chapter. Respect reduced-motion preferences.
 - Keep drawer typography comfortably legible; supporting labels and descriptions must not fall back to the earlier overly small 8–9 px treatment.
+- Keep the compact reading header on one line down to iPhone X widths. Put full-text chapter search at the top of `目录 / Contents` rather than adding another crowded header or drawer control; search covers chapter numbers, titles, the three textual layers, received references, and interpretation.
 - The three reading-size choices begin at the former default size: the smallest choice preserves that visual size, while the middle and largest choices step upward. A first-time reader must still see the former default size.
 - Keep the 01 / 02 / 03 section-rail labels transparent in both day and night modes; do not place a tinted block behind the numbers or labels.
 - Use `人生说明书 / Life manual`, not `出厂设置 / Native pattern`, for the personalized Human Design layer. Never render a bodygraph in Wendao and never present a personalized result as a deterministic verdict.

@@ -19,6 +19,7 @@ import {
   HamburgerMenuIcon,
   InfoCircledIcon,
   LockClosedIcon,
+  MagnifyingGlassIcon,
   MoonIcon,
   PersonIcon,
   SunIcon,
@@ -347,6 +348,30 @@ function questionResponse(question: string, chapter: ChapterCopyBase, chart: Cha
     return `In “${chapter.title}”, the useful move is not to force an immediate answer to “${question}”. As a ${type}, your experiment is ${strategy}; with ${authority}, give the decision enough space to become clear. Notice which option lets the situation move without asking you to abandon yourself.`;
   }
   return `面对“${question}”，《${chapter.title}》给你的不是一个替你决定的答案。作为${type}，你可以先实践“${strategy}”；结合${authority}，给重要决定留出澄清的空间。观察哪一个选择既让事情重新流动，也不要求你背离真实的自己。`;
+}
+
+function chapterSearchText(chapter: (typeof chapters)[number]) {
+  return [
+    chapter.id,
+    `第${chapter.id}章`,
+    chapter.silkOrder,
+    chapter.theme.zh,
+    chapter.theme.en,
+    chapter.sources.silkBTranscription,
+    chapter.sources.receivedReference,
+    chapter.sources.reconstructionNotes,
+    chapter.zh.title,
+    ...chapter.zh.reconstructedVerse,
+    ...chapter.zh.lineByLineTranslation,
+    ...chapter.zh.explanation.flatMap((item) => [item.title, item.body]),
+    ...chapter.zh.related.flatMap((item) => [item.title, item.body]),
+    chapter.zh.action,
+    chapter.en.title,
+    ...chapter.en.verse,
+    ...chapter.en.explanation.flatMap((item) => [item.title, item.body]),
+    ...chapter.en.related.flatMap((item) => [item.title, item.body]),
+    chapter.en.action,
+  ].join(" ").toLocaleLowerCase().replace(/\s+/g, "");
 }
 
 function loadTheme(): Theme {
@@ -1303,6 +1328,7 @@ export default function Prototype() {
   const [language, setLanguage] = useState<Language>("zh");
   const [chapterId, setChapterId] = useState(8);
   const [directoryOpen, setDirectoryOpen] = useState(false);
+  const [directoryQuery, setDirectoryQuery] = useState("");
   const [insightOpen, setInsightOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerView, setDrawerView] = useState<DrawerView>("home");
@@ -1335,6 +1361,13 @@ export default function Prototype() {
   const isZh = language === "zh";
   const activeCopy = chapters.find((chapter) => chapter.id === chapterId)?.[language] ?? chapters[0][language];
   const profileReady = Boolean(chart?.chartHash);
+  const normalizedDirectoryQuery = directoryQuery.trim().toLocaleLowerCase().replace(/\s+/g, "");
+  const directoryChapters = useMemo(
+    () => normalizedDirectoryQuery
+      ? chapters.filter((chapter) => chapterSearchText(chapter).includes(normalizedDirectoryQuery))
+      : chapters,
+    [normalizedDirectoryQuery],
+  );
 
   const trackEvent = (eventName: string, metadata: Record<string, string | number> = {}, eventChapter = chapterId) => {
     void apiRequest<{ saved: boolean }>("/v1/events", {
@@ -1415,6 +1448,7 @@ export default function Prototype() {
     setChapterId(id);
     setVisibleChapterCount(1);
     setDirectoryOpen(false);
+    setDirectoryQuery("");
     trackEvent("chapter_view", { source: "directory" }, id);
     scrollReadingToTop();
   };
@@ -1808,13 +1842,19 @@ export default function Prototype() {
           onSubmit={submitQuestion}
         >
           <span className="composer-spark" aria-hidden="true">✦</span>
-          <input
-            value={question}
-            onChange={(event) => setQuestion(event.target.value)}
-            onFocus={() => trackEvent("composer_focus", { source: "reading" })}
-            placeholder={isZh ? "问问这一章与你的关系…" : "Ask how this chapter relates to you…"}
-            aria-label={isZh ? "向三慢问道提问" : "Ask Wendao"}
-          />
+          <div className="composer-field">
+            <small className="composer-expectation" id="composer-expectation">
+              {isZh ? "AI 个性化回应 · 即将接入" : "AI personalization · coming soon"}
+            </small>
+            <input
+              value={question}
+              onChange={(event) => setQuestion(event.target.value)}
+              onFocus={() => trackEvent("composer_focus", { source: "reading" })}
+              placeholder={isZh ? "问问这一章与你的关系…" : "Ask how this chapter relates to you…"}
+              aria-label={isZh ? "向三慢问道提问" : "Ask Wendao"}
+              aria-describedby="composer-expectation"
+            />
+          </div>
           <button type="submit" aria-label={isZh ? "发送" : "Send"}>
             <ArrowRightIcon />
           </button>
@@ -1827,8 +1867,34 @@ export default function Prototype() {
         title={isZh ? "目录" : "Contents"}
         description={isZh ? "帛书次序为主，括号内为今本章次" : "Silk-text order first; received chapter in parentheses"}
       >
+        <div className="directory-search" role="search" aria-label={isZh ? "搜索章节" : "Search chapters"}>
+          <div className="directory-search-field">
+            <MagnifyingGlassIcon aria-hidden="true" />
+            <input
+              type="search"
+              value={directoryQuery}
+              onChange={(event) => setDirectoryQuery(event.target.value)}
+              placeholder={isZh ? "搜索章次、标题、原文与解读" : "Search number, title, text, or meaning"}
+              aria-label={isZh ? "搜索章节" : "Search chapters"}
+            />
+            {directoryQuery ? (
+              <button
+                type="button"
+                onClick={() => setDirectoryQuery("")}
+                aria-label={isZh ? "清除搜索" : "Clear search"}
+              >
+                ×
+              </button>
+            ) : null}
+          </div>
+          <small>
+            {normalizedDirectoryQuery
+              ? (isZh ? `找到 ${directoryChapters.length} 章` : `${directoryChapters.length} chapters found`)
+              : (isZh ? "可搜索乙本转写、校读正文、传世参照与现代解读" : "Includes Silk B, base readings, received references, and interpretation")}
+          </small>
+        </div>
         <div className="directory-list">
-          {chapters.map((chapter) => {
+          {directoryChapters.map((chapter) => {
             const copy = chapter[language];
             return (
               <button
@@ -1847,6 +1913,11 @@ export default function Prototype() {
               </button>
             );
           })}
+          {directoryChapters.length === 0 ? (
+            <p className="directory-empty">
+              {isZh ? "没有找到相关章节，换一个词试试。" : "No chapter found. Try another term."}
+            </p>
+          ) : null}
         </div>
       </WebSheet>
 
@@ -1873,6 +1944,14 @@ export default function Prototype() {
               ? "如果你愿意，先写下两个选项各自让身体产生的感觉。我们可以从更松、更真实的那个反应继续。"
               : "If you like, write down how each option feels in your body. We can continue with the response that feels more spacious and true."}
           </p>
+          <aside className="ai-preview-note">
+            <strong>{isZh ? "AI 个性化回应即将接入" : "AI personalization is coming"}</strong>
+            <p>
+              {isZh
+                ? "当前为体验版回应。接入大模型后，将综合本章、你的提问与已验证的人类图信息，给出更贴近你当下处境的建议；它仍是自我观察的参考，不替你做决定。"
+                : "This is a preview response. Once the AI model is connected, it will combine this chapter, your question, and your verified Human Design information for advice closer to your present situation—still as a lens for reflection, never a verdict."}
+            </p>
+          </aside>
           <div className="source-disclosure">
             <span>{isZh ? "回应依据" : "Response basis"}</span>
             <p>

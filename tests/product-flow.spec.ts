@@ -261,6 +261,61 @@ test("shared inspiration is bilingual and remains visible without a life-manual 
   await expect(chapter.getByRole("heading", { name: "Your life manual", exact: true })).toHaveCount(0);
 });
 
+test("sets an honest expectation for future AI personalization", async ({ page }) => {
+  await page.addInitScript((storedChart) => {
+    window.localStorage.setItem("wendao-chart-snapshot", JSON.stringify(storedChart));
+  }, chartSnapshot);
+  await page.route("https://pluto-human-design-api.vercel.app/**", async (route) => {
+    await route.fulfill({ json: { data: { saved: true }, error: null } });
+  });
+  await page.goto("/");
+
+  const question = page.getByLabel("向三慢问道提问");
+  await expect(page.getByText("AI 个性化回应 · 即将接入", { exact: true })).toBeVisible();
+  await expect(question).toHaveAttribute("aria-describedby", "composer-expectation");
+
+  await page.getByRole("button", { name: "EN", exact: true }).click();
+  await expect(page.getByText("AI personalization · coming soon", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "中", exact: true }).click();
+
+  await question.fill("我现在应该继续还是停下来？");
+  await page.getByRole("button", { name: "发送", exact: true }).click();
+  await expect(page.getByText("AI 个性化回应即将接入", { exact: true })).toBeVisible();
+  await expect(page.getByText(/当前为体验版回应。接入大模型后/)).toBeVisible();
+});
+
+test("searches all textual layers from the directory", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "目录", exact: true }).click();
+  const search = page.getByRole("search", { name: "搜索章节" });
+  const input = search.getByRole("searchbox", { name: "搜索章节" });
+
+  await input.fill("上善如水");
+  await expect(page.locator(".directory-item")).toHaveCount(1);
+  await expect(page.locator('.directory-item[data-chapter-id="8"]')).toBeVisible();
+
+  await input.fill("非常道");
+  await expect(page.locator('.directory-item[data-chapter-id="1"]')).toBeVisible();
+  await expect(search.getByText(/找到 \d+ 章/)).toBeVisible();
+
+  await input.fill("绝不会存在的搜索词");
+  await expect(page.getByText("没有找到相关章节，换一个词试试。", { exact: true })).toBeVisible();
+});
+
+test("keeps the Chinese wordmark on one line at iPhone X width", async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.goto("/");
+  const wordmark = page.getByRole("button", { name: "三慢问道", exact: true });
+  await expect(wordmark).toHaveCSS("white-space", "nowrap");
+  const textLineCount = await wordmark.evaluate((element) => {
+    const range = document.createRange();
+    range.selectNodeContents(element);
+    return range.getClientRects().length;
+  });
+  expect(textLineCount).toBe(1);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0);
+});
+
 for (const width of [320, 390, 720]) {
   test(`${width}px reading has no horizontal overflow or detached punctuation`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });

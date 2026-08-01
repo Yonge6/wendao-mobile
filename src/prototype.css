@@ -184,11 +184,13 @@ textarea {
 }
 
 .wordmark {
+  flex: 0 0 auto;
   font-family: var(--serif);
   font-size: 27px;
   font-weight: 600;
   letter-spacing: 0.05em;
   line-height: 1;
+  white-space: nowrap;
 }
 
 .header-rule {
@@ -846,10 +848,10 @@ textarea {
   display: grid;
   grid-template-columns: 22px minmax(0, 1fr) 37px;
   align-items: center;
-  min-height: 53px;
-  padding: 5px 6px 5px 15px;
+  min-height: 64px;
+  padding: 6px 6px 6px 15px;
   border: 1px solid rgba(174, 127, 43, 0.6);
-  border-radius: 27px;
+  border-radius: 33px;
   background: var(--composer-surface);
   box-shadow: 0 9px 25px var(--shadow-color), inset 0 1px 0 rgba(255, 255, 255, 0.16);
   backdrop-filter: blur(12px);
@@ -876,6 +878,25 @@ textarea {
 .composer-spark {
   color: var(--gold);
   font-size: 15px;
+}
+
+.composer-field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1px;
+}
+
+.composer-expectation {
+  overflow: hidden;
+  color: color-mix(in srgb, var(--gold) 88%, transparent);
+  font-family: var(--sans);
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .ai-composer input {
@@ -1019,6 +1040,72 @@ textarea {
   padding-bottom: 22px;
 }
 
+.directory-search {
+  margin: 2px 0 12px;
+}
+
+.directory-search-field {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) 28px;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 7px 0 13px;
+  border: 1px solid rgba(174, 127, 43, 0.32);
+  border-radius: 22px;
+  background: color-mix(in srgb, var(--card-surface) 78%, transparent);
+}
+
+.directory-search-field svg {
+  width: 14px;
+  height: 14px;
+  color: var(--gold);
+}
+
+.directory-search-field input {
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 14px;
+}
+
+.directory-search-field input::placeholder {
+  color: color-mix(in srgb, var(--ink) 52%, transparent);
+}
+
+.directory-search-field button {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink-soft);
+  cursor: pointer;
+  font-family: var(--sans);
+  font-size: 18px;
+}
+
+.directory-search > small {
+  display: block;
+  margin: 7px 10px 0;
+  color: color-mix(in srgb, var(--ink) 58%, transparent);
+  font-family: var(--sans);
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+.directory-empty {
+  margin: 30px 8px;
+  color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 1.8;
+  text-align: center;
+}
+
 .directory-item {
   display: grid;
   grid-template-columns: 40px minmax(0, 1fr) 25px;
@@ -1111,6 +1198,30 @@ textarea {
   margin-top: 26px;
   padding-top: 13px;
   border-top: 1px solid rgba(174, 127, 43, 0.35);
+}
+
+.ai-preview-note {
+  margin-top: 22px;
+  padding: 14px 15px;
+  border: 1px solid rgba(174, 127, 43, 0.25);
+  background: color-mix(in srgb, var(--gold) 7%, transparent);
+}
+
+.ai-preview-note strong {
+  color: var(--gold);
+  font-family: var(--sans);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+}
+
+.ai-preview-note p {
+  margin: 7px 0 0;
+  color: var(--ink-soft);
+  font-family: var(--sans);
+  font-size: 10px;
+  line-height: 1.7;
+  letter-spacing: 0.02em;
 }
 
 .source-disclosure p {
