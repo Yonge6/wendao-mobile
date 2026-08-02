@@ -218,18 +218,29 @@ export async function renderShareCardDataUrl(content: ShareCardContent) {
   const context = canvas.getContext("2d");
   if (!context) throw new Error("CANVAS_UNAVAILABLE");
 
-  context.fillStyle = "#f7f1e6";
+  const paper = "#f7f1e6";
+  const ink = "#123f47";
+  const softInk = "#48666a";
+  const gold = "#ad7e2f";
+  context.fillStyle = paper;
   context.fillRect(0, 0, canvas.width, canvas.height);
-  const wash = context.createRadialGradient(820, 520, 20, 820, 520, 780);
-  wash.addColorStop(0, "rgba(181, 157, 112, 0.16)");
-  wash.addColorStop(1, "rgba(247, 241, 230, 0)");
-  context.fillStyle = wash;
+
+  const upperWash = context.createRadialGradient(850, 350, 30, 850, 350, 860);
+  upperWash.addColorStop(0, "rgba(184, 154, 100, 0.17)");
+  upperWash.addColorStop(1, "rgba(247, 241, 230, 0)");
+  context.fillStyle = upperWash;
+  context.fillRect(0, 0, canvas.width, canvas.height);
+
+  const lowerWash = context.createRadialGradient(180, 1780, 20, 180, 1780, 690);
+  lowerWash.addColorStop(0, "rgba(18, 63, 71, 0.055)");
+  lowerWash.addColorStop(1, "rgba(247, 241, 230, 0)");
+  context.fillStyle = lowerWash;
   context.fillRect(0, 0, canvas.width, canvas.height);
 
   const texture = await loadPaperTexture();
   if (texture) {
     context.save();
-    context.globalAlpha = 0.34;
+    context.globalAlpha = 0.28;
     const scale = Math.max(canvas.width / texture.width, canvas.height / texture.height);
     const width = texture.width * scale;
     const height = texture.height * scale;
@@ -239,101 +250,169 @@ export async function renderShareCardDataUrl(content: ShareCardContent) {
 
   const serif = content.language === "zh" ? '"Noto Serif SC", serif' : 'Georgia, "Times New Roman", serif';
   const sans = content.language === "zh" ? '"Noto Sans SC", sans-serif' : 'Arial, sans-serif';
-  const ink = "#123f47";
-  const softInk = "#48666a";
-  const gold = "#ad7e2f";
-  const margin = 104;
-  const contentWidth = canvas.width - margin * 2;
+  const frame = 58;
+  const railX = 104;
+  const contentX = 166;
+  const contentWidth = 760;
+  const chapterNumber = String(content.chapterId).padStart(2, "0");
 
-  context.fillStyle = gold;
-  context.font = `500 27px ${sans}`;
-  context.letterSpacing = "2px";
-  context.fillText(`${content.label}  ·  ${content.chapterLabel}`, margin, 145);
-
-  context.strokeStyle = "rgba(173, 126, 47, 0.5)";
+  context.strokeStyle = "rgba(173, 126, 47, 0.24)";
   context.lineWidth = 2;
+  context.strokeRect(frame, frame, canvas.width - frame * 2, canvas.height - frame * 2);
+
+  context.fillStyle = paper;
   context.beginPath();
-  context.moveTo(margin, 190);
-  context.lineTo(canvas.width - margin, 190);
+  context.arc(frame, 174, 9, 0, Math.PI * 2);
+  context.fill();
+  context.strokeStyle = gold;
+  context.lineWidth = 2;
   context.stroke();
 
-  context.fillStyle = ink;
-  context.font = `600 50px ${serif}`;
-  context.letterSpacing = "3px";
-  const titleLines = wrapLine(context, content.chapterTitle, contentWidth);
-  let cursorY = drawLines(context, titleLines, margin, 305, 74) + 85;
+  context.strokeStyle = "rgba(173, 126, 47, 0.44)";
+  context.lineWidth = 1.5;
+  context.beginPath();
+  context.moveTo(railX, 174);
+  context.lineTo(railX, 1882);
+  context.stroke();
 
   context.fillStyle = gold;
-  context.fillRect(margin, cursorY - 44, 3, 84);
+  context.font = `500 23px ${sans}`;
+  context.letterSpacing = "3px";
+  context.textAlign = "left";
+  context.fillText(content.language === "zh" ? "道德经 · READING NOTE" : "DAODEJING · READING NOTE", contentX, 144);
+  context.textAlign = "right";
+  context.fillText(
+    content.language === "zh" ? `${content.label} · 今本 ${chapterNumber}` : `${content.label.toUpperCase()} · CH. ${chapterNumber}`,
+    canvas.width - 92,
+    144,
+  );
+  context.textAlign = "left";
 
-  const primarySizes = content.primary.length > 190 ? [46, 42, 38] : content.primary.length > 105 ? [52, 46, 42] : [62, 56, 50];
+  context.strokeStyle = "rgba(173, 126, 47, 0.34)";
+  context.beginPath();
+  context.moveTo(contentX, 190);
+  context.lineTo(canvas.width - 92, 190);
+  context.stroke();
+
+  context.save();
+  context.fillStyle = "rgba(173, 126, 47, 0.065)";
+  context.font = `600 250px ${serif}`;
+  context.textAlign = "right";
+  context.fillText(chapterNumber, canvas.width - 66, 398);
+  context.restore();
+
+  context.fillStyle = ink;
+  context.font = `600 52px ${serif}`;
+  context.letterSpacing = content.language === "zh" ? "5px" : "1px";
+  const titleLines = wrapLine(context, content.chapterTitle, 610);
+  drawLines(context, titleLines, contentX, 318, 72);
+
+  context.fillStyle = "rgba(173, 126, 47, 0.16)";
+  context.font = `400 178px ${serif}`;
+  context.fillText(content.language === "zh" ? "「" : "“", 118, 550);
+
+  const primarySizes = content.primary.length > 180 ? [42, 38, 35] : content.primary.length > 105 ? [50, 45, 40] : [62, 56, 50];
   let primaryLines: string[] = [];
   let primarySize = primarySizes[0];
   for (const size of primarySizes) {
     context.font = `400 ${size}px ${serif}`;
     context.letterSpacing = content.language === "zh" ? "3px" : "1px";
-    const lines = wrapParagraphs(context, content.primary, contentWidth - 42);
+    const lines = wrapParagraphs(context, content.primary, contentWidth);
     primaryLines = lines;
     primarySize = size;
-    if (lines.length <= 11) break;
+    if (lines.length <= 10) break;
   }
 
+  const primaryTop = 470;
+  const primaryBottom = 1320;
+  const primaryLineHeight = Math.round(primarySize * 1.66);
+  const primaryHeight = primaryLines.length * primaryLineHeight;
+  const primaryY = primaryTop + Math.max(0, (primaryBottom - primaryTop - primaryHeight) / 2) + primarySize;
+
+  context.fillStyle = gold;
+  context.fillRect(140, primaryY - primarySize - 9, 3, Math.min(124, primaryHeight + 12));
   context.fillStyle = ink;
   context.font = `400 ${primarySize}px ${serif}`;
-  cursorY = drawLines(context, primaryLines, margin + 30, cursorY, Math.round(primarySize * 1.72));
+  context.letterSpacing = content.language === "zh" ? "3px" : "1px";
+  drawLines(context, primaryLines, contentX, primaryY, primaryLineHeight);
 
-  const secondaryY = Math.max(cursorY + 92, 1370);
-  context.fillStyle = "rgba(238, 227, 209, 0.72)";
-  context.strokeStyle = "rgba(173, 126, 47, 0.34)";
-  context.lineWidth = 2;
+  const secondaryY = 1408;
+  const secondaryHeight = 396;
+  context.fillStyle = "rgba(238, 227, 209, 0.68)";
+  context.strokeStyle = "rgba(173, 126, 47, 0.3)";
+  context.lineWidth = 1.5;
   context.beginPath();
-  context.roundRect(margin, secondaryY, contentWidth, 410, 24);
+  context.roundRect(140, secondaryY, 820, secondaryHeight, 18);
   context.fill();
   context.stroke();
 
   context.fillStyle = gold;
-  context.font = `500 25px ${sans}`;
+  context.fillRect(140, secondaryY, 86, 4);
+  context.font = `500 19px ${sans}`;
   context.letterSpacing = "2px";
-  context.fillText(content.secondaryLabel, margin + 42, secondaryY + 64);
+  context.fillText("02", 176, secondaryY + 70);
 
+  context.fillStyle = gold;
+  context.font = `500 24px ${sans}`;
+  context.letterSpacing = "2px";
+  context.fillText(content.secondaryLabel, 244, secondaryY + 70);
+
+  let secondarySize = 32;
+  let secondaryLines: string[] = [];
+  for (const size of [32, 29, 26]) {
+    context.font = `400 ${size}px ${serif}`;
+    context.letterSpacing = content.language === "zh" ? "2px" : "0.5px";
+    secondaryLines = wrapParagraphs(context, content.secondary, 666);
+    secondarySize = size;
+    if (secondaryLines.length <= 5) break;
+  }
   context.fillStyle = softInk;
-  context.font = `400 34px ${serif}`;
-  context.letterSpacing = content.language === "zh" ? "2px" : "0.5px";
-  const secondaryLines = wrapParagraphs(context, content.secondary, contentWidth - 84);
-  drawLines(context, secondaryLines, margin + 42, secondaryY + 132, 58);
+  context.font = `400 ${secondarySize}px ${serif}`;
+  drawLines(context, secondaryLines, 244, secondaryY + 144, Math.round(secondarySize * 1.72));
 
-  const footerY = 1960;
-  context.strokeStyle = "rgba(173, 126, 47, 0.48)";
+  const footerY = 1920;
+  context.strokeStyle = "rgba(173, 126, 47, 0.4)";
   context.beginPath();
-  context.moveTo(margin, footerY);
-  context.lineTo(canvas.width - margin, footerY);
+  context.moveTo(railX, footerY);
+  context.lineTo(canvas.width - 84, footerY);
   context.stroke();
 
   context.fillStyle = ink;
-  context.font = `600 52px ${serif}`;
-  context.letterSpacing = "5px";
-  context.fillText(content.language === "zh" ? "三慢问道" : "WENDAO", margin, footerY + 105);
+  context.font = `600 54px ${serif}`;
+  context.letterSpacing = content.language === "zh" ? "6px" : "4px";
+  context.fillText(content.language === "zh" ? "三慢问道" : "WENDAO", 140, footerY + 104);
   context.fillStyle = softInk;
-  context.font = `400 25px ${serif}`;
+  context.font = `400 24px ${serif}`;
   context.letterSpacing = content.language === "zh" ? "2px" : "0.4px";
   context.fillText(
     content.language === "zh" ? "读一章《道德经》，照见此刻的自己。" : "Read one chapter. Meet yourself anew.",
-    margin,
-    footerY + 165,
+    140,
+    footerY + 164,
   );
   context.fillStyle = gold;
-  context.font = `400 21px ${sans}`;
+  context.font = `400 20px ${sans}`;
   context.letterSpacing = "1px";
-  context.fillText("wendao.wonderelian.com", margin, footerY + 224);
+  context.fillText("wendao.wonderelian.com", 140, footerY + 222);
 
   const qrCanvas = document.createElement("canvas");
   await QRCode.toCanvas(qrCanvas, content.url, {
-    width: 190,
+    width: 180,
     margin: 1,
-    color: { dark: ink, light: "#f7f1e6" },
+    color: { dark: ink, light: paper },
     errorCorrectionLevel: "M",
   });
-  context.drawImage(qrCanvas, canvas.width - margin - 190, footerY + 54, 190, 190);
+  context.fillStyle = "rgba(247, 241, 230, 0.84)";
+  context.strokeStyle = "rgba(173, 126, 47, 0.32)";
+  context.beginPath();
+  context.roundRect(772, footerY + 34, 220, 220, 16);
+  context.fill();
+  context.stroke();
+  context.drawImage(qrCanvas, 792, footerY + 54, 180, 180);
+
+  context.fillStyle = gold;
+  context.beginPath();
+  context.arc(canvas.width / 2, canvas.height - 84, 4, 0, Math.PI * 2);
+  context.fill();
 
   return canvas.toDataURL("image/png");
 }
