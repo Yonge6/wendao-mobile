@@ -1201,9 +1201,6 @@ function SideDrawer({
           ) : null}
         </div>
 
-        <footer className="drawer-footer">
-          {isZh ? "帛书乙本底本校读 · 王弼本及其他版本参照" : "Silk B Base Reading · Wang Bi and other editions compared"}
-        </footer>
       </aside>
     </div>
   );

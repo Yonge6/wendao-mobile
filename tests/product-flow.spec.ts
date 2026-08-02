@@ -248,6 +248,7 @@ test("drawer presents three bilingual related works with safe external links", a
   await page.goto("/");
   await page.getByRole("button", { name: "打开更多功能" }).click();
   await expect(page.getByRole("button", { name: "分享问道" })).toHaveCount(0);
+  await expect(page.locator(".drawer-footer")).toHaveCount(0);
   const works = page.getByRole("region", { name: "沿途所作" });
   await expect(works).toBeVisible();
   const links = works.getByRole("link");

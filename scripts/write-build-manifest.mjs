@@ -26,7 +26,7 @@ writeFileSync(path.join(outputDir, "wendao-build.json"), `${JSON.stringify({
   appName: "三慢问道",
   bundleId: "com.yonge6.wendao",
   appVersion: "1.0",
-  buildNumber: 1,
+  buildNumber: 2,
   commit,
   chapterCount: chapters.length,
   chapterDataSha256: createHash("sha256").update(chapterBytes).digest("hex"),

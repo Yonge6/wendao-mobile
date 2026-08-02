@@ -2891,16 +2891,6 @@ textarea {
   font-size: 10px;
 }
 
-.drawer-footer {
-  padding: 13px 22px calc(env(safe-area-inset-bottom, 0px) + 15px);
-  border-top: 1px solid color-mix(in srgb, var(--gold) 16%, transparent);
-  color: var(--ink-soft);
-  font-family: var(--sans);
-  font-size: 9px;
-  letter-spacing: 0.08em;
-  text-align: center;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .chapter-continuation,
   .next-chapter-divider,
