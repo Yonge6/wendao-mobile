@@ -142,10 +142,9 @@ function wrapLine(context: CanvasRenderingContext2D, text: string, maxWidth: num
 }
 
 function wrapParagraphs(context: CanvasRenderingContext2D, text: string, maxWidth: number) {
-  return text.split("\n").flatMap((paragraph, index, paragraphs) => {
-    const lines = wrapLine(context, paragraph, maxWidth);
-    return index < paragraphs.length - 1 ? [...lines, ""] : lines;
-  });
+  return text.split("\n").flatMap((paragraph) => (
+    paragraph.trim() ? wrapLine(context, paragraph, maxWidth) : [""]
+  ));
 }
 
 function drawLines(
@@ -210,10 +209,10 @@ export async function renderShareCardDataUrl(content: ShareCardContent) {
   context.font = `400 ${secondarySize}px ${serif}`;
   context.letterSpacing = content.language === "zh" ? "2px" : "0.5px";
   const secondaryLines = wrapParagraphs(context, content.secondary, 666);
-  const secondaryY = Math.max(1370, primaryTop + primaryHeight + 104);
+  const secondaryY = primaryTop + primaryHeight + 84;
   const secondaryHeight = Math.max(396, 154 + secondaryLines.length * secondaryLineHeight + 58);
-  const naturalFooterY = secondaryY + secondaryHeight + 112;
-  canvas.height = Math.max(2340, naturalFooterY + 340);
+  const naturalFooterY = secondaryY + secondaryHeight + 100;
+  canvas.height = Math.max(2160, naturalFooterY + 320);
   context = canvas.getContext("2d");
   if (!context) throw new Error("CANVAS_UNAVAILABLE");
   const footerY = canvas.height - 320;

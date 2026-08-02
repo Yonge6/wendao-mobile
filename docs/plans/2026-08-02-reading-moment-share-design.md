@@ -2,7 +2,7 @@
 
 ## Outcome
 
-Turn sharing from a generic product link into a complete, deliberately typeset chapter poster. Every poster stays 1080 px wide, begins at 2340 px high, and grows vertically with its real content instead of shrinking, cropping, or presenting an excerpt as the whole. A reader can share or save the image, copy the accompanying text, or send a deep link that opens the same chapter and reading layer.
+Turn sharing from a generic product link into a complete, deliberately typeset chapter poster. Every poster stays 1080 px wide, begins around a 1:2 ratio (2160 px high), and grows vertically with its real content instead of shrinking, cropping, or presenting an excerpt as the whole. A reader can share or save the image, copy the accompanying text, or send a deep link that opens the same chapter and reading layer.
 
 ## Four cards
 
@@ -19,6 +19,8 @@ The card uses Wendao's mist-gold paper, deep teal text, pale ink atmosphere, ant
 2. The complete primary text, with the poster height calculated from its wrapped line count.
 3. A complete contextual companion in a distinct editorial field.
 4. `三慢问道 / WENDAO`, the line `读一章《道德经》，照见此刻的自己。`, the exact chapter QR code, and the public domain.
+
+Source line breaks use the normal text line height. Only an actual blank paragraph creates additional paragraph space, and the companion field follows the primary text with one controlled transition gap rather than a fixed empty middle.
 
 ## Interaction
 

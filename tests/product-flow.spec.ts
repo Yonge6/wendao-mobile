@@ -147,7 +147,7 @@ test("opens the complete original-text poster and shares an exact chapter link",
   await expect.poll(() => preview.evaluate((image: HTMLImageElement) => image.naturalWidth)).toBe(1080);
   const naturalSize = await preview.evaluate((image: HTMLImageElement) => [image.naturalWidth, image.naturalHeight]);
   expect(naturalSize[0]).toBe(1080);
-  expect(naturalSize[1]).toBeGreaterThanOrEqual(2340);
+  expect(naturalSize[1]).toBeGreaterThanOrEqual(2160);
   const originalLabel = await page.locator(".share-card-preview").getAttribute("aria-label");
   expect(originalLabel).toContain(chapter8.zh.reconstructedVerse.at(-1));
   expect(originalLabel).toContain(chapter8.zh.lineByLineTranslation.at(-1));
@@ -230,6 +230,7 @@ test("grows a long chapter poster instead of shrinking or cropping its full text
   const preview = page.locator(".share-card-preview img");
   await expect(preview).toBeVisible();
   await expect.poll(() => preview.evaluate((image: HTMLImageElement) => image.naturalHeight)).toBeGreaterThan(2340);
+  expect(await preview.evaluate((image: HTMLImageElement) => image.naturalHeight)).toBeLessThan(4500);
   const label = await page.locator(".share-card-preview").getAttribute("aria-label");
   expect(label).toContain(chapter64.zh.lineByLineTranslation.at(-1));
   expect(label).toContain(chapter64.zh.reconstructedVerse.at(-1));
