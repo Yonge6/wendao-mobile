@@ -373,6 +373,33 @@ textarea {
   letter-spacing: 0.06em;
 }
 
+.chapter-meta-tools {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.chapter-share-quick {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 0 3px 8px;
+  border: 0;
+  border-left: 1px solid color-mix(in srgb, var(--gold) 34%, transparent);
+  background: transparent;
+  color: var(--gold);
+  font-family: var(--sans);
+  font-size: 9px;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+}
+
+.chapter-share-quick svg {
+  width: 11px;
+  height: 11px;
+}
+
 .original-section h1 {
   margin: 0 0 11px;
   color: var(--ink);
@@ -667,6 +694,66 @@ textarea {
   font-size: var(--reading-body-size);
   line-height: 1.85;
   letter-spacing: 0.06em;
+}
+
+.section-share-action {
+  display: flex;
+  width: max-content;
+  align-items: center;
+  gap: 6px;
+  margin: 18px 0 2px auto;
+  padding: 7px 0 7px 38px;
+  border: 0;
+  background:
+    linear-gradient(color-mix(in srgb, var(--gold) 34%, transparent), color-mix(in srgb, var(--gold) 34%, transparent)) left center / 29px 1px no-repeat;
+  color: color-mix(in srgb, var(--gold) 90%, var(--ink));
+  font-family: var(--sans);
+  font-size: 9px;
+  letter-spacing: 0.09em;
+  cursor: pointer;
+}
+
+.section-share-action svg {
+  width: 12px;
+  height: 12px;
+}
+
+.selection-share-button {
+  position: fixed;
+  z-index: 72;
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 13px;
+  transform: translate(-50%, -100%);
+  border: 1px solid color-mix(in srgb, var(--gold) 60%, transparent);
+  border-radius: 999px;
+  background: var(--ink);
+  box-shadow: 0 9px 24px color-mix(in srgb, var(--ink) 24%, transparent);
+  color: var(--paper);
+  font: 500 10px/1 var(--sans);
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.selection-share-button::after {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  transform: translate(-50%, -50%) rotate(45deg);
+  border-right: 1px solid color-mix(in srgb, var(--gold) 60%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--gold) 60%, transparent);
+  background: var(--ink);
+  content: "";
+}
+
+.selection-share-button svg {
+  width: 13px;
+  height: 13px;
 }
 
 .next-chapter-divider {
@@ -1066,6 +1153,28 @@ textarea {
   line-height: 1.55;
 }
 
+.share-content-source {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 10px 5px 0;
+  color: var(--ink-soft);
+  font-size: 10px;
+  line-height: 1.55;
+}
+
+.share-content-source strong {
+  flex: 0 0 auto;
+  color: var(--gold);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
+.share-content-source.is-selection strong::before {
+  margin-right: 5px;
+  content: "✦";
+}
+
 .share-card-workspace {
   display: grid;
   grid-template-columns: minmax(205px, 254px) minmax(0, 1fr);
@@ -1093,21 +1202,6 @@ textarea {
   width: 100%;
   height: 100%;
   object-fit: cover;
-}
-
-.share-card-preview figcaption {
-  position: absolute;
-  right: 10px;
-  bottom: 9px;
-  left: 10px;
-  padding: 5px 8px;
-  border-radius: 999px;
-  background: rgba(247, 241, 230, 0.86);
-  color: #48666a;
-  font: 500 8px/1.2 var(--sans);
-  letter-spacing: 0.05em;
-  text-align: center;
-  backdrop-filter: blur(7px);
 }
 
 .share-card-rendering {
@@ -1271,6 +1365,18 @@ textarea {
 }
 
 @media (max-width: 350px) {
+  .chapter-meta {
+    align-items: flex-start;
+  }
+
+  .chapter-meta-tools {
+    gap: 5px;
+  }
+
+  .chapter-completeness {
+    display: none;
+  }
+
   .share-kind-tabs button {
     padding-right: 4px;
     padding-left: 4px;

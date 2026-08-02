@@ -24,10 +24,12 @@ The card uses Wendao's mist-gold paper, deep teal text, pale ink atmosphere, ant
 
 ## Interaction
 
-`分享问道 / Share Wendao` opens a phone-friendly share sheet rather than immediately invoking the system sheet. The sheet contains the four type controls, a live 9:19.5 preview, and actions for sharing the image, saving it, copying the text, and sharing the exact link. The AI composer remains hidden while the sheet is open.
+Sharing begins inside the reading flow, not in the drawer. Each of the three reading layers ends with a quiet `分享此刻 / Share this moment` action that opens the matching recommended card. A compact share action beside the chapter metadata offers the original-text recommendation immediately. When a reader selects text inside a chapter, a contextual `分享所选 / Share selection` control appears beside that passage and uses the selected text as the card's primary content.
+
+The share sheet contains the four type controls, a live preview, and actions for sharing the image, saving it, copying the text, and sharing the exact link. It clearly labels whether the current card uses `你的选择 / Your selection` or `本章推荐 / Recommended`, but exposes no pixel dimensions, device names, or production specifications. The AI composer remains hidden while the sheet is open.
 
 Deep links use `?chapter=<1-81>&section=<verse|meaning|inspiration|manual>&lang=<zh|en>`. The H5 reads these parameters on first load, opens the requested chapter, and scrolls to the requested layer. The QR always uses the public HTTPS URL, so an iOS share still resolves when received on another device.
 
 ## Validation
 
-Automated coverage verifies all four card modes, anonymity of life-manual cards, QR presence, downloadable PNG output, exact deep-link parameters, same chapter opening from a deep link, and no horizontal overflow at 320, 390, and 720 px. The normal 81-chapter, Silk B, H5, and iOS synchronization gates remain required.
+Automated coverage verifies in-reading entry points, selected-text cards, recommended cards, all four card modes, anonymity of life-manual cards, QR presence, downloadable PNG output, exact deep-link parameters, same chapter opening from a deep link, and no horizontal overflow at 320, 390, and 720 px. The normal 81-chapter, Silk B, H5, and iOS synchronization gates remain required.

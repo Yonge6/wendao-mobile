@@ -21,6 +21,8 @@ type ShareCardPanelProps = {
   language: ShareLanguage;
   manualText?: string;
   profileReady: boolean;
+  initialKind?: ShareCardKind;
+  selectedText?: string;
   onAction?: (action: string, kind: ShareCardKind) => void;
 };
 
@@ -29,17 +31,26 @@ export default function ShareCardPanel({
   language,
   manualText,
   profileReady,
+  initialKind = "verse",
+  selectedText,
   onAction,
 }: ShareCardPanelProps) {
   const isZh = language === "zh";
-  const [kind, setKind] = useState<ShareCardKind>("verse");
+  const [kind, setKind] = useState<ShareCardKind>(initialKind);
   const [imageUrl, setImageUrl] = useState("");
   const [rendering, setRendering] = useState(true);
   const [feedback, setFeedback] = useState("");
   const content = useMemo(
-    () => buildShareCardContent(chapter, language, kind, manualText),
-    [chapter, kind, language, manualText],
+    () => buildShareCardContent(
+      chapter,
+      language,
+      kind,
+      manualText,
+      kind === initialKind ? selectedText : undefined,
+    ),
+    [chapter, initialKind, kind, language, manualText, selectedText],
   );
+  const usesSelection = Boolean(selectedText && kind === initialKind);
 
   useEffect(() => {
     let cancelled = false;
@@ -158,6 +169,15 @@ export default function ShareCardPanel({
         })}
       </div>
 
+      <p className={`share-content-source ${usesSelection ? "is-selection" : ""}`}>
+        <strong>{usesSelection ? (isZh ? "你的选择" : "Your selection") : (isZh ? "本章推荐" : "Recommended")}</strong>
+        <span>
+          {usesSelection
+            ? (isZh ? "卡片使用你刚刚选中的文字" : "The card uses the passage you selected")
+            : (isZh ? "已为这一层选出一个适合分享的阅读瞬间" : "A focused moment has been chosen from this layer")}
+        </span>
+      </p>
+
       {!profileReady ? (
         <p className="share-manual-note">
           {isZh ? "生成真实人生说明书后，可分享匿名说明书卡。" : "Create a verified life manual to share an anonymous manual card."}
@@ -183,7 +203,6 @@ export default function ShareCardPanel({
                 : (isZh ? "等待重新生成" : "Waiting to retry")}
             </div>
           )}
-          <figcaption>{isZh ? "iPhone 长卡 · 1080 × 2340" : "iPhone card · 1080 × 2340"}</figcaption>
         </figure>
 
         <div className="share-card-controls">

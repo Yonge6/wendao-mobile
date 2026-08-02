@@ -84,6 +84,7 @@ export function buildShareCardContent(
   language: ShareLanguage,
   kind: ShareCardKind,
   manualText?: string,
+  primaryOverride?: string,
 ): ShareCardContent {
   const copy = chapter[language];
   const label = shareKindLabel(kind, language);
@@ -115,6 +116,25 @@ export function buildShareCardContent(
     secondary = language === "zh"
       ? "已隐藏姓名与出生资料；这是一面自我观察的镜子，不是替你做决定的结论。"
       : "Name and birth details are hidden. This is a lens for reflection, never a verdict.";
+  }
+
+  if (primaryOverride?.trim()) {
+    primary = sentenceExcerpt(primaryOverride, language === "zh" ? 190 : 290);
+    if (kind === "verse") {
+      secondaryLabel = language === "zh" ? "读到这里" : "Read in context";
+      if (language === "zh") {
+        const normalizedSelection = primaryOverride.replace(/[〔〕\s]/g, "");
+        const lineIndex = chapter.zh.reconstructedVerse.findIndex((line) => {
+          const normalizedLine = line.replace(/[〔〕\s]/g, "");
+          return normalizedSelection.includes(normalizedLine) || normalizedLine.includes(normalizedSelection);
+        });
+        secondary = lineIndex >= 0
+          ? chapter.zh.lineByLineTranslation[lineIndex]
+          : sentenceExcerpt(chapter.zh.explanation[0].body, 120);
+      } else {
+        secondary = sentenceExcerpt(chapter.en.explanation[0]?.body ?? chapter.en.variant, 190);
+      }
+    }
   }
 
   const brand = language === "zh" ? "三慢问道" : "Wendao";

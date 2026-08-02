@@ -46,6 +46,14 @@ type ReadingSize = "small" | "medium" | "large";
 type DrawerView = "home" | "profile" | "profile-detail" | "about" | "feedback";
 type ChapterEntrySource = "daily" | "directory" | "chance" | "link";
 
+type ReadingSelectionPrompt = {
+  text: string;
+  kind: ShareCardKind;
+  chapterId: number;
+  x: number;
+  y: number;
+};
+
 type LifeProfile = {
   name: string;
   birthDate: string;
@@ -552,6 +560,36 @@ function copyVerseWithoutPinyin(event: ReactClipboardEvent<HTMLDivElement>) {
   event.preventDefault();
 }
 
+function currentReadingSelection(): ReadingSelectionPrompt | null {
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return null;
+  const range = selection.getRangeAt(0);
+  const commonNode = range.commonAncestorContainer;
+  const element = commonNode instanceof Element ? commonNode : commonNode.parentElement;
+  const chapter = element?.closest<HTMLElement>("article.chapter");
+  const section = element?.closest<HTMLElement>("[data-share-section]");
+  const sectionKind = section?.dataset.shareSection;
+  const chapterId = Number(chapter?.dataset.chapterId);
+  if (!chapter || !section || !Number.isInteger(chapterId)) return null;
+  if (sectionKind !== "verse" && sectionKind !== "meaning" && sectionKind !== "inspiration" && sectionKind !== "manual") return null;
+
+  const fragment = range.cloneContents();
+  fragment.querySelectorAll?.("rt").forEach((node) => node.remove());
+  const holder = document.createElement("div");
+  holder.append(fragment);
+  const text = (holder.textContent ?? "").replace(/\s+/g, " ").trim();
+  if (text.length < 2) return null;
+
+  const rect = range.getBoundingClientRect();
+  return {
+    text: text.slice(0, 600),
+    kind: sectionKind,
+    chapterId,
+    x: Math.min(window.innerWidth - 58, Math.max(58, rect.left + rect.width / 2)),
+    y: Math.min(window.innerHeight - 70, Math.max(92, rect.top - 8)),
+  };
+}
+
 type WebSheetProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -628,7 +666,6 @@ type SideDrawerProps = {
   onContactClick: (target: string) => void;
   onWorkClick: (target: string) => void;
   onVideoChannelOpen: () => void;
-  onShare: () => void;
 };
 
 function SideDrawer({
@@ -658,7 +695,6 @@ function SideDrawer({
   onContactClick,
   onWorkClick,
   onVideoChannelOpen,
-  onShare,
 }: SideDrawerProps) {
   const isZh = language === "zh";
   const profileComplete = Boolean(chart?.chartHash);
@@ -834,14 +870,6 @@ function SideDrawer({
                     ))}
                   </div>
                 </div>
-                <button type="button" onClick={onShare}>
-                  <span className="drawer-nav-icon"><Share1Icon /></span>
-                  <span>
-                    <strong>{isZh ? "分享问道" : "Share Wendao"}</strong>
-                    <small>{isZh ? "把此刻读到的一章递给朋友" : "Pass this slower reading on to a friend"}</small>
-                  </span>
-                  <ChevronRightIcon />
-                </button>
                 <button type="button" onClick={() => onViewChange("about")}>
                   <span className="drawer-nav-icon"><InfoCircledIcon /></span>
                   <span>
@@ -1452,6 +1480,10 @@ export default function Prototype() {
   const [directoryQuery, setDirectoryQuery] = useState("");
   const [insightOpen, setInsightOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [shareChapterId, setShareChapterId] = useState(chapterId);
+  const [shareInitialKind, setShareInitialKind] = useState<ShareCardKind>("verse");
+  const [shareSelectedText, setShareSelectedText] = useState("");
+  const [selectionPrompt, setSelectionPrompt] = useState<ReadingSelectionPrompt | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerView, setDrawerView] = useState<DrawerView>("home");
   const [question, setQuestion] = useState("");
@@ -1484,6 +1516,8 @@ export default function Prototype() {
   const isZh = language === "zh";
   const activeChapter = chapters.find((chapter) => chapter.id === chapterId) ?? chapters[0];
   const activeCopy = activeChapter[language];
+  const shareChapter = chapters.find((chapter) => chapter.id === shareChapterId) ?? activeChapter;
+  const shareCopy = shareChapter[language];
   const profileReady = Boolean(chart?.chartHash);
   const normalizedDirectoryQuery = directoryQuery.trim().toLocaleLowerCase().replace(/\s+/g, "");
   const directoryChapters = useMemo(
@@ -1533,10 +1567,21 @@ export default function Prototype() {
     const scroll = document.querySelector<HTMLElement>("[data-testid='mobile-scroll']");
     if (!scroll) return;
 
-    const updateReadingState = () => setIsReadingScrolled(scroll.scrollTop > 44);
+    const updateReadingState = () => {
+      setIsReadingScrolled(scroll.scrollTop > 44);
+      setSelectionPrompt(null);
+    };
     updateReadingState();
     scroll.addEventListener("scroll", updateReadingState, { passive: true });
     return () => scroll.removeEventListener("scroll", updateReadingState);
+  }, []);
+
+  useEffect(() => {
+    const updateSelection = () => {
+      window.requestAnimationFrame(() => setSelectionPrompt(currentReadingSelection()));
+    };
+    document.addEventListener("selectionchange", updateSelection);
+    return () => document.removeEventListener("selectionchange", updateSelection);
   }, []);
 
   useEffect(() => {
@@ -1756,6 +1801,19 @@ export default function Prototype() {
     trackEvent("theme_change", { value: nextTheme });
   };
 
+  const openShare = (kind: ShareCardKind, targetChapterId: number, selectedText = "") => {
+    setShareChapterId(targetChapterId);
+    setShareInitialKind(kind);
+    setShareSelectedText(selectedText);
+    setSelectionPrompt(null);
+    setShareOpen(true);
+    window.getSelection()?.removeAllRanges();
+  };
+
+  const captureReadingSelection = () => {
+    window.requestAnimationFrame(() => setSelectionPrompt(currentReadingSelection()));
+  };
+
   return (
     <>
       <header
@@ -1816,6 +1874,8 @@ export default function Prototype() {
           data-testid="reading-screen"
           data-reading-top
           lang={isZh ? "zh-CN" : "en"}
+          onPointerUp={captureReadingSelection}
+          onKeyUp={captureReadingSelection}
         >
           <p className="philosophy-line">
             {isZh ? "真实自己，流动人生" : "True to yourself. Flow with life."}
@@ -1866,8 +1926,19 @@ export default function Prototype() {
                             </>
                           ) : copy.eyebrow}
                         </p>
-                        <span className="chapter-completeness">
-                          {isZh ? `全文 · ${verse.length}句` : `Full text · ${verse.length} lines`}
+                        <span className="chapter-meta-tools">
+                          <span className="chapter-completeness">
+                            {isZh ? `全文 · ${verse.length}句` : `Full text · ${verse.length} lines`}
+                          </span>
+                          <button
+                            type="button"
+                            className="chapter-share-quick"
+                            aria-label={isZh ? "分享本章推荐" : "Share a recommended passage"}
+                            onClick={() => openShare("verse", chapter.id)}
+                          >
+                            <Share1Icon />
+                            <span>{isZh ? "分享" : "Share"}</span>
+                          </button>
                         </span>
                       </div>
                       <h1 id={`chapter-${chapter.id}-${language}`}>{copy.title}</h1>
@@ -1895,6 +1966,10 @@ export default function Prototype() {
                         <small>{isZh ? chapter.sources.reconstructionNotes : `Editorial record: ${chapter.sources.reconstructionNotes}`}</small>
                       </div>
                       <p className="variant-note">{copy.variant}</p>
+                      <button type="button" className="section-share-action" onClick={() => openShare("verse", chapter.id)}>
+                        <Share1Icon />
+                        <span>{isZh ? "分享此刻" : "Share this moment"}</span>
+                      </button>
                     </div>
                   </section>
 
@@ -1933,6 +2008,10 @@ export default function Prototype() {
                           <p>{item.body}</p>
                         </div>
                       ))}
+                      <button type="button" className="section-share-action" onClick={() => openShare("meaning", chapter.id)}>
+                        <Share1Icon />
+                        <span>{isZh ? "分享此刻" : "Share this moment"}</span>
+                      </button>
                     </div>
                   </section>
 
@@ -1957,6 +2036,10 @@ export default function Prototype() {
                         <span className="practice-kicker">{isZh ? "今日一练" : "A practice for today"}</span>
                         <p>{copy.action}</p>
                       </div>
+                      <button type="button" className="section-share-action" onClick={() => openShare("inspiration", chapter.id)}>
+                        <Share1Icon />
+                        <span>{isZh ? "分享此刻" : "Share this moment"}</span>
+                      </button>
                     </div>
                   </section>
                 </div>
@@ -1990,6 +2073,19 @@ export default function Prototype() {
           </footer>
         </main>
       </div>
+
+      {selectionPrompt && !directoryOpen && !insightOpen && !drawerOpen && !shareOpen ? (
+        <button
+          type="button"
+          className="selection-share-button"
+          style={{ left: selectionPrompt.x, top: selectionPrompt.y }}
+          onPointerDown={(event) => event.preventDefault()}
+          onClick={() => openShare(selectionPrompt.kind, selectionPrompt.chapterId, selectionPrompt.text)}
+        >
+          <Share1Icon />
+          {isZh ? "分享所选" : "Share selection"}
+        </button>
+      ) : null}
 
       {!directoryOpen && !insightOpen && !drawerOpen && !shareOpen ? (
         <form
@@ -2122,14 +2218,16 @@ export default function Prototype() {
         open={shareOpen}
         onOpenChange={setShareOpen}
         title={isZh ? "分享这一章" : "Share this chapter"}
-        description={isZh ? "选择一个阅读瞬间，生成 iPhone 长卡" : "Choose one reading moment for an iPhone-length card"}
+        description={isZh ? "分享你选中的文字，或这一层的推荐片段" : "Share your selection or a recommended passage from this layer"}
         variant="share"
       >
         <ShareCardPanel
-          chapter={activeChapter}
+          chapter={shareChapter}
           language={language}
-          manualText={chart ? personalizedAdvice(activeChapter.id, activeCopy, chart, language) : undefined}
+          manualText={chart ? personalizedAdvice(shareChapter.id, shareCopy, chart, language) : undefined}
           profileReady={profileReady}
+          initialKind={shareInitialKind}
+          selectedText={shareSelectedText || undefined}
         />
       </WebSheet>
 
@@ -2168,10 +2266,6 @@ export default function Prototype() {
         onVideoChannelOpen={() => {
           setVideoChannelOpen(true);
           trackEvent("contact_click", { target: "视频号" });
-        }}
-        onShare={() => {
-          setDrawerOpen(false);
-          setShareOpen(true);
         }}
       />
       <VideoChannelModal open={videoChannelOpen} onClose={() => setVideoChannelOpen(false)} language={language} />
