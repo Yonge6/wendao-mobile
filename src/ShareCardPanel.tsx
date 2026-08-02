@@ -22,7 +22,6 @@ type ShareCardPanelProps = {
   manualText?: string;
   profileReady: boolean;
   initialKind?: ShareCardKind;
-  selectedText?: string;
   onAction?: (action: string, kind: ShareCardKind) => void;
 };
 
@@ -32,7 +31,6 @@ export default function ShareCardPanel({
   manualText,
   profileReady,
   initialKind = "verse",
-  selectedText,
   onAction,
 }: ShareCardPanelProps) {
   const isZh = language === "zh";
@@ -41,16 +39,9 @@ export default function ShareCardPanel({
   const [rendering, setRendering] = useState(true);
   const [feedback, setFeedback] = useState("");
   const content = useMemo(
-    () => buildShareCardContent(
-      chapter,
-      language,
-      kind,
-      manualText,
-      kind === initialKind ? selectedText : undefined,
-    ),
-    [chapter, initialKind, kind, language, manualText, selectedText],
+    () => buildShareCardContent(chapter, language, kind, manualText),
+    [chapter, kind, language, manualText],
   );
-  const usesSelection = Boolean(selectedText && kind === initialKind);
 
   useEffect(() => {
     let cancelled = false;
@@ -169,15 +160,6 @@ export default function ShareCardPanel({
         })}
       </div>
 
-      <p className={`share-content-source ${usesSelection ? "is-selection" : ""}`}>
-        <strong>{usesSelection ? (isZh ? "你的选择" : "Your selection") : (isZh ? "本章推荐" : "Recommended")}</strong>
-        <span>
-          {usesSelection
-            ? (isZh ? "卡片使用你刚刚选中的文字" : "The card uses the passage you selected")
-            : (isZh ? "已为这一层选出一个适合分享的阅读瞬间" : "A focused moment has been chosen from this layer")}
-        </span>
-      </p>
-
       {!profileReady ? (
         <p className="share-manual-note">
           {isZh ? "生成真实人生说明书后，可分享匿名说明书卡。" : "Create a verified life manual to share an anonymous manual card."}
@@ -187,7 +169,6 @@ export default function ShareCardPanel({
       <div className="share-card-workspace">
         <figure
           className="share-card-preview"
-          data-card-ratio="9:19.5"
           aria-label={`${content.primary} ${content.secondaryLabel} ${content.secondary}`}
         >
           {imageUrl ? (
@@ -209,7 +190,6 @@ export default function ShareCardPanel({
           <div className="share-card-summary">
             <span>{content.chapterLabel}</span>
             <strong>{isZh ? `${content.label}卡` : `${content.label} card`}</strong>
-            <p>{isZh ? "图片放一个阅读瞬间，二维码回到完整章节。" : "One reading moment on the card; the QR returns to the full chapter."}</p>
           </div>
 
           <button

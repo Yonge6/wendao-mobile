@@ -40,37 +40,24 @@ export function shareChapterUrl(chapterId: number, kind: ShareCardKind, language
   return url.toString();
 }
 
-function sentenceExcerpt(text: string, limit: number) {
-  const cleaned = text.replace(/\s+/g, " ").trim();
-  if (cleaned.length <= limit) return cleaned;
-  const sentences = cleaned.match(/[^。！？.!?；;]+[。！？.!?；;]?/g) ?? [cleaned];
-  let result = "";
-  for (const sentence of sentences) {
-    if (result && result.length + sentence.length > limit) break;
-    result += sentence;
-    if (result.length >= limit * 0.62) break;
-  }
-  return result || sentences[0];
-}
-
-function openingVerse(chapter: Chapter, language: ShareLanguage) {
+function fullVerse(chapter: Chapter, language: ShareLanguage) {
   const lines = language === "zh" ? chapter.zh.reconstructedVerse : chapter.en.verse;
-  const chosen: string[] = [];
-  for (const line of lines) {
-    if (chosen.length >= 2 || (chosen.length > 0 && chosen.join("").length + line.length > 82)) break;
-    chosen.push(line);
+  return lines.join("\n");
+}
+
+function fullTranslation(chapter: Chapter, language: ShareLanguage) {
+  if (language === "zh") return chapter.zh.lineByLineTranslation.join("\n");
+  return chapter.en.explanation[0]?.body ?? chapter.en.variant;
+}
+
+function fullMeaning(chapter: Chapter, language: ShareLanguage) {
+  if (language === "zh") {
+    return [
+      chapter.zh.lineByLineTranslation.join("\n"),
+      chapter.zh.explanation[1]?.body,
+    ].filter(Boolean).join("\n\n");
   }
-  return chosen.join("\n");
-}
-
-function openingTranslation(chapter: Chapter, language: ShareLanguage) {
-  if (language === "zh") return chapter.zh.lineByLineTranslation.slice(0, 2).join("");
-  return sentenceExcerpt(chapter.en.explanation[0]?.body ?? chapter.en.variant, 180);
-}
-
-function meaningItem(chapter: Chapter, language: ShareLanguage) {
-  const copy = chapter[language];
-  return copy.explanation[1] ?? copy.explanation[0];
+  return chapter.en.explanation.slice(0, 2).map((item) => item.body).join("\n\n");
 }
 
 function inspirationItem(chapter: Chapter, language: ShareLanguage) {
@@ -84,7 +71,6 @@ export function buildShareCardContent(
   language: ShareLanguage,
   kind: ShareCardKind,
   manualText?: string,
-  primaryOverride?: string,
 ): ShareCardContent {
   const copy = chapter[language];
   const label = shareKindLabel(kind, language);
@@ -95,46 +81,25 @@ export function buildShareCardContent(
   let secondary = "";
 
   if (kind === "verse") {
-    primary = openingVerse(chapter, language);
+    primary = fullVerse(chapter, language);
     secondaryLabel = language === "zh" ? "今译" : "A plain reading";
-    secondary = openingTranslation(chapter, language);
+    secondary = fullTranslation(chapter, language);
   } else if (kind === "meaning") {
-    const item = meaningItem(chapter, language);
-    primary = sentenceExcerpt(item.body, language === "zh" ? 150 : 240);
-    secondaryLabel = language === "zh" ? "从原文读起" : "Rooted in the text";
-    secondary = openingVerse(chapter, language);
+    primary = fullMeaning(chapter, language);
+    secondaryLabel = language === "zh" ? "原文" : "Original text";
+    secondary = fullVerse(chapter, language);
   } else if (kind === "inspiration") {
     const item = inspirationItem(chapter, language);
-    primary = sentenceExcerpt(item.body, language === "zh" ? 170 : 260);
-    secondaryLabel = language === "zh" ? "今日一练" : "A practice for today";
-    secondary = sentenceExcerpt(copy.action, language === "zh" ? 110 : 190);
+    primary = item.body;
+    secondaryLabel = language === "zh" ? "原文" : "Original text";
+    secondary = fullVerse(chapter, language);
   } else {
     primary = manualText || (language === "zh"
       ? "完成你的人生说明书后，这里会出现结合本章与真实结果的个性化阅读。"
       : "Complete your life manual to create a personal reading rooted in this chapter.");
-    secondaryLabel = language === "zh" ? "分享说明" : "Privacy note";
-    secondary = language === "zh"
-      ? "已隐藏姓名与出生资料；这是一面自我观察的镜子，不是替你做决定的结论。"
-      : "Name and birth details are hidden. This is a lens for reflection, never a verdict.";
-  }
-
-  if (primaryOverride?.trim()) {
-    primary = sentenceExcerpt(primaryOverride, language === "zh" ? 190 : 290);
-    if (kind === "verse") {
-      secondaryLabel = language === "zh" ? "读到这里" : "Read in context";
-      if (language === "zh") {
-        const normalizedSelection = primaryOverride.replace(/[〔〕\s]/g, "");
-        const lineIndex = chapter.zh.reconstructedVerse.findIndex((line) => {
-          const normalizedLine = line.replace(/[〔〕\s]/g, "");
-          return normalizedSelection.includes(normalizedLine) || normalizedLine.includes(normalizedSelection);
-        });
-        secondary = lineIndex >= 0
-          ? chapter.zh.lineByLineTranslation[lineIndex]
-          : sentenceExcerpt(chapter.zh.explanation[0].body, 120);
-      } else {
-        secondary = sentenceExcerpt(chapter.en.explanation[0]?.body ?? chapter.en.variant, 190);
-      }
-    }
+    const item = inspirationItem(chapter, language);
+    secondaryLabel = language === "zh" ? "对我们的启发" : "What this teaches us";
+    secondary = item.body;
   }
 
   const brand = language === "zh" ? "三慢问道" : "Wendao";
@@ -214,14 +179,45 @@ export async function renderShareCardDataUrl(content: ShareCardContent) {
   await document.fonts.ready;
   const canvas = document.createElement("canvas");
   canvas.width = 1080;
-  canvas.height = 2340;
-  const context = canvas.getContext("2d");
+  canvas.height = 1;
+  let context = canvas.getContext("2d");
   if (!context) throw new Error("CANVAS_UNAVAILABLE");
 
   const paper = "#f7f1e6";
   const ink = "#123f47";
   const softInk = "#48666a";
   const gold = "#ad7e2f";
+  const serif = content.language === "zh" ? '"Noto Serif SC", serif' : 'Georgia, "Times New Roman", serif';
+  const sans = content.language === "zh" ? '"Noto Sans SC", sans-serif' : 'Arial, sans-serif';
+  const frame = 58;
+  const railX = 104;
+  const contentX = 166;
+  const contentWidth = 760;
+  const chapterNumber = String(content.chapterId).padStart(2, "0");
+  const primarySize = content.language === "zh"
+    ? (content.primary.length > 280 ? 42 : content.primary.length > 150 ? 46 : 52)
+    : (content.primary.length > 440 ? 36 : content.primary.length > 250 ? 40 : 46);
+  const primaryLineHeight = Math.round(primarySize * 1.72);
+  context.font = `400 ${primarySize}px ${serif}`;
+  context.letterSpacing = content.language === "zh" ? "3px" : "1px";
+  const primaryLines = wrapParagraphs(context, content.primary, contentWidth);
+  const primaryTop = 490;
+  const primaryHeight = Math.max(primaryLineHeight, primaryLines.length * primaryLineHeight);
+  const secondarySize = content.language === "zh"
+    ? (content.secondary.length > 260 ? 28 : 31)
+    : (content.secondary.length > 420 ? 25 : 28);
+  const secondaryLineHeight = Math.round(secondarySize * 1.72);
+  context.font = `400 ${secondarySize}px ${serif}`;
+  context.letterSpacing = content.language === "zh" ? "2px" : "0.5px";
+  const secondaryLines = wrapParagraphs(context, content.secondary, 666);
+  const secondaryY = Math.max(1370, primaryTop + primaryHeight + 104);
+  const secondaryHeight = Math.max(396, 154 + secondaryLines.length * secondaryLineHeight + 58);
+  const naturalFooterY = secondaryY + secondaryHeight + 112;
+  canvas.height = Math.max(2340, naturalFooterY + 340);
+  context = canvas.getContext("2d");
+  if (!context) throw new Error("CANVAS_UNAVAILABLE");
+  const footerY = canvas.height - 320;
+
   context.fillStyle = paper;
   context.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -231,7 +227,8 @@ export async function renderShareCardDataUrl(content: ShareCardContent) {
   context.fillStyle = upperWash;
   context.fillRect(0, 0, canvas.width, canvas.height);
 
-  const lowerWash = context.createRadialGradient(180, 1780, 20, 180, 1780, 690);
+  const lowerWashY = canvas.height * 0.76;
+  const lowerWash = context.createRadialGradient(180, lowerWashY, 20, 180, lowerWashY, 760);
   lowerWash.addColorStop(0, "rgba(18, 63, 71, 0.055)");
   lowerWash.addColorStop(1, "rgba(247, 241, 230, 0)");
   context.fillStyle = lowerWash;
@@ -247,14 +244,6 @@ export async function renderShareCardDataUrl(content: ShareCardContent) {
     context.drawImage(texture, (canvas.width - width) / 2, (canvas.height - height) / 2, width, height);
     context.restore();
   }
-
-  const serif = content.language === "zh" ? '"Noto Serif SC", serif' : 'Georgia, "Times New Roman", serif';
-  const sans = content.language === "zh" ? '"Noto Sans SC", sans-serif' : 'Arial, sans-serif';
-  const frame = 58;
-  const railX = 104;
-  const contentX = 166;
-  const contentWidth = 760;
-  const chapterNumber = String(content.chapterId).padStart(2, "0");
 
   context.strokeStyle = "rgba(173, 126, 47, 0.24)";
   context.lineWidth = 2;
@@ -272,7 +261,7 @@ export async function renderShareCardDataUrl(content: ShareCardContent) {
   context.lineWidth = 1.5;
   context.beginPath();
   context.moveTo(railX, 174);
-  context.lineTo(railX, 1882);
+  context.lineTo(railX, footerY - 42);
   context.stroke();
 
   context.fillStyle = gold;
@@ -311,23 +300,7 @@ export async function renderShareCardDataUrl(content: ShareCardContent) {
   context.font = `400 178px ${serif}`;
   context.fillText(content.language === "zh" ? "「" : "“", 118, 550);
 
-  const primarySizes = content.primary.length > 180 ? [42, 38, 35] : content.primary.length > 105 ? [50, 45, 40] : [62, 56, 50];
-  let primaryLines: string[] = [];
-  let primarySize = primarySizes[0];
-  for (const size of primarySizes) {
-    context.font = `400 ${size}px ${serif}`;
-    context.letterSpacing = content.language === "zh" ? "3px" : "1px";
-    const lines = wrapParagraphs(context, content.primary, contentWidth);
-    primaryLines = lines;
-    primarySize = size;
-    if (lines.length <= 10) break;
-  }
-
-  const primaryTop = 470;
-  const primaryBottom = 1320;
-  const primaryLineHeight = Math.round(primarySize * 1.66);
-  const primaryHeight = primaryLines.length * primaryLineHeight;
-  const primaryY = primaryTop + Math.max(0, (primaryBottom - primaryTop - primaryHeight) / 2) + primarySize;
+  const primaryY = primaryTop + primarySize;
 
   context.fillStyle = gold;
   context.fillRect(140, primaryY - primarySize - 9, 3, Math.min(124, primaryHeight + 12));
@@ -336,8 +309,6 @@ export async function renderShareCardDataUrl(content: ShareCardContent) {
   context.letterSpacing = content.language === "zh" ? "3px" : "1px";
   drawLines(context, primaryLines, contentX, primaryY, primaryLineHeight);
 
-  const secondaryY = 1408;
-  const secondaryHeight = 396;
   context.fillStyle = "rgba(238, 227, 209, 0.68)";
   context.strokeStyle = "rgba(173, 126, 47, 0.3)";
   context.lineWidth = 1.5;
@@ -357,20 +328,11 @@ export async function renderShareCardDataUrl(content: ShareCardContent) {
   context.letterSpacing = "2px";
   context.fillText(content.secondaryLabel, 244, secondaryY + 70);
 
-  let secondarySize = 32;
-  let secondaryLines: string[] = [];
-  for (const size of [32, 29, 26]) {
-    context.font = `400 ${size}px ${serif}`;
-    context.letterSpacing = content.language === "zh" ? "2px" : "0.5px";
-    secondaryLines = wrapParagraphs(context, content.secondary, 666);
-    secondarySize = size;
-    if (secondaryLines.length <= 5) break;
-  }
   context.fillStyle = softInk;
   context.font = `400 ${secondarySize}px ${serif}`;
-  drawLines(context, secondaryLines, 244, secondaryY + 144, Math.round(secondarySize * 1.72));
+  context.letterSpacing = content.language === "zh" ? "2px" : "0.5px";
+  drawLines(context, secondaryLines, 244, secondaryY + 144, secondaryLineHeight);
 
-  const footerY = 1920;
   context.strokeStyle = "rgba(173, 126, 47, 0.4)";
   context.beginPath();
   context.moveTo(railX, footerY);

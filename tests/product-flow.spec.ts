@@ -1,4 +1,10 @@
 import { expect, test } from "@playwright/test";
+import { readFileSync } from "node:fs";
+import type { Chapter } from "../src/data/chapters";
+
+const chapters = JSON.parse(readFileSync(new URL("../src/data/chapters.json", import.meta.url), "utf8")) as Chapter[];
+const chapter8 = chapters.find((chapter) => chapter.id === 8)!;
+const chapter64 = chapters.find((chapter) => chapter.id === 64)!;
 
 const chartSnapshot = {
   schemaVersion: "1.0",
@@ -121,7 +127,7 @@ test("starts at the former default size and offers two larger reading steps", as
   await expect(page.locator(".verse-line-ruby > .verse-punctuation")).toHaveCount(0);
 });
 
-test("opens a recommended share card inside the reading flow and shares an exact chapter link", async ({ page }) => {
+test("opens the complete original-text poster and shares an exact chapter link", async ({ page }) => {
   await page.addInitScript(() => {
     Object.defineProperty(navigator, "share", {
       configurable: true,
@@ -130,16 +136,21 @@ test("opens a recommended share card inside the reading flow and shares an exact
       },
     });
   });
-  await page.goto("/");
+  await page.goto("/?chapter=8&lang=zh");
   await page.locator(".chapter-current .chapter-share-quick").click();
   await expect(page.getByRole("heading", { name: "分享这一章" })).toBeVisible();
-  await expect(page.getByText("本章推荐", { exact: true })).toBeVisible();
   await expect(page.getByRole("tab", { name: "说明书" })).toBeDisabled();
-  await expect(page.getByText(/iPhone|1080 × 2340/)).toHaveCount(0);
+  await expect(page.getByText(/iPhone|1080 × 2340|分享你选中的文字|图片放一个阅读瞬间/)).toHaveCount(0);
 
   const preview = page.locator(".share-card-preview img");
   await expect(preview).toBeVisible();
-  await expect.poll(() => preview.evaluate((image: HTMLImageElement) => [image.naturalWidth, image.naturalHeight])).toEqual([1080, 2340]);
+  await expect.poll(() => preview.evaluate((image: HTMLImageElement) => image.naturalWidth)).toBe(1080);
+  const naturalSize = await preview.evaluate((image: HTMLImageElement) => [image.naturalWidth, image.naturalHeight]);
+  expect(naturalSize[0]).toBe(1080);
+  expect(naturalSize[1]).toBeGreaterThanOrEqual(2340);
+  const originalLabel = await page.locator(".share-card-preview").getAttribute("aria-label");
+  expect(originalLabel).toContain(chapter8.zh.reconstructedVerse.at(-1));
+  expect(originalLabel).toContain(chapter8.zh.lineByLineTranslation.at(-1));
 
   const shareLink = page.getByRole("button", { name: "分享链接" });
   const exactUrl = await shareLink.getAttribute("data-share-link");
@@ -151,7 +162,7 @@ test("opens a recommended share card inside the reading flow and shares an exact
   expect(payload.title).toMatch(/^三慢问道 · 第\d+章$/);
 });
 
-test("switches all four share-card moments and keeps life-manual details anonymous", async ({ page }) => {
+test("switches all four complete posters and keeps life-manual details anonymous", async ({ page }) => {
   await page.addInitScript((storedChart) => {
     window.localStorage.setItem("wendao-chart-snapshot", JSON.stringify(storedChart));
     window.localStorage.setItem("wendao-life-profile", JSON.stringify({
@@ -169,19 +180,25 @@ test("switches all four share-card moments and keeps life-manual details anonymo
     await page.getByRole("tab", { name: tab }).click();
     await expect(page.locator(".share-card-preview img")).toBeVisible();
     await expect(page.getByRole("button", { name: "分享链接" })).toHaveAttribute("data-share-link", new RegExp(`chapter=8&section=${section}&lang=zh`));
+    if (section === "inspiration") {
+      const inspirationLabel = await page.locator(".share-card-preview").getAttribute("aria-label");
+      expect(inspirationLabel).toContain(chapter8.zh.related.find((item) => item.title === "对我们的启发")!.body);
+      expect(inspirationLabel).toContain(chapter8.zh.reconstructedVerse.at(-1));
+    }
   }
 
   const manualCardLabel = await page.locator(".share-card-preview").getAttribute("aria-label");
   expect(manualCardLabel).toContain("生产者");
+  expect(manualCardLabel).toContain("对我们的启发");
+  expect(manualCardLabel).toContain(chapter8.zh.related.find((item) => item.title === "对我们的启发")!.body);
   expect(manualCardLabel).not.toContain("不应出现在分享卡上的姓名");
   expect(manualCardLabel).not.toContain("1990-01-01");
   expect(manualCardLabel).not.toContain("武汉市");
 });
 
-test("shares the reader's selected passage instead of a fixed recommendation", async ({ page }) => {
+test("keeps text selection for copying without creating a share-selection mode", async ({ page }) => {
   await page.goto("/?chapter=8&lang=zh");
   const inspiration = page.locator('.chapter-current .related-item').filter({ hasText: "对我们的启发" }).locator("p");
-  const selectedText = await inspiration.innerText();
   await inspiration.evaluate((element) => {
     const range = document.createRange();
     range.selectNodeContents(element);
@@ -191,19 +208,31 @@ test("shares the reader's selected passage instead of a fixed recommendation", a
     element.dispatchEvent(new PointerEvent("pointerup", { bubbles: true }));
   });
 
-  await page.getByRole("button", { name: "分享所选" }).click();
-  await expect(page.getByText("你的选择", { exact: true })).toBeVisible();
-  await expect(page.getByRole("tab", { name: "启发" })).toHaveAttribute("aria-selected", "true");
-  await expect(page.locator(".share-card-preview")).toHaveAttribute("aria-label", new RegExp(selectedText.slice(0, 24)));
+  await expect(page.getByRole("button", { name: "分享所选" })).toHaveCount(0);
 });
 
-test("offers a recommended share action at the end of every reading layer", async ({ page }) => {
+test("offers a full-poster share action at the end of every reading layer", async ({ page }) => {
   await page.goto("/?chapter=8&lang=zh");
   const chapter = page.locator('.chapter-current[data-chapter-id="8"]');
   await expect(chapter.locator(".section-share-action")).toHaveCount(3);
   await chapter.locator(".explanation-section .section-share-action").click();
   await expect(page.getByRole("tab", { name: "解读" })).toHaveAttribute("aria-selected", "true");
-  await expect(page.getByText("本章推荐", { exact: true })).toBeVisible();
+  const meaningLabel = await page.locator(".share-card-preview").getAttribute("aria-label");
+  expect(meaningLabel).toContain(chapter8.zh.lineByLineTranslation.at(-1));
+  expect(meaningLabel).toContain(chapter8.zh.explanation[1].body);
+  expect(meaningLabel).toContain(chapter8.zh.reconstructedVerse.at(-1));
+});
+
+test("grows a long chapter poster instead of shrinking or cropping its full text", async ({ page }) => {
+  await page.goto("/?chapter=64&lang=zh");
+  await page.locator(".chapter-current .chapter-share-quick").click();
+  await page.getByRole("tab", { name: "解读" }).click();
+  const preview = page.locator(".share-card-preview img");
+  await expect(preview).toBeVisible();
+  await expect.poll(() => preview.evaluate((image: HTMLImageElement) => image.naturalHeight)).toBeGreaterThan(2340);
+  const label = await page.locator(".share-card-preview").getAttribute("aria-label");
+  expect(label).toContain(chapter64.zh.lineByLineTranslation.at(-1));
+  expect(label).toContain(chapter64.zh.reconstructedVerse.at(-1));
 });
 
 test("opens shared chapter links in the requested language and section", async ({ page }) => {
