@@ -272,6 +272,87 @@ test("drawer presents three bilingual related works with safe external links", a
   await expect(page.getByRole("region", { name: "Works along the way" })).toContainText("Learn to see a style");
 });
 
+test("opens a pressure-free bilingual support modal from the bottom of the drawer", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "打开更多功能" }).click();
+  const supportSection = page.getByRole("region", { name: "随喜相助" });
+  await expect(supportSection).toBeVisible();
+  await expect(supportSection).toContainText("有余则助，无余亦安");
+  await supportSection.getByRole("button", { name: /随喜相助/ }).click();
+
+  const supportDialog = page.getByRole("dialog", { name: "随喜相助" });
+  await expect(supportDialog).toBeVisible();
+  await expect(supportDialog).toContainText("阅读、停留与分享，本身已经是同行");
+  await expect(supportDialog.getByRole("img", { name: "微信支付收款码" })).toHaveAttribute("src", "/assets/wendao/support-wechat.jpg");
+  const supportClose = supportDialog.locator("figure > button");
+  await expect(supportClose).toHaveCount(1);
+  await supportClose.click();
+  await expect(supportDialog).toHaveCount(0);
+
+  await page.getByRole("button", { name: "关闭菜单", exact: true }).last().click();
+  await page.getByRole("button", { name: "EN", exact: true }).click();
+  await page.getByRole("button", { name: "Open more", exact: true }).click();
+  await expect(page.getByRole("region", { name: "Support the journey" })).toContainText("Give freely, or simply read in peace");
+});
+
+for (const width of [320, 390, 720]) {
+  test(`${width}px support modal keeps the payment code clear and inside the viewport`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/");
+    await page.getByRole("button", { name: "打开更多功能" }).click();
+    await page.getByRole("region", { name: "随喜相助" }).getByRole("button", { name: /随喜相助/ }).click();
+
+    const supportDialog = page.getByRole("dialog", { name: "随喜相助" });
+    const paymentCode = supportDialog.getByRole("img", { name: "微信支付收款码" });
+    await expect(paymentCode).toBeVisible();
+    await expect.poll(() => paymentCode.evaluate((image: HTMLImageElement) => ({
+      complete: image.complete,
+      width: image.naturalWidth,
+      height: image.naturalHeight,
+    }))).toEqual({ complete: true, width: 828, height: 1124 });
+
+    const layout = await page.evaluate(() => {
+      const figure = document.querySelector<HTMLElement>(".support-modal figure")!;
+      const bounds = figure.getBoundingClientRect();
+      return {
+        documentOverflow: document.documentElement.scrollWidth - window.innerWidth,
+        leftOverflow: Math.min(0, bounds.left),
+        rightOverflow: Math.max(0, bounds.right - window.innerWidth),
+        topOverflow: Math.min(0, bounds.top),
+        bottomOverflow: Math.max(0, bounds.bottom - window.innerHeight),
+      };
+    });
+    expect(layout.documentOverflow).toBeLessThanOrEqual(0);
+    expect(layout.leftOverflow).toBe(0);
+    expect(layout.rightOverflow).toBe(0);
+    expect(layout.topOverflow).toBe(0);
+    expect(layout.bottomOverflow).toBe(0);
+  });
+}
+
+test("keeps the external payment entry out of the native iOS surface", async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.assign(window, {
+      CapacitorCustomPlatform: { name: "ios" },
+      Capacitor: {
+        Plugins: {},
+        PluginHeaders: [{
+          name: "StatusBar",
+          methods: [
+            { name: "setStyle", rtype: "promise" },
+            { name: "setOverlaysWebView", rtype: "promise" },
+          ],
+        }],
+        nativePromise: () => Promise.resolve(),
+      },
+    });
+  });
+  await page.goto("/");
+  await page.getByRole("button", { name: "打开更多功能" }).click();
+  await expect(page.getByRole("region", { name: "随喜相助" })).toHaveCount(0);
+  await expect(page.getByRole("dialog", { name: "随喜相助" })).toHaveCount(0);
+});
+
 test("About separates the textual lineage from claims of direct descent", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "打开更多功能" }).click();

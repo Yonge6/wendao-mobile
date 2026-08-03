@@ -1870,6 +1870,79 @@ textarea {
   line-height: 1.7;
 }
 
+.drawer-support {
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid color-mix(in srgb, var(--gold) 24%, transparent);
+}
+
+.drawer-support h3 {
+  margin: 9px 0 7px;
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.drawer-support > p {
+  margin: 0 0 14px;
+  color: var(--ink-soft);
+  font-family: var(--sans);
+  font-size: 11px;
+  line-height: 1.75;
+}
+
+.drawer-support-button {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) 18px;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 13px;
+  border: 1px solid color-mix(in srgb, var(--gold) 34%, transparent);
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 92% 12%, color-mix(in srgb, var(--gold) 12%, transparent), transparent 38%),
+    color-mix(in srgb, var(--field-surface) 90%, transparent);
+  color: var(--ink);
+  text-align: left;
+}
+
+.drawer-support-button > span:nth-child(2) {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.drawer-support-button strong {
+  font-family: var(--serif);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.drawer-support-button small {
+  color: var(--ink-soft);
+  font-family: var(--sans);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.drawer-support-button > svg {
+  color: var(--gold);
+}
+
+.drawer-support-mark {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--gold) 42%, transparent);
+  border-radius: 50%;
+  color: var(--gold);
+  font-family: var(--serif);
+  font-size: 14px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .drawer-work-card {
     transition: none;
@@ -2595,6 +2668,73 @@ textarea {
   font-family: var(--sans);
   font-size: 11px;
   text-align: center;
+}
+
+.support-modal figure {
+  max-height: calc(100dvh - 36px);
+  overflow-y: auto;
+  background:
+    linear-gradient(color-mix(in srgb, var(--card-surface) 94%, transparent), var(--card-surface)),
+    url("/assets/wendao/paper-mist-background.png") center / cover no-repeat;
+  color: var(--ink);
+  scrollbar-width: none;
+}
+
+.support-modal figure::-webkit-scrollbar {
+  display: none;
+}
+
+.support-modal-copy {
+  padding: 26px 24px 16px;
+}
+
+.support-modal-copy > span {
+  color: var(--gold);
+  font-family: var(--sans);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+}
+
+.support-modal-copy h2 {
+  margin: 8px 0 9px;
+  font-family: var(--serif);
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.support-modal-copy p {
+  margin: 0;
+  color: var(--ink-soft);
+  font-family: var(--sans);
+  font-size: 11px;
+  line-height: 1.8;
+}
+
+.support-modal img {
+  width: calc(100% - 44px);
+  margin: 0 22px 18px;
+  border: 1px solid color-mix(in srgb, var(--gold) 24%, transparent);
+  border-radius: 18px;
+}
+
+.support-modal figcaption {
+  display: grid;
+  gap: 5px;
+  padding: 0 22px 22px;
+  color: var(--ink);
+}
+
+.support-modal figcaption strong {
+  font-family: var(--serif);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.support-modal figcaption span {
+  color: var(--ink-soft);
+  font-size: 10px;
+  line-height: 1.6;
 }
 
 .admin-console {

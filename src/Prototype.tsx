@@ -628,6 +628,8 @@ type SideDrawerProps = {
   onContactClick: (target: string) => void;
   onWorkClick: (target: string) => void;
   onVideoChannelOpen: () => void;
+  showSupport: boolean;
+  onSupportOpen: () => void;
 };
 
 function SideDrawer({
@@ -657,6 +659,8 @@ function SideDrawer({
   onContactClick,
   onWorkClick,
   onVideoChannelOpen,
+  showSupport,
+  onSupportOpen,
 }: SideDrawerProps) {
   const isZh = language === "zh";
   const profileComplete = Boolean(chart?.chartHash);
@@ -880,6 +884,26 @@ function SideDrawer({
                   ))}
                 </div>
               </section>
+
+              {showSupport ? (
+                <section className="drawer-support" aria-labelledby="drawer-support-title">
+                  <span className="drawer-kicker">{isZh ? "有余相助" : "If you have something to spare"}</span>
+                  <h3 id="drawer-support-title">{isZh ? "随喜相助" : "Support the journey"}</h3>
+                  <p>
+                    {isZh
+                      ? "若这段慢读于你有用，可以让一份心意继续流动；也可以把它留给自己，照顾此刻真正需要的生活。"
+                      : "If this slow reading has helped, you may let a little support keep it flowing—or keep that care for what your own life needs now."}
+                  </p>
+                  <button type="button" className="drawer-support-button" onClick={onSupportOpen}>
+                    <span className="drawer-support-mark" aria-hidden="true">水</span>
+                    <span>
+                      <strong>{isZh ? "随喜相助" : "Offer support"}</strong>
+                      <small>{isZh ? "有余则助，无余亦安" : "Give freely, or simply read in peace"}</small>
+                    </span>
+                    <ChevronRightIcon />
+                  </button>
+                </section>
+              ) : null}
             </>
           ) : null}
 
@@ -1220,6 +1244,43 @@ function VideoChannelModal({ open, onClose, language }: { open: boolean; onClose
   );
 }
 
+function SupportModal({ open, onClose, language }: { open: boolean; onClose: () => void; language: Language }) {
+  useEffect(() => {
+    if (!open) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [onClose, open]);
+
+  if (!open) return null;
+  const isZh = language === "zh";
+
+  return (
+    <div className="image-modal support-modal" role="dialog" aria-modal="true" aria-labelledby="support-modal-title" aria-describedby="support-modal-description">
+      <button type="button" className="image-modal-backdrop" aria-label={isZh ? "关闭" : "Close"} onClick={onClose} />
+      <figure>
+        <button type="button" aria-label={isZh ? "关闭" : "Close"} onClick={onClose}>×</button>
+        <div className="support-modal-copy">
+          <span>{isZh ? "生而不有 · 为而不恃" : "Create without possessing · Give without claiming"}</span>
+          <h2 id="support-modal-title">{isZh ? "随喜相助" : "Support the journey"}</h2>
+          <p id="support-modal-description">
+            {isZh
+              ? "若三慢问道对你有一点用，你可以随心支持，让这份慢读继续生长；若此刻不便，也请把这份心意留给自己。阅读、停留与分享，本身已经是同行。"
+              : "If Wendao has been useful, you may support its continued growth. If now is not the moment, keep that care for yourself. Reading, pausing, and sharing are already ways of walking together."}
+          </p>
+        </div>
+        <img src="/assets/wendao/support-wechat.jpg" alt={isZh ? "微信支付收款码" : "WeChat Pay support QR code"} />
+        <figcaption>
+          <strong>{isZh ? "有余则助，无余亦安。" : "Give when you can; be at ease when you cannot."}</strong>
+          <span>{isZh ? "谢谢你珍惜这份作品，也珍惜自己的生活。" : "Thank you for valuing this work—and your own life."}</span>
+        </figcaption>
+      </figure>
+    </div>
+  );
+}
+
 function formatDate(value: unknown, language: Language) {
   if (typeof value !== "string") return "—";
   const date = new Date(value);
@@ -1431,6 +1492,7 @@ function AdminConsole({ open, onClose, language }: AdminConsoleProps) {
 
 export default function Prototype() {
   const initialRequest = useRef(initialReadingRequest()).current;
+  const webSupportEnabled = runtimeSurface() === "web";
   const [language, setLanguage] = useState<Language>(initialRequest.language);
   const [recommendationDate] = useState(localDateKey);
   const [chapterId, setChapterId] = useState(() => initialRequest.chapterId ?? dailyChapterId(recommendationDate));
@@ -1461,6 +1523,7 @@ export default function Prototype() {
   const [feedbackError, setFeedbackError] = useState("");
   const [responseText, setResponseText] = useState("");
   const [videoChannelOpen, setVideoChannelOpen] = useState(false);
+  const [supportOpen, setSupportOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(isAdminLocation);
   const clientId = useRef(stableId(CLIENT_ID_KEY));
   const sessionId = useRef(window.crypto.randomUUID());
@@ -2191,8 +2254,11 @@ export default function Prototype() {
           setVideoChannelOpen(true);
           trackEvent("contact_click", { target: "视频号" });
         }}
+        showSupport={webSupportEnabled}
+        onSupportOpen={() => setSupportOpen(true)}
       />
       <VideoChannelModal open={videoChannelOpen} onClose={() => setVideoChannelOpen(false)} language={language} />
+      {webSupportEnabled ? <SupportModal open={supportOpen} onClose={() => setSupportOpen(false)} language={language} /> : null}
       <AdminConsole
         open={adminOpen}
         onClose={() => {
