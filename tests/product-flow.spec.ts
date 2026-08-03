@@ -81,7 +81,7 @@ test("refreshes progressive reading after language and text-size changes", async
   await expect(page.locator("article.chapter")).toHaveCount(2);
   await expect(page.getByText("下一章已展开", { exact: true })).toBeVisible();
 
-  await page.getByRole("button", { name: "EN", exact: true }).click();
+  await page.getByRole("button", { name: "切换到英文", exact: true }).click();
   await expect(page.locator("article.chapter")).toHaveCount(1);
   await expect.poll(async () => reading.evaluate((element) => element.scrollTop)).toBeLessThan(4);
 
@@ -239,7 +239,7 @@ test("grows a long chapter poster instead of shrinking or cropping its full text
 test("opens shared chapter links in the requested language and section", async ({ page }) => {
   await page.goto("/?chapter=8&section=inspiration&lang=en");
   await expect(page.locator('.chapter-current[data-chapter-id="8"]')).toBeVisible();
-  await expect(page.getByRole("button", { name: "EN", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("button", { name: "Switch to Chinese", exact: true })).toBeVisible();
   await expect(page.getByTestId("daily-recommendation")).toHaveCount(0);
   await expect(page.locator('.chapter-current [data-share-section="inspiration"]')).toBeVisible();
 });
@@ -265,7 +265,7 @@ test("drawer presents three bilingual related works with safe external links", a
   }
 
   await page.getByRole("button", { name: "关闭菜单", exact: true }).last().click();
-  await page.getByRole("button", { name: "EN", exact: true }).click();
+  await page.getByRole("button", { name: "切换到英文", exact: true }).click();
   await page.getByRole("button", { name: "Open more", exact: true }).click();
   await expect(page.getByRole("region", { name: "Works along the way" })).toContainText("Yesterday’s World");
   await expect(page.getByRole("region", { name: "Works along the way" })).toContainText("A manual for your life");
@@ -283,14 +283,21 @@ test("opens a pressure-free bilingual support modal from the bottom of the drawe
   const supportDialog = page.getByRole("dialog", { name: "随喜相助" });
   await expect(supportDialog).toBeVisible();
   await expect(supportDialog).toContainText("阅读、停留与分享，本身已经是同行");
-  await expect(supportDialog.getByRole("img", { name: "微信支付收款码" })).toHaveAttribute("src", "/assets/wendao/support-wechat.jpg");
+  const paymentCode = supportDialog.getByRole("img", { name: "微信支付收款码" });
+  await expect(paymentCode).toHaveAttribute("src", "/assets/wendao/support-wechat.jpg");
+  await expect(paymentCode).toHaveAttribute("draggable", "true");
+  await expect(paymentCode).toHaveAttribute("data-native-drag", "true");
+  await expect(supportDialog.getByText("长按图片，识别二维码", { exact: true })).toBeVisible();
+  const rawImageLink = supportDialog.getByRole("link", { name: "没有出现识别菜单？点此单独打开", exact: true });
+  await expect(rawImageLink).toHaveAttribute("href", "/assets/wendao/support-wechat.jpg");
+  await expect(rawImageLink).toHaveAttribute("target", "_blank");
   const supportClose = supportDialog.locator("figure > button");
   await expect(supportClose).toHaveCount(1);
   await supportClose.click();
   await expect(supportDialog).toHaveCount(0);
 
   await page.getByRole("button", { name: "关闭菜单", exact: true }).last().click();
-  await page.getByRole("button", { name: "EN", exact: true }).click();
+  await page.getByRole("button", { name: "切换到英文", exact: true }).click();
   await page.getByRole("button", { name: "Open more", exact: true }).click();
   await expect(page.getByRole("region", { name: "Support the journey" })).toContainText("Give freely, or simply read in peace");
 });
@@ -363,7 +370,7 @@ test("About separates the textual lineage from claims of direct descent", async 
   await expect(lineage.getByText("王弼本", { exact: true })).toBeVisible();
   await expect(lineage.getByText(/不代表各版本之间存在单一直系抄传关系/)).toBeVisible();
   await page.getByRole("button", { name: "关闭菜单", exact: true }).last().click();
-  await page.getByRole("button", { name: "EN", exact: true }).click();
+  await page.getByRole("button", { name: "切换到英文", exact: true }).click();
   await page.getByRole("button", { name: "Open more", exact: true }).click();
   await page.getByRole("button", { name: "About Wendao" }).click();
   const englishLineage = page.getByRole("region", { name: "Textual lineage of the Daodejing" });
@@ -382,9 +389,9 @@ test("covers all 81 chapters through contents, chance, and progressive reading",
   await page.reload();
   await expect(page.locator("article.chapter")).toHaveAttribute("data-chapter-id", String(firstDailyChapter));
 
-  await page.getByRole("button", { name: "EN", exact: true }).click();
+  await page.getByRole("button", { name: "切换到英文", exact: true }).click();
   await expect(dailyRecommendation).toContainText(new RegExp(`^Today’s encounter｜Silk B Base Reading · Received Chapter ${firstDailyChapter}$`));
-  await page.getByRole("button", { name: "中", exact: true }).click();
+  await page.getByRole("button", { name: "Switch to Chinese", exact: true }).click();
 
   await page.getByRole("button", { name: "目录", exact: true }).click();
   const directoryItems = page.locator(".directory-item");
@@ -449,7 +456,7 @@ test("renders a source-aligned modern Chinese translation for every line", async
   await expect(chapter.getByText("正因为不争，所以没有过失和怨尤。", { exact: true })).toBeVisible();
   await expect(chapter.getByRole("heading", { name: "校读｜原字、缺损与参照分层", exact: true })).toHaveCount(0);
 
-  await page.getByRole("button", { name: "EN", exact: true }).click();
+  await page.getByRole("button", { name: "切换到英文", exact: true }).click();
   await expect(chapter.getByRole("heading", { name: "Collation · Keep witness, supply, and comparison separate", exact: true })).toHaveCount(0);
   await expect(chapter.getByRole("heading", { name: "Thought · Return force to the larger pattern", exact: true })).toBeVisible();
 });
@@ -501,7 +508,7 @@ test("shared inspiration is bilingual and remains visible without a life-manual 
   await expect(chapter.getByText(/向下不等于失败/)).toBeVisible();
   await expect(chapter.getByRole("heading", { name: "你的人生说明书", exact: true })).toHaveCount(0);
 
-  await page.getByRole("button", { name: "EN", exact: true }).click();
+  await page.getByRole("button", { name: "切换到英文", exact: true }).click();
   await expect(chapter.getByRole("heading", { name: "What this teaches us", exact: true })).toBeVisible();
   await expect(chapter.getByText(/going low is not failure/)).toBeVisible();
   await expect(chapter.getByRole("heading", { name: "Your life manual", exact: true })).toHaveCount(0);
@@ -520,9 +527,9 @@ test("sets an honest expectation for future AI personalization", async ({ page }
   await expect(page.getByText("AI 个性化回应 · 即将接入", { exact: true })).toBeVisible();
   await expect(question).toHaveAttribute("aria-describedby", "composer-expectation");
 
-  await page.getByRole("button", { name: "EN", exact: true }).click();
+  await page.getByRole("button", { name: "切换到英文", exact: true }).click();
   await expect(page.getByText("AI personalization · coming soon", { exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "中", exact: true }).click();
+  await page.getByRole("button", { name: "Switch to Chinese", exact: true }).click();
 
   await question.fill("我现在应该继续还是停下来？");
   await page.getByRole("button", { name: "发送", exact: true }).click();
@@ -546,6 +553,48 @@ test("searches all textual layers from the directory", async ({ page }) => {
 
   await input.fill("绝不会存在的搜索词");
   await expect(page.getByText("没有找到相关章节，换一个词试试。", { exact: true })).toBeVisible();
+});
+
+test("uses compact header icons and keeps one-result search above a reduced viewport", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+
+  const languageToggle = page.getByRole("button", { name: "切换到英文", exact: true });
+  const searchButton = page.getByRole("button", { name: "搜索章节", exact: true });
+  await expect(languageToggle.locator("svg")).toHaveCount(1);
+  await expect(searchButton.locator("svg")).toHaveCount(1);
+  await expect(page.getByRole("button", { name: "EN", exact: true })).toHaveCount(0);
+
+  await searchButton.click();
+  const input = page.getByRole("searchbox", { name: "搜索章节" });
+  await expect(input).toBeFocused();
+  const sheet = page.locator(".web-sheet.is-directory-sheet");
+  const initialHeight = await sheet.evaluate((element) => element.getBoundingClientRect().height);
+
+  await input.fill("上善如水");
+  await expect(page.locator(".directory-item")).toHaveCount(1);
+  await expect(page.locator('.directory-item[data-chapter-id="8"]')).toBeVisible();
+  const filteredHeight = await sheet.evaluate((element) => element.getBoundingClientRect().height);
+  expect(Math.abs(filteredHeight - initialHeight)).toBeLessThanOrEqual(1);
+
+  await page.setViewportSize({ width: 390, height: 520 });
+  await expect.poll(() => sheet.evaluate((element) => {
+    const bounds = element.getBoundingClientRect();
+    return Math.max(0, bounds.bottom - window.innerHeight);
+  })).toBe(0);
+  const reducedLayout = await page.evaluate(() => {
+    const searchField = document.querySelector<HTMLElement>(".directory-search-field")!;
+    const result = document.querySelector<HTMLElement>(".directory-item")!;
+    return {
+      documentOverflow: document.documentElement.scrollWidth - window.innerWidth,
+      searchBottom: searchField.getBoundingClientRect().bottom,
+      resultBottom: result.getBoundingClientRect().bottom,
+      viewportHeight: window.innerHeight,
+    };
+  });
+  expect(reducedLayout.documentOverflow).toBeLessThanOrEqual(0);
+  expect(reducedLayout.searchBottom).toBeLessThan(reducedLayout.viewportHeight);
+  expect(reducedLayout.resultBottom).toBeLessThan(reducedLayout.viewportHeight);
 });
 
 test("keeps the Chinese wordmark on one line at iPhone X width", async ({ page }) => {

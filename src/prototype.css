@@ -216,27 +216,7 @@ textarea {
   color: var(--ink-soft) !important;
 }
 
-.language-switch {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-family: var(--sans);
-  color: color-mix(in srgb, var(--ink) 42%, transparent);
-  font-size: 11px;
-}
-
-.language-switch button {
-  font-family: var(--sans);
-  font-size: 11px;
-  font-weight: 400;
-  color: color-mix(in srgb, var(--ink) 48%, transparent);
-}
-
-.language-switch button.is-active {
-  color: var(--ink);
-  font-weight: 500;
-}
-
+.header-icon-button,
 .header-menu-button {
   display: grid;
   flex: 0 0 auto;
@@ -246,9 +226,20 @@ textarea {
   border-radius: 50% !important;
 }
 
+.header-icon-button:hover,
+.header-icon-button:focus-visible,
 .header-menu-button:hover,
 .header-menu-button:focus-visible {
   background: color-mix(in srgb, var(--gold) 10%, transparent);
+}
+
+.header-icon-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.header-menu-button {
+  margin-left: -2px;
 }
 
 .header-menu-button svg {
@@ -1002,6 +993,12 @@ textarea {
   justify-content: center;
 }
 
+.web-sheet-layer.is-directory-layer {
+  top: var(--sheet-viewport-top, 0px);
+  bottom: auto;
+  height: var(--sheet-viewport-height, 100dvh);
+}
+
 .web-sheet-backdrop {
   position: absolute;
   inset: 0;
@@ -1026,6 +1023,22 @@ textarea {
   max-height: calc(min(74dvh, 680px) - 112px);
   overflow-y: auto;
   overscroll-behavior: contain;
+}
+
+.web-sheet.is-directory-sheet {
+  display: grid;
+  grid-template-rows: auto auto auto minmax(0, 1fr);
+  height: min(calc(var(--sheet-viewport-height, 100dvh) - 8px), 760px);
+  max-height: min(calc(var(--sheet-viewport-height, 100dvh) - 8px), 760px);
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 12px);
+}
+
+.web-sheet.is-directory-sheet .web-sheet-content {
+  display: flex;
+  min-height: 0;
+  max-height: none;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .web-sheet-close {
@@ -1338,9 +1351,15 @@ textarea {
 
 .directory-list {
   display: flex;
+  min-height: 0;
+  flex: 1;
   flex-direction: column;
   gap: 2px;
   padding-bottom: 22px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scroll-padding-bottom: 22px;
+  -webkit-overflow-scrolling: touch;
 }
 
 .directory-search {
@@ -1371,11 +1390,15 @@ textarea {
   background: transparent;
   color: var(--ink);
   font-family: var(--serif);
-  font-size: 14px;
+  font-size: 16px;
 }
 
 .directory-search-field input::placeholder {
   color: color-mix(in srgb, var(--ink) 52%, transparent);
+}
+
+.directory-search-field input::-webkit-search-cancel-button {
+  appearance: none;
 }
 
 .directory-search-field button {
@@ -2718,6 +2741,37 @@ textarea {
   border-radius: 18px;
 }
 
+.support-modal .support-payment-code {
+  -webkit-touch-callout: default;
+  -webkit-user-drag: auto;
+  -webkit-user-select: auto;
+  user-select: auto;
+  touch-action: auto;
+  pointer-events: auto;
+}
+
+.support-qr-recognition {
+  display: grid;
+  gap: 5px;
+  margin: -3px 22px 18px;
+  color: var(--ink);
+  font-family: var(--sans);
+  text-align: center;
+}
+
+.support-qr-recognition strong {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+
+.support-qr-recognition a {
+  color: var(--gold);
+  font-size: 10px;
+  line-height: 1.6;
+  text-underline-offset: 3px;
+}
+
 .support-modal figcaption {
   display: grid;
   gap: 5px;
@@ -3092,9 +3146,9 @@ textarea {
   line-height: 1.75;
 }
 
-@media (max-width: 374px) {
+@media (max-width: 420px) {
   .reading-header-fixed {
-    gap: 8px;
+    gap: 7px;
     padding-right: 16px;
     padding-left: 16px;
   }
@@ -3108,10 +3162,11 @@ textarea {
     font-size: 11px;
   }
 
-  .language-switch {
-    gap: 4px;
+  .reading-header[lang="en"] .wordmark {
+    font-size: 21px;
   }
 
+  .header-icon-button,
   .header-menu-button {
     width: 28px;
     height: 28px;
@@ -3151,6 +3206,31 @@ textarea {
 
   .drawer-form-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 359px) {
+  .reading-header-fixed {
+    gap: 5px;
+    padding-right: 12px;
+    padding-left: 12px;
+  }
+
+  .wordmark,
+  .reading-header[lang="en"] .wordmark {
+    font-size: 19px;
+  }
+
+  .header-action,
+  .reading-header[lang="en"] .header-action,
+  .encounter-action {
+    font-size: 10px;
+  }
+
+  .header-icon-button,
+  .header-menu-button {
+    width: 26px;
+    height: 26px;
   }
 }
 

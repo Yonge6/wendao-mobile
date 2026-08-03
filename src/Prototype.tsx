@@ -1,6 +1,7 @@
 import {
   FormEvent,
   type ClipboardEvent as ReactClipboardEvent,
+  type CSSProperties,
   type Dispatch,
   type ReactNode,
   type SetStateAction,
@@ -17,6 +18,7 @@ import {
   ChatBubbleIcon,
   CheckIcon,
   ChevronRightIcon,
+  GlobeIcon,
   HamburgerMenuIcon,
   InfoCircledIcon,
   LockClosedIcon,
@@ -558,10 +560,15 @@ type WebSheetProps = {
   title: string;
   description?: string;
   children: ReactNode;
-  variant?: "default" | "share";
+  variant?: "default" | "share" | "directory";
 };
 
 function WebSheet({ open, onOpenChange, title, description, children, variant = "default" }: WebSheetProps) {
+  const [viewportBounds, setViewportBounds] = useState(() => ({
+    height: typeof window === "undefined" ? 0 : window.visualViewport?.height ?? window.innerHeight,
+    top: typeof window === "undefined" ? 0 : window.visualViewport?.offsetTop ?? 0,
+  }));
+
   useEffect(() => {
     if (!open) return;
 
@@ -573,17 +580,46 @@ function WebSheet({ open, onOpenChange, title, description, children, variant = 
     return () => document.removeEventListener("keydown", closeOnEscape);
   }, [onOpenChange, open]);
 
+  useEffect(() => {
+    if (!open || variant !== "directory") return;
+    const viewport = window.visualViewport;
+    const updateBounds = () => setViewportBounds({
+      height: viewport?.height ?? window.innerHeight,
+      top: viewport?.offsetTop ?? 0,
+    });
+    updateBounds();
+    viewport?.addEventListener("resize", updateBounds);
+    viewport?.addEventListener("scroll", updateBounds);
+    window.addEventListener("resize", updateBounds);
+    return () => {
+      viewport?.removeEventListener("resize", updateBounds);
+      viewport?.removeEventListener("scroll", updateBounds);
+      window.removeEventListener("resize", updateBounds);
+    };
+  }, [open, variant]);
+
   if (!open) return null;
 
   return (
-    <div className="web-sheet-layer">
+    <div
+      className={`web-sheet-layer ${variant === "directory" ? "is-directory-layer" : ""}`}
+      style={variant === "directory" ? ({
+        "--sheet-viewport-height": `${viewportBounds.height}px`,
+        "--sheet-viewport-top": `${viewportBounds.top}px`,
+      } as CSSProperties) : undefined}
+    >
       <button
         type="button"
         className="web-sheet-backdrop"
         aria-label="关闭"
         onClick={() => onOpenChange(false)}
       />
-      <section className={`bottom-sheet web-sheet ${variant === "share" ? "is-share-sheet" : ""}`} role="dialog" aria-modal="true" aria-labelledby="web-sheet-title">
+      <section
+        className={`bottom-sheet web-sheet ${variant === "share" ? "is-share-sheet" : ""} ${variant === "directory" ? "is-directory-sheet" : ""}`}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="web-sheet-title"
+      >
         <button
           type="button"
           className="web-sheet-close"
@@ -1271,7 +1307,20 @@ function SupportModal({ open, onClose, language }: { open: boolean; onClose: () 
               : "If Wendao has been useful, you may support its continued growth. If now is not the moment, keep that care for yourself. Reading, pausing, and sharing are already ways of walking together."}
           </p>
         </div>
-        <img src="/assets/wendao/support-wechat.jpg" alt={isZh ? "微信支付收款码" : "WeChat Pay support QR code"} />
+        <img
+          className="support-payment-code"
+          src="/assets/wendao/support-wechat.jpg"
+          alt={isZh ? "微信支付收款码" : "WeChat Pay support QR code"}
+          draggable
+          data-native-drag="true"
+          decoding="sync"
+        />
+        <div className="support-qr-recognition">
+          <strong>{isZh ? "长按图片，识别二维码" : "Press and hold the image to recognize the QR code"}</strong>
+          <a href="/assets/wendao/support-wechat.jpg" target="_blank" rel="noreferrer">
+            {isZh ? "没有出现识别菜单？点此单独打开" : "No recognition menu? Open the image on its own"}
+          </a>
+        </div>
         <figcaption>
           <strong>{isZh ? "有余则助，无余亦安。" : "Give when you can; be at ease when you cannot."}</strong>
           <span>{isZh ? "谢谢你珍惜这份作品，也珍惜自己的生活。" : "Thank you for valuing this work—and your own life."}</span>
@@ -1499,6 +1548,7 @@ export default function Prototype() {
   const [chapterEntrySource, setChapterEntrySource] = useState<ChapterEntrySource>(initialRequest.chapterId ? "link" : "daily");
   const [directoryOpen, setDirectoryOpen] = useState(false);
   const [directoryQuery, setDirectoryQuery] = useState("");
+  const [directoryFocusRequested, setDirectoryFocusRequested] = useState(false);
   const [insightOpen, setInsightOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [shareChapterId, setShareChapterId] = useState(chapterId);
@@ -1651,6 +1701,7 @@ export default function Prototype() {
     setVisibleChapterCount(1);
     setDirectoryOpen(false);
     setDirectoryQuery("");
+    setDirectoryFocusRequested(false);
     trackEvent("chapter_view", { source: "directory" }, id);
     scrollReadingToTop();
   };
@@ -1799,6 +1850,12 @@ export default function Prototype() {
     setDrawerOpen(true);
   };
 
+  const openDirectory = (focusSearch: boolean) => {
+    setDirectoryFocusRequested(focusSearch);
+    setDirectoryOpen(true);
+    trackEvent("directory_open", { source: focusSearch ? "header_search" : "header" });
+  };
+
   const changeLanguage = (nextLanguage: Language) => {
     resetChapterOpening();
     setLanguage(nextLanguage);
@@ -1832,10 +1889,7 @@ export default function Prototype() {
         <button
           className="header-action directory-action"
           type="button"
-          onClick={() => {
-            setDirectoryOpen(true);
-            trackEvent("directory_open", { source: "header" });
-          }}
+          onClick={() => openDirectory(false)}
         >
           {isZh ? "目录" : "Contents"}
         </button>
@@ -1843,25 +1897,24 @@ export default function Prototype() {
         <button className="header-action encounter-action" type="button" onClick={meetAChapter}>
           {isZh ? "偶遇一章" : "Chance"}
         </button>
-        <div className="language-switch" aria-label={isZh ? "语言切换" : "Language"}>
-          <button
-            type="button"
-            className={isZh ? "is-active" : undefined}
-            aria-pressed={isZh}
-            onClick={() => changeLanguage("zh")}
-          >
-            中
-          </button>
-          <span aria-hidden="true">|</span>
-          <button
-            type="button"
-            className={!isZh ? "is-active" : undefined}
-            aria-pressed={!isZh}
-            onClick={() => changeLanguage("en")}
-          >
-            EN
-          </button>
-        </div>
+        <button
+          className="header-icon-button header-search-button"
+          type="button"
+          aria-label={isZh ? "搜索章节" : "Search chapters"}
+          title={isZh ? "搜索章节" : "Search chapters"}
+          onClick={() => openDirectory(true)}
+        >
+          <MagnifyingGlassIcon />
+        </button>
+        <button
+          className="header-icon-button language-toggle"
+          type="button"
+          aria-label={isZh ? "切换到英文" : "Switch to Chinese"}
+          title={isZh ? "切换到英文" : "Switch to Chinese"}
+          onClick={() => changeLanguage(isZh ? "en" : "zh")}
+        >
+          <GlobeIcon />
+        </button>
         <button
           className="header-menu-button"
           type="button"
@@ -2103,9 +2156,13 @@ export default function Prototype() {
 
       <WebSheet
         open={directoryOpen}
-        onOpenChange={setDirectoryOpen}
+        onOpenChange={(open) => {
+          setDirectoryOpen(open);
+          if (!open) setDirectoryFocusRequested(false);
+        }}
         title={isZh ? "目录" : "Contents"}
         description={isZh ? "帛书次序为主，括号内为今本章次" : "Silk-text order first; received chapter in parentheses"}
+        variant="directory"
       >
         <div className="directory-search" role="search" aria-label={isZh ? "搜索章节" : "Search chapters"}>
           <div className="directory-search-field">
@@ -2116,6 +2173,7 @@ export default function Prototype() {
               onChange={(event) => setDirectoryQuery(event.target.value)}
               placeholder={isZh ? "搜索章次、标题、原文与解读" : "Search number, title, text, or meaning"}
               aria-label={isZh ? "搜索章节" : "Search chapters"}
+              autoFocus={directoryFocusRequested}
             />
             {directoryQuery ? (
               <button
