@@ -2693,12 +2693,45 @@ textarea {
   text-align: center;
 }
 
-.support-modal figure {
+.support-modal-panel {
+  position: relative;
+  width: min(100%, 390px);
   max-height: calc(100dvh - 36px);
-  overflow-y: auto;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--gold) 34%, transparent);
+  border-radius: 24px;
   background:
     linear-gradient(color-mix(in srgb, var(--card-surface) 94%, transparent), var(--card-surface)),
     url("/assets/wendao/paper-mist-background.png") center / cover no-repeat;
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.28);
+}
+
+.support-modal-panel > .support-modal-close {
+  position: absolute;
+  z-index: 4;
+  top: 10px;
+  right: 10px;
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(18, 63, 73, 0.92);
+  color: #fff;
+  font-size: 24px;
+}
+
+.support-modal figure {
+  width: 100%;
+  max-height: calc(100dvh - 36px);
+  margin: 0;
+  overflow-y: auto;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
   color: var(--ink);
   scrollbar-width: none;
 }
@@ -2742,12 +2775,8 @@ textarea {
 }
 
 .support-modal .support-payment-code {
-  -webkit-touch-callout: default;
-  -webkit-user-drag: auto;
-  -webkit-user-select: auto;
-  user-select: auto;
-  touch-action: auto;
-  pointer-events: auto;
+  background: #fff;
+  image-rendering: auto;
 }
 
 .support-qr-recognition {
@@ -2770,6 +2799,13 @@ textarea {
   font-size: 10px;
   line-height: 1.6;
   text-underline-offset: 3px;
+}
+
+.support-qr-recognition > span {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 14px;
 }
 
 .support-modal figcaption {

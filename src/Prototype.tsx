@@ -1296,36 +1296,40 @@ function SupportModal({ open, onClose, language }: { open: boolean; onClose: () 
   return (
     <div className="image-modal support-modal" role="dialog" aria-modal="true" aria-labelledby="support-modal-title" aria-describedby="support-modal-description">
       <button type="button" className="image-modal-backdrop" aria-label={isZh ? "关闭" : "Close"} onClick={onClose} />
-      <figure>
-        <button type="button" aria-label={isZh ? "关闭" : "Close"} onClick={onClose}>×</button>
-        <div className="support-modal-copy">
-          <span>{isZh ? "生而不有 · 为而不恃" : "Create without possessing · Give without claiming"}</span>
-          <h2 id="support-modal-title">{isZh ? "随喜相助" : "Support the journey"}</h2>
-          <p id="support-modal-description">
-            {isZh
-              ? "若三慢问道对你有一点用，你可以随心支持，让这份慢读继续生长；若此刻不便，也请把这份心意留给自己。阅读、停留与分享，本身已经是同行。"
-              : "If Wendao has been useful, you may support its continued growth. If now is not the moment, keep that care for yourself. Reading, pausing, and sharing are already ways of walking together."}
-          </p>
-        </div>
-        <img
-          className="support-payment-code"
-          src="/assets/wendao/support-wechat.jpg"
-          alt={isZh ? "微信支付收款码" : "WeChat Pay support QR code"}
-          draggable
-          data-native-drag="true"
-          decoding="sync"
-        />
-        <div className="support-qr-recognition">
-          <strong>{isZh ? "长按图片，识别二维码" : "Press and hold the image to recognize the QR code"}</strong>
-          <a href="/assets/wendao/support-wechat.jpg" target="_blank" rel="noreferrer">
-            {isZh ? "没有出现识别菜单？点此单独打开" : "No recognition menu? Open the image on its own"}
-          </a>
-        </div>
-        <figcaption>
-          <strong>{isZh ? "有余则助，无余亦安。" : "Give when you can; be at ease when you cannot."}</strong>
-          <span>{isZh ? "谢谢你珍惜这份作品，也珍惜自己的生活。" : "Thank you for valuing this work—and your own life."}</span>
-        </figcaption>
-      </figure>
+      <div className="support-modal-panel">
+        <button type="button" className="support-modal-close" aria-label={isZh ? "关闭" : "Close"} onClick={onClose}>×</button>
+        <figure>
+          <div className="support-modal-copy">
+            <span>{isZh ? "生而不有 · 为而不恃" : "Create without possessing · Give without claiming"}</span>
+            <h2 id="support-modal-title">{isZh ? "随喜相助" : "Support the journey"}</h2>
+            <p id="support-modal-description">
+              {isZh
+                ? "若三慢问道对你有一点用，你可以随心支持，让这份慢读继续生长；若此刻不便，也请把这份心意留给自己。阅读、停留与分享，本身已经是同行。"
+                : "If Wendao has been useful, you may support its continued growth. If now is not the moment, keep that care for yourself. Reading, pausing, and sharing are already ways of walking together."}
+            </p>
+          </div>
+          <img
+            className="support-payment-code"
+            src="/assets/wendao/support-wechat-qr.png"
+            alt={isZh ? "微信支付收款码" : "WeChat Pay support QR code"}
+          />
+          <div className="support-qr-recognition">
+            <strong>{isZh ? "长按二维码，识别并支付" : "Press and hold the QR code to recognize it"}</strong>
+            <span>
+              <a href="/assets/wendao/support-wechat-qr.png" target="_blank" rel="noreferrer">
+                {isZh ? "单独打开二维码" : "Open the QR code on its own"}
+              </a>
+              <a href="/assets/wendao/support-wechat.jpg" target="_blank" rel="noreferrer">
+                {isZh ? "查看完整收款海报" : "View the complete payment poster"}
+              </a>
+            </span>
+          </div>
+          <figcaption>
+            <strong>{isZh ? "有余则助，无余亦安。" : "Give when you can; be at ease when you cannot."}</strong>
+            <span>{isZh ? "谢谢你珍惜这份作品，也珍惜自己的生活。" : "Thank you for valuing this work—and your own life."}</span>
+          </figcaption>
+        </figure>
+      </div>
     </div>
   );
 }

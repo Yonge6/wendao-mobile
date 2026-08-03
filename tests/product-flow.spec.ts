@@ -284,15 +284,20 @@ test("opens a pressure-free bilingual support modal from the bottom of the drawe
   await expect(supportDialog).toBeVisible();
   await expect(supportDialog).toContainText("阅读、停留与分享，本身已经是同行");
   const paymentCode = supportDialog.getByRole("img", { name: "微信支付收款码" });
-  await expect(paymentCode).toHaveAttribute("src", "/assets/wendao/support-wechat.jpg");
-  await expect(paymentCode).toHaveAttribute("draggable", "true");
-  await expect(paymentCode).toHaveAttribute("data-native-drag", "true");
-  await expect(supportDialog.getByText("长按图片，识别二维码", { exact: true })).toBeVisible();
-  const rawImageLink = supportDialog.getByRole("link", { name: "没有出现识别菜单？点此单独打开", exact: true });
-  await expect(rawImageLink).toHaveAttribute("href", "/assets/wendao/support-wechat.jpg");
+  await expect(paymentCode).toHaveAttribute("src", "/assets/wendao/support-wechat-qr.png");
+  await expect(paymentCode).not.toHaveAttribute("draggable", "true");
+  await expect(paymentCode).not.toHaveAttribute("data-native-drag", "true");
+  await expect(supportDialog.getByText("长按二维码，识别并支付", { exact: true })).toBeVisible();
+  const rawImageLink = supportDialog.getByRole("link", { name: "单独打开二维码", exact: true });
+  await expect(rawImageLink).toHaveAttribute("href", "/assets/wendao/support-wechat-qr.png");
   await expect(rawImageLink).toHaveAttribute("target", "_blank");
-  const supportClose = supportDialog.locator("figure > button");
+  await expect(supportDialog.getByRole("link", { name: "查看完整收款海报", exact: true })).toHaveAttribute("href", "/assets/wendao/support-wechat.jpg");
+  const supportClose = supportDialog.locator(".support-modal-close");
   await expect(supportClose).toHaveCount(1);
+  const closeTop = await supportClose.evaluate((element) => element.getBoundingClientRect().top);
+  await supportDialog.locator("figure").evaluate((element) => { element.scrollTop = element.scrollHeight; });
+  const scrolledCloseTop = await supportClose.evaluate((element) => element.getBoundingClientRect().top);
+  expect(Math.abs(scrolledCloseTop - closeTop)).toBeLessThanOrEqual(1);
   await supportClose.click();
   await expect(supportDialog).toHaveCount(0);
 
@@ -316,7 +321,7 @@ for (const width of [320, 390, 720]) {
       complete: image.complete,
       width: image.naturalWidth,
       height: image.naturalHeight,
-    }))).toEqual({ complete: true, width: 828, height: 1124 });
+    }))).toEqual({ complete: true, width: 440, height: 440 });
 
     const layout = await page.evaluate(() => {
       const figure = document.querySelector<HTMLElement>(".support-modal figure")!;
