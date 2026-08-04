@@ -1098,17 +1098,27 @@ textarea {
 }
 
 .web-sheet.is-share-sheet {
+  display: flex;
   width: min(100%, 820px);
+  height: min(94dvh, 900px);
+  min-height: 0;
   max-height: min(94dvh, 900px);
+  flex-direction: column;
   padding-bottom: max(env(safe-area-inset-bottom, 0px), 10px);
 }
 
 .web-sheet.is-share-sheet .web-sheet-content {
-  max-height: calc(min(94dvh, 900px) - 82px);
-  overflow-y: auto;
+  min-height: 0;
+  max-height: none;
+  flex: 1;
+  overflow: hidden;
 }
 
 .share-card-panel {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  flex-direction: column;
   padding: 2px 0 0;
   font-family: var(--sans);
 }
@@ -1154,19 +1164,28 @@ textarea {
 }
 
 .share-card-workspace {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
+  display: grid;
+  min-height: 0;
+  flex: 1;
+  grid-template-rows: minmax(0, 1fr) auto;
   margin-top: 12px;
-  padding: 20px clamp(10px, 3vw, 26px) 2px;
   border-top: 1px solid color-mix(in srgb, var(--gold) 18%, transparent);
+  overflow: hidden;
+}
+
+.share-card-preview-scroll {
+  min-height: 0;
+  padding: 20px clamp(10px, 3vw, 26px) 18px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--gold) 32%, transparent) transparent;
 }
 
 .share-card-preview {
   position: relative;
   width: min(62vw, 320px);
-  align-self: center;
-  margin: 0;
+  margin: 0 auto;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--gold) 34%, transparent);
   border-radius: 24px;
@@ -1213,7 +1232,8 @@ textarea {
   gap: 8px;
   padding-top: 10px;
   border-top: 1px solid color-mix(in srgb, var(--gold) 22%, transparent);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--paper) 93%, transparent), var(--paper) 22%);
+  background: color-mix(in srgb, var(--paper) 97%, transparent);
+  box-shadow: 0 -12px 24px color-mix(in srgb, var(--paper) 88%, transparent);
 }
 
 .share-card-controls button {
@@ -1273,6 +1293,7 @@ textarea {
 
 @media (max-width: 560px) {
   .web-sheet.is-share-sheet {
+    height: 96dvh;
     max-height: 96dvh;
     padding-right: 18px;
     padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px);
@@ -1280,11 +1301,15 @@ textarea {
   }
 
   .web-sheet.is-share-sheet .web-sheet-content {
-    max-height: calc(96dvh - 78px);
+    max-height: none;
   }
 
   .share-card-workspace {
-    padding: 15px 0 0;
+    margin-top: 10px;
+  }
+
+  .share-card-preview-scroll {
+    padding: 15px 0 14px;
   }
 
   .share-card-preview {

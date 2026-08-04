@@ -660,11 +660,13 @@ for (const width of [320, 390, 720]) {
     await expect(page.locator(".verse-line-ruby > .verse-punctuation")).toHaveCount(0);
   });
 
-  test(`${width}px share sheet keeps the card and controls inside the viewport`, async ({ page }) => {
+  test(`${width}px share sheet fixes tabs and actions while only the full poster scrolls`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
-    await page.goto("/?chapter=8&lang=zh");
+    await page.goto("/?chapter=64&lang=zh");
     await page.locator(".chapter-current .chapter-share-quick").click();
+    await page.getByRole("tab", { name: "解读" }).click();
     await expect(page.locator(".share-card-preview img")).toBeVisible();
+    await expect.poll(() => page.locator(".share-card-preview img").evaluate((image: HTMLImageElement) => image.naturalHeight)).toBeGreaterThan(2340);
     const overflow = await page.evaluate(() => {
       const sheet = document.querySelector<HTMLElement>(".web-sheet.is-share-sheet")!;
       const bounds = sheet.getBoundingClientRect();
@@ -677,24 +679,46 @@ for (const width of [320, 390, 720]) {
     expect(overflow.document).toBeLessThanOrEqual(0);
     expect(overflow.left).toBe(0);
     expect(overflow.right).toBe(0);
-    const scrollSurface = page.locator(".web-sheet.is-share-sheet .web-sheet-content");
+    const sheetContent = page.locator(".web-sheet.is-share-sheet .web-sheet-content");
+    const scrollSurface = page.getByTestId("share-card-preview-scroll");
     const preview = page.locator(".share-card-preview");
+    await expect(sheetContent).toHaveCSS("overflow-y", "hidden");
     await expect(scrollSurface).toHaveCSS("overflow-y", "auto");
     expect(await preview.evaluate((element) => element.scrollHeight - element.clientHeight)).toBeLessThanOrEqual(1);
+    expect(await scrollSurface.evaluate((element) => element.scrollHeight - element.clientHeight)).toBeGreaterThan(0);
     if (width <= 560) {
       expect((await preview.boundingBox())!.width).toBeGreaterThanOrEqual(width * 0.7);
     }
     await expect(page.locator(".share-action-feedback")).toHaveCount(0);
+    const fixedBefore = await page.evaluate(() => {
+      const tabs = document.querySelector<HTMLElement>(".share-kind-tabs")!.getBoundingClientRect();
+      const controls = document.querySelector<HTMLElement>(".share-card-controls")!.getBoundingClientRect();
+      const sheet = document.querySelector<HTMLElement>(".web-sheet.is-share-sheet")!.getBoundingClientRect();
+      return {
+        tabsTop: tabs.top,
+        controlsTop: controls.top,
+        controlsBottom: controls.bottom,
+        sheetTop: sheet.top,
+        sheetBottom: sheet.bottom,
+      };
+    });
     await scrollSurface.evaluate((element) => {
       element.scrollTop = element.scrollHeight;
     });
-    const bottomGap = await page.evaluate(() => {
-      const content = document.querySelector<HTMLElement>(".web-sheet.is-share-sheet .web-sheet-content")!;
-      const controls = document.querySelector<HTMLElement>(".share-card-controls")!;
-      return Math.round(content.getBoundingClientRect().bottom - controls.getBoundingClientRect().bottom);
+    const fixedAfter = await page.evaluate(() => {
+      const tabs = document.querySelector<HTMLElement>(".share-kind-tabs")!.getBoundingClientRect();
+      const controls = document.querySelector<HTMLElement>(".share-card-controls")!.getBoundingClientRect();
+      return { tabsTop: tabs.top, controlsTop: controls.top, controlsBottom: controls.bottom };
     });
-    expect(bottomGap).toBeGreaterThanOrEqual(-1);
-    expect(bottomGap).toBeLessThanOrEqual(3);
+    expect(Math.abs(fixedAfter.tabsTop - fixedBefore.tabsTop)).toBeLessThanOrEqual(1);
+    expect(Math.abs(fixedAfter.controlsTop - fixedBefore.controlsTop)).toBeLessThanOrEqual(1);
+    expect(Math.abs(fixedAfter.controlsBottom - fixedBefore.controlsBottom)).toBeLessThanOrEqual(1);
+    expect(fixedBefore.tabsTop).toBeGreaterThanOrEqual(fixedBefore.sheetTop);
+    expect(fixedBefore.controlsBottom).toBeLessThanOrEqual(fixedBefore.sheetBottom + 1);
+    expect(await scrollSurface.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+    await page.getByRole("tab", { name: "启发" }).click();
+    await expect(page.locator(".share-card-preview img")).toBeVisible();
+    await expect.poll(() => scrollSurface.evaluate((element) => element.scrollTop)).toBeLessThanOrEqual(1);
     for (const button of await page.locator(".share-action-grid button").all()) {
       await expect(button).toHaveCSS("flex-direction", "row");
       expect((await button.boundingBox())!.height).toBeLessThanOrEqual(40);

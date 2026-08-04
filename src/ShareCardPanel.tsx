@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   CopyIcon,
   DownloadIcon,
@@ -38,6 +38,7 @@ export default function ShareCardPanel({
   const [imageUrl, setImageUrl] = useState("");
   const [rendering, setRendering] = useState(true);
   const [feedback, setFeedback] = useState("");
+  const previewScrollRef = useRef<HTMLDivElement>(null);
   const content = useMemo(
     () => buildShareCardContent(chapter, language, kind, manualText),
     [chapter, kind, language, manualText],
@@ -72,6 +73,10 @@ export default function ShareCardPanel({
     const timer = window.setTimeout(() => setFeedback(""), 2400);
     return () => window.clearTimeout(timer);
   }, [feedback]);
+
+  useEffect(() => {
+    previewScrollRef.current?.scrollTo({ top: 0 });
+  }, [chapter.id, kind, language]);
 
   const selectKind = (nextKind: ShareCardKind) => {
     if (nextKind === "manual" && !profileReady) return;
@@ -172,24 +177,26 @@ export default function ShareCardPanel({
       ) : null}
 
       <div className="share-card-workspace">
-        <figure
-          className="share-card-preview"
-          aria-label={`${content.primary} ${pinyinDescription} ${content.secondaryLabel} ${content.secondary}`.trim()}
-        >
-          {imageUrl ? (
-            <img
-              src={imageUrl}
-              alt={isZh ? `${content.label}分享卡预览` : `${content.label} share-card preview`}
-            />
-          ) : (
-            <div className="share-card-rendering" role="status">
-              <span aria-hidden="true" />
-              {rendering
-                ? (isZh ? "正在生成阅读卡" : "Creating your reading card")
-                : (isZh ? "等待重新生成" : "Waiting to retry")}
-            </div>
-          )}
-        </figure>
+        <div className="share-card-preview-scroll" ref={previewScrollRef} data-testid="share-card-preview-scroll">
+          <figure
+            className="share-card-preview"
+            aria-label={`${content.primary} ${pinyinDescription} ${content.secondaryLabel} ${content.secondary}`.trim()}
+          >
+            {imageUrl ? (
+              <img
+                src={imageUrl}
+                alt={isZh ? `${content.label}分享卡预览` : `${content.label} share-card preview`}
+              />
+            ) : (
+              <div className="share-card-rendering" role="status">
+                <span aria-hidden="true" />
+                {rendering
+                  ? (isZh ? "正在生成阅读卡" : "Creating your reading card")
+                  : (isZh ? "等待重新生成" : "Waiting to retry")}
+              </div>
+            )}
+          </figure>
+        </div>
 
         <div className="share-card-controls">
           <button
