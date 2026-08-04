@@ -1098,27 +1098,18 @@ textarea {
 }
 
 .web-sheet.is-share-sheet {
-  display: flex;
   width: min(100%, 820px);
-  height: min(94dvh, 900px);
   max-height: min(94dvh, 900px);
-  flex-direction: column;
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 10px);
 }
 
 .web-sheet.is-share-sheet .web-sheet-content {
-  display: flex;
-  min-height: 0;
-  max-height: none;
-  flex: 1;
-  overflow: hidden;
+  max-height: calc(min(94dvh, 900px) - 82px);
+  overflow-y: auto;
 }
 
 .share-card-panel {
-  display: flex;
-  min-height: 0;
-  flex: 1;
-  flex-direction: column;
-  padding: 2px 0 12px;
+  padding: 2px 0 0;
   font-family: var(--sans);
 }
 
@@ -1163,28 +1154,20 @@ textarea {
 }
 
 .share-card-workspace {
-  display: grid;
-  min-height: 0;
-  flex: 1;
-  grid-template-columns: 1fr;
-  grid-template-rows: minmax(0, 1fr) auto;
+  display: flex;
+  flex-direction: column;
   gap: 18px;
   margin-top: 12px;
-  padding: 20px clamp(10px, 3vw, 26px) 0;
-  overflow: hidden;
+  padding: 20px clamp(10px, 3vw, 26px) 2px;
   border-top: 1px solid color-mix(in srgb, var(--gold) 18%, transparent);
 }
 
 .share-card-preview {
   position: relative;
-  width: min(42vw, 254px);
-  height: 100%;
-  min-height: 0;
-  justify-self: center;
+  width: min(62vw, 320px);
+  align-self: center;
   margin: 0;
-  overflow-x: hidden;
-  overflow-y: auto;
-  overscroll-behavior: contain;
+  overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--gold) 34%, transparent);
   border-radius: 24px;
   background: #f7f1e6;
@@ -1281,7 +1264,6 @@ textarea {
 }
 
 .share-action-feedback {
-  min-height: 18px;
   margin: 0;
   color: var(--gold);
   font-size: 10px;
@@ -1291,10 +1273,14 @@ textarea {
 
 @media (max-width: 560px) {
   .web-sheet.is-share-sheet {
-    height: 96dvh;
     max-height: 96dvh;
     padding-right: 18px;
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px);
     padding-left: 18px;
+  }
+
+  .web-sheet.is-share-sheet .web-sheet-content {
+    max-height: calc(96dvh - 78px);
   }
 
   .share-card-workspace {
@@ -1302,7 +1288,7 @@ textarea {
   }
 
   .share-card-preview {
-    width: min(54vw, 228px);
+    width: min(72vw, 320px);
     border-radius: 21px;
   }
 
@@ -1316,11 +1302,6 @@ textarea {
   .share-action-grid button svg {
     width: 14px;
     height: 14px;
-  }
-
-  .share-action-feedback {
-    min-height: 15px;
-    line-height: 1.35;
   }
 
 }
@@ -1345,7 +1326,7 @@ textarea {
   }
 
   .share-card-preview {
-    width: min(58vw, 208px);
+    width: min(72vw, 230px);
   }
 }
 

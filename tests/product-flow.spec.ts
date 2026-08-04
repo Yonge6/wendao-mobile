@@ -650,20 +650,27 @@ for (const width of [320, 390, 720]) {
     expect(overflow.document).toBeLessThanOrEqual(0);
     expect(overflow.left).toBe(0);
     expect(overflow.right).toBe(0);
+    const scrollSurface = page.locator(".web-sheet.is-share-sheet .web-sheet-content");
+    const preview = page.locator(".share-card-preview");
+    await expect(scrollSurface).toHaveCSS("overflow-y", "auto");
+    expect(await preview.evaluate((element) => element.scrollHeight - element.clientHeight)).toBeLessThanOrEqual(1);
     if (width <= 560) {
-      const controls = page.locator(".share-card-controls");
-      const before = await controls.boundingBox();
-      expect(before).not.toBeNull();
-      await page.locator(".share-card-preview").evaluate((element) => {
-        element.scrollTop = element.scrollHeight;
-      });
-      const after = await controls.boundingBox();
-      expect(after?.y).toBeCloseTo(before!.y, 0);
-      expect(after?.height).toBeCloseTo(before!.height, 0);
-      for (const button of await page.locator(".share-action-grid button").all()) {
-        await expect(button).toHaveCSS("flex-direction", "row");
-        expect((await button.boundingBox())!.height).toBeLessThanOrEqual(40);
-      }
+      expect((await preview.boundingBox())!.width).toBeGreaterThanOrEqual(width * 0.7);
+    }
+    await expect(page.locator(".share-action-feedback")).toHaveCount(0);
+    await scrollSurface.evaluate((element) => {
+      element.scrollTop = element.scrollHeight;
+    });
+    const bottomGap = await page.evaluate(() => {
+      const content = document.querySelector<HTMLElement>(".web-sheet.is-share-sheet .web-sheet-content")!;
+      const controls = document.querySelector<HTMLElement>(".share-card-controls")!;
+      return Math.round(content.getBoundingClientRect().bottom - controls.getBoundingClientRect().bottom);
+    });
+    expect(bottomGap).toBeGreaterThanOrEqual(-1);
+    expect(bottomGap).toBeLessThanOrEqual(3);
+    for (const button of await page.locator(".share-action-grid button").all()) {
+      await expect(button).toHaveCSS("flex-direction", "row");
+      expect((await button.boundingBox())!.height).toBeLessThanOrEqual(40);
     }
   });
 }

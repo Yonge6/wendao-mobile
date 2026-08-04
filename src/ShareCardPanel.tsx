@@ -215,7 +215,7 @@ export default function ShareCardPanel({
               {isZh ? "分享链接" : "Share link"}
             </button>
           </div>
-          <p className="share-action-feedback" aria-live="polite">{feedback}</p>
+          {feedback ? <p className="share-action-feedback" aria-live="polite">{feedback}</p> : null}
         </div>
       </div>
     </div>
