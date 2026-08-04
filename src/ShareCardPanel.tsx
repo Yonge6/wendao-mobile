@@ -42,6 +42,11 @@ export default function ShareCardPanel({
     () => buildShareCardContent(chapter, language, kind, manualText),
     [chapter, kind, language, manualText],
   );
+  const pinyinDescription = useMemo(() => (
+    [...(content.primaryPinyin ?? []), ...(content.secondaryPinyin ?? [])]
+      .map((line) => `${line.text} ${line.pinyin.join(" ")}`)
+      .join(" ")
+  ), [content.primaryPinyin, content.secondaryPinyin]);
 
   useEffect(() => {
     let cancelled = false;
@@ -169,7 +174,7 @@ export default function ShareCardPanel({
       <div className="share-card-workspace">
         <figure
           className="share-card-preview"
-          aria-label={`${content.primary} ${content.secondaryLabel} ${content.secondary}`}
+          aria-label={`${content.primary} ${pinyinDescription} ${content.secondaryLabel} ${content.secondary}`.trim()}
         >
           {imageUrl ? (
             <img
@@ -187,11 +192,6 @@ export default function ShareCardPanel({
         </figure>
 
         <div className="share-card-controls">
-          <div className="share-card-summary">
-            <span>{content.chapterLabel}</span>
-            <strong>{isZh ? `${content.label}卡` : `${content.label} card`}</strong>
-          </div>
-
           <button
             type="button"
             className="share-action-primary"

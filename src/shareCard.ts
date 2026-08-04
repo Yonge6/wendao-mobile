@@ -5,6 +5,11 @@ import { CANONICAL_URL } from "./native";
 export type ShareCardKind = "verse" | "meaning" | "inspiration" | "manual";
 export type ShareLanguage = "zh" | "en";
 
+type PinyinVerseLine = {
+  text: string;
+  pinyin: string[];
+};
+
 export type ShareCardContent = {
   kind: ShareCardKind;
   language: ShareLanguage;
@@ -13,8 +18,10 @@ export type ShareCardContent = {
   chapterLabel: string;
   chapterTitle: string;
   primary: string;
+  primaryPinyin?: PinyinVerseLine[];
   secondaryLabel: string;
   secondary: string;
+  secondaryPinyin?: PinyinVerseLine[];
   url: string;
   shareText: string;
   filename: string;
@@ -43,6 +50,13 @@ export function shareChapterUrl(chapterId: number, kind: ShareCardKind, language
 function fullVerse(chapter: Chapter, language: ShareLanguage) {
   const lines = language === "zh" ? chapter.zh.reconstructedVerse : chapter.en.verse;
   return lines.join("\n");
+}
+
+function pinyinVerse(chapter: Chapter): PinyinVerseLine[] {
+  return chapter.zh.reconstructedVerse.map((text, lineIndex) => ({
+    text,
+    pinyin: chapter.zh.pinyin[lineIndex],
+  }));
 }
 
 function fullTranslation(chapter: Chapter, language: ShareLanguage) {
@@ -77,22 +91,27 @@ export function buildShareCardContent(
   const chapterLabel = language === "zh" ? `《道德经》今本第 ${chapter.id} 章` : `Daodejing · Received Chapter ${chapter.id}`;
   const url = shareChapterUrl(chapter.id, kind, language);
   let primary = "";
+  let primaryPinyin: PinyinVerseLine[] | undefined;
   let secondaryLabel = "";
   let secondary = "";
+  let secondaryPinyin: PinyinVerseLine[] | undefined;
 
   if (kind === "verse") {
     primary = fullVerse(chapter, language);
+    if (language === "zh") primaryPinyin = pinyinVerse(chapter);
     secondaryLabel = language === "zh" ? "今译" : "A plain reading";
     secondary = fullTranslation(chapter, language);
   } else if (kind === "meaning") {
     primary = fullMeaning(chapter, language);
     secondaryLabel = language === "zh" ? "原文" : "Original text";
     secondary = fullVerse(chapter, language);
+    if (language === "zh") secondaryPinyin = pinyinVerse(chapter);
   } else if (kind === "inspiration") {
     const item = inspirationItem(chapter, language);
     primary = item.body;
     secondaryLabel = language === "zh" ? "原文" : "Original text";
     secondary = fullVerse(chapter, language);
+    if (language === "zh") secondaryPinyin = pinyinVerse(chapter);
   } else {
     primary = manualText || (language === "zh"
       ? "完成你的人生说明书后，这里会出现结合本章与真实结果的个性化阅读。"
@@ -115,8 +134,10 @@ export function buildShareCardContent(
     chapterLabel,
     chapterTitle: copy.title,
     primary,
+    primaryPinyin,
     secondaryLabel,
     secondary,
+    secondaryPinyin,
     url,
     shareText,
     filename: `wendao-chapter-${String(chapter.id).padStart(2, "0")}-${kind}.png`,
@@ -156,6 +177,197 @@ function drawLines(
 ) {
   lines.forEach((line, index) => context.fillText(line, x, y + index * lineHeight));
   return y + lines.length * lineHeight;
+}
+
+type RubyToken = {
+  character: string;
+  pinyin: string;
+  punctuation: string;
+  supplyStart: boolean;
+  supplyEnd: boolean;
+  supplied: boolean;
+};
+
+type RubyLayoutToken = RubyToken & {
+  bodyWidth: number;
+  prefixWidth: number;
+  suffixWidth: number;
+  punctuationWidth: number;
+  width: number;
+};
+
+type RubyLayout = {
+  rows: RubyLayoutToken[][];
+  rowHeight: number;
+  height: number;
+};
+
+function rubyTokens(line: PinyinVerseLine): RubyToken[] {
+  const characters = Array.from(line.text);
+  const tokens: RubyToken[] = [];
+  let syllableIndex = 0;
+  let inSupply = false;
+  let supplyStartsHere = false;
+
+  for (let characterIndex = 0; characterIndex < characters.length; characterIndex += 1) {
+    const character = characters[characterIndex];
+    if (character === "〔") {
+      inSupply = true;
+      supplyStartsHere = true;
+      continue;
+    }
+    if (character === "〕") {
+      inSupply = false;
+      supplyStartsHere = false;
+      continue;
+    }
+    if (!/\p{Script=Han}/u.test(character)) continue;
+
+    const supplyStart = inSupply && supplyStartsHere;
+    supplyStartsHere = false;
+    const supplyEnd = inSupply && characters[characterIndex + 1] === "〕";
+    if (supplyEnd) {
+      characterIndex += 1;
+      inSupply = false;
+    }
+    let punctuation = "";
+    while (
+      characterIndex + 1 < characters.length
+      && !/\p{Script=Han}/u.test(characters[characterIndex + 1])
+      && characters[characterIndex + 1] !== "〔"
+      && characters[characterIndex + 1] !== "〕"
+    ) {
+      punctuation += characters[characterIndex + 1];
+      characterIndex += 1;
+    }
+    tokens.push({
+      character,
+      pinyin: line.pinyin[syllableIndex] ?? "",
+      punctuation,
+      supplyStart,
+      supplyEnd,
+      supplied: inSupply || supplyStart || supplyEnd,
+    });
+    syllableIndex += 1;
+  }
+  return tokens;
+}
+
+function layoutPinyinVerse(
+  context: CanvasRenderingContext2D,
+  verse: PinyinVerseLine[],
+  maxWidth: number,
+  hanSize: number,
+  pinyinSize: number,
+  serif: string,
+  sans: string,
+): RubyLayout {
+  const gap = Math.max(7, Math.round(hanSize * 0.16));
+  const bracketSize = Math.round(hanSize * 0.68);
+  const rows: RubyLayoutToken[][] = [];
+
+  for (const line of verse) {
+    let row: RubyLayoutToken[] = [];
+    let rowWidth = 0;
+    for (const token of rubyTokens(line)) {
+      context.font = `400 ${hanSize}px ${serif}`;
+      const characterWidth = context.measureText(token.character).width;
+      const punctuationWidth = context.measureText(token.punctuation).width;
+      context.font = `400 ${pinyinSize}px ${sans}`;
+      const pinyinWidth = context.measureText(token.pinyin).width;
+      context.font = `400 ${bracketSize}px ${serif}`;
+      const prefixWidth = token.supplyStart ? context.measureText("〔").width : 0;
+      const suffixWidth = token.supplyEnd ? context.measureText("〕").width : 0;
+      const bodyWidth = Math.max(characterWidth, pinyinWidth);
+      const width = prefixWidth + bodyWidth + suffixWidth + punctuationWidth + gap;
+      const layoutToken = {
+        ...token,
+        bodyWidth,
+        prefixWidth,
+        suffixWidth,
+        punctuationWidth,
+        width,
+      };
+
+      if (row.length && rowWidth + width > maxWidth) {
+        rows.push(row);
+        row = [];
+        rowWidth = 0;
+      }
+      row.push(layoutToken);
+      rowWidth += width;
+    }
+    if (row.length) rows.push(row);
+  }
+
+  const rowHeight = Math.round(hanSize * 1.28 + pinyinSize * 1.22 + 13);
+  return {
+    rows,
+    rowHeight,
+    height: Math.max(rowHeight, rows.length * rowHeight),
+  };
+}
+
+function drawPinyinVerse(
+  context: CanvasRenderingContext2D,
+  layout: RubyLayout,
+  x: number,
+  y: number,
+  hanSize: number,
+  pinyinSize: number,
+  serif: string,
+  sans: string,
+  ink: string,
+  softInk: string,
+  gold: string,
+) {
+  const bracketSize = Math.round(hanSize * 0.68);
+  const pinyinBaselineOffset = pinyinSize;
+  const characterBaselineOffset = pinyinSize + Math.round(hanSize * 1.08);
+
+  layout.rows.forEach((row, rowIndex) => {
+    const rowTop = y + rowIndex * layout.rowHeight;
+    let cursorX = x;
+    row.forEach((token) => {
+      if (token.supplyStart) {
+        context.fillStyle = gold;
+        context.font = `400 ${bracketSize}px ${serif}`;
+        context.fillText("〔", cursorX, rowTop + characterBaselineOffset);
+      }
+      const bodyX = cursorX + token.prefixWidth;
+      context.fillStyle = softInk;
+      context.font = `400 ${pinyinSize}px ${sans}`;
+      context.letterSpacing = "0px";
+      const pinyinWidth = context.measureText(token.pinyin).width;
+      context.fillText(
+        token.pinyin,
+        bodyX + (token.bodyWidth - pinyinWidth) / 2,
+        rowTop + pinyinBaselineOffset,
+      );
+
+      context.fillStyle = token.supplied ? "#725829" : ink;
+      context.font = `400 ${hanSize}px ${serif}`;
+      const characterWidth = context.measureText(token.character).width;
+      context.fillText(
+        token.character,
+        bodyX + (token.bodyWidth - characterWidth) / 2,
+        rowTop + characterBaselineOffset,
+      );
+      let suffixX = bodyX + token.bodyWidth;
+      if (token.supplyEnd) {
+        context.fillStyle = gold;
+        context.font = `400 ${bracketSize}px ${serif}`;
+        context.fillText("〕", suffixX, rowTop + characterBaselineOffset);
+        suffixX += token.suffixWidth;
+      }
+      if (token.punctuation) {
+        context.fillStyle = ink;
+        context.font = `400 ${hanSize}px ${serif}`;
+        context.fillText(token.punctuation, suffixX, rowTop + characterBaselineOffset);
+      }
+      cursorX += token.width;
+    });
+  });
 }
 
 async function loadPaperTexture() {
@@ -200,8 +412,13 @@ export async function renderShareCardDataUrl(content: ShareCardContent) {
   context.font = `400 ${primarySize}px ${serif}`;
   context.letterSpacing = content.language === "zh" ? "3px" : "1px";
   const primaryLines = wrapParagraphs(context, content.primary, contentWidth);
+  const primaryPinyinSize = Math.max(16, Math.round(primarySize * 0.36));
+  const primaryPinyinLayout = content.primaryPinyin
+    ? layoutPinyinVerse(context, content.primaryPinyin, contentWidth, primarySize, primaryPinyinSize, serif, sans)
+    : null;
   const primaryTop = 490;
-  const primaryHeight = Math.max(primaryLineHeight, primaryLines.length * primaryLineHeight);
+  const primaryHeight = primaryPinyinLayout?.height
+    ?? Math.max(primaryLineHeight, primaryLines.length * primaryLineHeight);
   const secondarySize = content.language === "zh"
     ? (content.secondary.length > 260 ? 28 : 31)
     : (content.secondary.length > 420 ? 25 : 28);
@@ -209,8 +426,14 @@ export async function renderShareCardDataUrl(content: ShareCardContent) {
   context.font = `400 ${secondarySize}px ${serif}`;
   context.letterSpacing = content.language === "zh" ? "2px" : "0.5px";
   const secondaryLines = wrapParagraphs(context, content.secondary, 666);
+  const secondaryPinyinSize = Math.max(12, Math.round(secondarySize * 0.4));
+  const secondaryPinyinLayout = content.secondaryPinyin
+    ? layoutPinyinVerse(context, content.secondaryPinyin, 666, secondarySize, secondaryPinyinSize, serif, sans)
+    : null;
   const secondaryY = primaryTop + primaryHeight + 84;
-  const secondaryHeight = Math.max(396, 154 + secondaryLines.length * secondaryLineHeight + 58);
+  const secondaryContentHeight = secondaryPinyinLayout?.height
+    ?? secondaryLines.length * secondaryLineHeight;
+  const secondaryHeight = Math.max(396, 154 + secondaryContentHeight + 58);
   const naturalFooterY = secondaryY + secondaryHeight + 100;
   canvas.height = Math.max(2160, naturalFooterY + 320);
   context = canvas.getContext("2d");
@@ -299,14 +522,28 @@ export async function renderShareCardDataUrl(content: ShareCardContent) {
   context.font = `400 178px ${serif}`;
   context.fillText(content.language === "zh" ? "「" : "“", 118, 550);
 
-  const primaryY = primaryTop + primarySize;
-
   context.fillStyle = gold;
-  context.fillRect(140, primaryY - primarySize - 9, 3, Math.min(124, primaryHeight + 12));
-  context.fillStyle = ink;
-  context.font = `400 ${primarySize}px ${serif}`;
-  context.letterSpacing = content.language === "zh" ? "3px" : "1px";
-  drawLines(context, primaryLines, contentX, primaryY, primaryLineHeight);
+  context.fillRect(140, primaryTop - 9, 3, Math.min(124, primaryHeight + 12));
+  if (primaryPinyinLayout) {
+    drawPinyinVerse(
+      context,
+      primaryPinyinLayout,
+      contentX,
+      primaryTop,
+      primarySize,
+      primaryPinyinSize,
+      serif,
+      sans,
+      ink,
+      softInk,
+      gold,
+    );
+  } else {
+    context.fillStyle = ink;
+    context.font = `400 ${primarySize}px ${serif}`;
+    context.letterSpacing = content.language === "zh" ? "3px" : "1px";
+    drawLines(context, primaryLines, contentX, primaryTop + primarySize, primaryLineHeight);
+  }
 
   context.fillStyle = "rgba(238, 227, 209, 0.68)";
   context.strokeStyle = "rgba(173, 126, 47, 0.3)";
@@ -327,10 +564,26 @@ export async function renderShareCardDataUrl(content: ShareCardContent) {
   context.letterSpacing = "2px";
   context.fillText(content.secondaryLabel, 244, secondaryY + 70);
 
-  context.fillStyle = softInk;
-  context.font = `400 ${secondarySize}px ${serif}`;
-  context.letterSpacing = content.language === "zh" ? "2px" : "0.5px";
-  drawLines(context, secondaryLines, 244, secondaryY + 144, secondaryLineHeight);
+  if (secondaryPinyinLayout) {
+    drawPinyinVerse(
+      context,
+      secondaryPinyinLayout,
+      244,
+      secondaryY + 124,
+      secondarySize,
+      secondaryPinyinSize,
+      serif,
+      sans,
+      ink,
+      softInk,
+      gold,
+    );
+  } else {
+    context.fillStyle = softInk;
+    context.font = `400 ${secondarySize}px ${serif}`;
+    context.letterSpacing = content.language === "zh" ? "2px" : "0.5px";
+    drawLines(context, secondaryLines, 244, secondaryY + 144, secondaryLineHeight);
+  }
 
   context.strokeStyle = "rgba(173, 126, 47, 0.4)";
   context.beginPath();

@@ -1063,9 +1063,32 @@ textarea {
   border-radius: 999px;
 }
 
-.web-sheet .sheet-title {
+.web-sheet .sheet-title-row {
   margin: 0 44px 5px 0;
+}
+
+.web-sheet .sheet-title-row.has-eyebrow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.web-sheet .sheet-title {
+  margin: 0;
   font-size: 24px;
+}
+
+.web-sheet .sheet-eyebrow {
+  margin: 0;
+  color: var(--gold);
+  font: 500 10px/1.45 var(--sans);
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+.web-sheet .sheet-title-row.has-eyebrow .sheet-title {
+  white-space: nowrap;
 }
 
 .web-sheet .sheet-description {
@@ -1075,15 +1098,26 @@ textarea {
 }
 
 .web-sheet.is-share-sheet {
+  display: flex;
   width: min(100%, 820px);
+  height: min(94dvh, 900px);
   max-height: min(94dvh, 900px);
+  flex-direction: column;
 }
 
 .web-sheet.is-share-sheet .web-sheet-content {
-  max-height: calc(min(94dvh, 900px) - 112px);
+  display: flex;
+  min-height: 0;
+  max-height: none;
+  flex: 1;
+  overflow: hidden;
 }
 
 .share-card-panel {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
   padding: 2px 0 12px;
   font-family: var(--sans);
 }
@@ -1130,20 +1164,27 @@ textarea {
 
 .share-card-workspace {
   display: grid;
-  grid-template-columns: minmax(205px, 254px) minmax(0, 1fr);
-  align-items: start;
-  gap: clamp(22px, 5vw, 46px);
+  min-height: 0;
+  flex: 1;
+  grid-template-columns: 1fr;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 18px;
   margin-top: 12px;
-  padding: 20px clamp(10px, 3vw, 26px);
+  padding: 20px clamp(10px, 3vw, 26px) 0;
+  overflow: hidden;
   border-top: 1px solid color-mix(in srgb, var(--gold) 18%, transparent);
 }
 
 .share-card-preview {
   position: relative;
-  width: 100%;
-  min-height: 420px;
+  width: min(42vw, 254px);
+  height: 100%;
+  min-height: 0;
+  justify-self: center;
   margin: 0;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   border: 1px solid color-mix(in srgb, var(--gold) 34%, transparent);
   border-radius: 24px;
   background: #f7f1e6;
@@ -1181,28 +1222,15 @@ textarea {
 }
 
 .share-card-controls {
+  position: relative;
+  z-index: 2;
   display: flex;
   min-width: 0;
   flex-direction: column;
-  gap: 11px;
-}
-
-.share-card-summary {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: 8px;
-}
-
-.share-card-summary span {
-  color: var(--gold);
-  font-size: 9px;
-  letter-spacing: 0.08em;
-}
-
-.share-card-summary strong {
-  color: var(--ink);
-  font: 600 24px/1.25 var(--serif);
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid color-mix(in srgb, var(--gold) 22%, transparent);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--paper) 93%, transparent), var(--paper) 22%);
 }
 
 .share-card-controls button {
@@ -1231,7 +1259,7 @@ textarea {
 }
 
 .share-card-controls .share-action-primary {
-  min-height: 50px;
+  min-height: 44px;
   border-color: var(--ink);
   border-radius: 999px;
   background: var(--ink);
@@ -1246,10 +1274,10 @@ textarea {
 }
 
 .share-action-grid button {
-  flex-direction: column;
+  min-height: 40px;
+  flex-direction: row;
   gap: 5px;
-  min-height: 66px;
-  padding: 8px 4px;
+  padding: 7px 5px;
 }
 
 .share-action-feedback {
@@ -1263,45 +1291,36 @@ textarea {
 
 @media (max-width: 560px) {
   .web-sheet.is-share-sheet {
+    height: 96dvh;
     max-height: 96dvh;
     padding-right: 18px;
     padding-left: 18px;
   }
 
-  .web-sheet.is-share-sheet .web-sheet-content {
-    max-height: calc(96dvh - 108px);
-  }
-
   .share-card-workspace {
-    grid-template-columns: 1fr;
-    gap: 18px;
     padding: 15px 0 0;
   }
 
   .share-card-preview {
     width: min(54vw, 228px);
-    justify-self: center;
     border-radius: 21px;
   }
 
-  .share-card-summary {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    align-items: end;
-    gap: 4px 10px;
-    margin-bottom: 2px;
+  .share-action-grid button {
+    min-height: 40px;
+    flex-direction: row;
+    gap: 5px;
+    padding: 7px 5px;
   }
 
-  .share-card-summary strong {
-    grid-column: 1;
-    grid-row: 1;
-    font-size: 20px;
+  .share-action-grid button svg {
+    width: 14px;
+    height: 14px;
   }
 
-  .share-card-summary span {
-    grid-column: 2;
-    grid-row: 1;
-    text-align: right;
+  .share-action-feedback {
+    min-height: 15px;
+    line-height: 1.35;
   }
 
 }

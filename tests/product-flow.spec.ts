@@ -150,6 +150,7 @@ test("opens the complete original-text poster and shares an exact chapter link",
   expect(naturalSize[1]).toBeGreaterThanOrEqual(2160);
   const originalLabel = await page.locator(".share-card-preview").getAttribute("aria-label");
   expect(originalLabel).toContain(chapter8.zh.reconstructedVerse.at(-1));
+  expect(originalLabel).toContain(chapter8.zh.pinyin.at(-1)?.join(" "));
   expect(originalLabel).toContain(chapter8.zh.lineByLineTranslation.at(-1));
 
   const shareLink = page.getByRole("button", { name: "分享链接" });
@@ -184,6 +185,7 @@ test("switches all four complete posters and keeps life-manual details anonymous
       const inspirationLabel = await page.locator(".share-card-preview").getAttribute("aria-label");
       expect(inspirationLabel).toContain(chapter8.zh.related.find((item) => item.title === "对我们的启发")!.body);
       expect(inspirationLabel).toContain(chapter8.zh.reconstructedVerse.at(-1));
+      expect(inspirationLabel).toContain(chapter8.zh.pinyin.at(-1)?.join(" "));
     }
   }
 
@@ -648,5 +650,20 @@ for (const width of [320, 390, 720]) {
     expect(overflow.document).toBeLessThanOrEqual(0);
     expect(overflow.left).toBe(0);
     expect(overflow.right).toBe(0);
+    if (width <= 560) {
+      const controls = page.locator(".share-card-controls");
+      const before = await controls.boundingBox();
+      expect(before).not.toBeNull();
+      await page.locator(".share-card-preview").evaluate((element) => {
+        element.scrollTop = element.scrollHeight;
+      });
+      const after = await controls.boundingBox();
+      expect(after?.y).toBeCloseTo(before!.y, 0);
+      expect(after?.height).toBeCloseTo(before!.height, 0);
+      for (const button of await page.locator(".share-action-grid button").all()) {
+        await expect(button).toHaveCSS("flex-direction", "row");
+        expect((await button.boundingBox())!.height).toBeLessThanOrEqual(40);
+      }
+    }
   });
 }

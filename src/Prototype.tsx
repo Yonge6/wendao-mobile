@@ -557,13 +557,14 @@ function copyVerseWithoutPinyin(event: ReactClipboardEvent<HTMLDivElement>) {
 type WebSheetProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  eyebrow?: string;
   title: string;
   description?: string;
   children: ReactNode;
   variant?: "default" | "share" | "directory";
 };
 
-function WebSheet({ open, onOpenChange, title, description, children, variant = "default" }: WebSheetProps) {
+function WebSheet({ open, onOpenChange, eyebrow, title, description, children, variant = "default" }: WebSheetProps) {
   const [viewportBounds, setViewportBounds] = useState(() => ({
     height: typeof window === "undefined" ? 0 : window.visualViewport?.height ?? window.innerHeight,
     top: typeof window === "undefined" ? 0 : window.visualViewport?.offsetTop ?? 0,
@@ -629,7 +630,10 @@ function WebSheet({ open, onOpenChange, title, description, children, variant = 
           ×
         </button>
         <span className="sheet-handle" aria-hidden="true" />
-        <h2 className="sheet-title" id="web-sheet-title">{title}</h2>
+        <div className={`sheet-title-row ${eyebrow ? "has-eyebrow" : ""}`}>
+          <h2 className="sheet-title" id="web-sheet-title">{title}</h2>
+          {eyebrow ? <p className="sheet-eyebrow">{eyebrow}</p> : null}
+        </div>
         {description ? <p className="sheet-description">{description}</p> : null}
         <div className="web-sheet-content">{children}</div>
       </section>
@@ -2268,6 +2272,7 @@ export default function Prototype() {
       <WebSheet
         open={shareOpen}
         onOpenChange={setShareOpen}
+        eyebrow={isZh ? `《道德经》今本第 ${shareChapter.id} 章` : `Daodejing · Received Chapter ${shareChapter.id}`}
         title={isZh ? "分享这一章" : "Share this chapter"}
         variant="share"
       >
