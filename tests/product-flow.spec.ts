@@ -664,9 +664,13 @@ for (const width of [320, 390, 720]) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto("/?chapter=64&lang=zh");
     await page.locator(".chapter-current .chapter-share-quick").click();
+    const previewImage = page.locator(".share-card-preview img");
+    await expect(previewImage).toBeVisible();
+    const originalImageSource = await previewImage.getAttribute("src");
     await page.getByRole("tab", { name: "解读" }).click();
-    await expect(page.locator(".share-card-preview img")).toBeVisible();
-    await expect.poll(() => page.locator(".share-card-preview img").evaluate((image: HTMLImageElement) => image.naturalHeight)).toBeGreaterThan(2340);
+    await expect(page.getByRole("button", { name: "分享链接" })).toHaveAttribute("data-share-link", /section=meaning/);
+    await expect.poll(() => previewImage.getAttribute("src")).not.toBe(originalImageSource);
+    await expect.poll(() => previewImage.evaluate((image: HTMLImageElement) => image.naturalHeight)).toBeGreaterThan(2340);
     const overflow = await page.evaluate(() => {
       const sheet = document.querySelector<HTMLElement>(".web-sheet.is-share-sheet")!;
       const bounds = sheet.getBoundingClientRect();
@@ -685,7 +689,7 @@ for (const width of [320, 390, 720]) {
     await expect(sheetContent).toHaveCSS("overflow-y", "hidden");
     await expect(scrollSurface).toHaveCSS("overflow-y", "auto");
     expect(await preview.evaluate((element) => element.scrollHeight - element.clientHeight)).toBeLessThanOrEqual(1);
-    expect(await scrollSurface.evaluate((element) => element.scrollHeight - element.clientHeight)).toBeGreaterThan(0);
+    await expect.poll(() => scrollSurface.evaluate((element) => element.scrollHeight - element.clientHeight)).toBeGreaterThan(0);
     if (width <= 560) {
       expect((await preview.boundingBox())!.width).toBeGreaterThanOrEqual(width * 0.7);
     }
