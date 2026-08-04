@@ -37,7 +37,7 @@ import {
   foundationalReading,
   type HumanDesignReadingChart,
 } from "./humanDesignReading";
-import { chapters, type ChapterCopyBase, type RelatedItem } from "./data/chapters";
+import { chapters, type Chapter, type ChapterCopyBase, type RelatedItem } from "./data/chapters";
 import ShareCardPanel from "./ShareCardPanel";
 import type { ShareCardKind } from "./shareCard";
 import { initializeNativeShell, nativeImpact, runtimeSurface, syncNativeTheme } from "./native";
@@ -320,32 +320,134 @@ function isLifeManualItem(item: RelatedItem) {
   return item.title === "你的人生说明书" || item.title === "Your life manual";
 }
 
-function personalizedAdvice(chapterId: number, chapter: ChapterCopyBase, chart: ChartSnapshot, language: Language) {
+const chapterTypeLens: Record<string, { zh: string; en: string }> = {
+  Generator: {
+    zh: "你有持续投入的生命力，但不必为了证明自己，先把能量交给一个尚未回应的方向",
+    en: "You have sustainable energy, but you do not need to spend it proving yourself to a direction your body has not answered",
+  },
+  "Manifesting Generator": {
+    zh: "你可以快速试探和调整路径，但速度不必替代身体的回应",
+    en: "You can test and adjust quickly, but speed does not need to replace your body's response",
+  },
+  Projector: {
+    zh: "你擅长看见方向与结构，真正的影响力来自被正确看见，而不是不断证明自己的洞察",
+    en: "You readily see direction and structure; your clearest influence comes through recognition, not constant proof of your insight",
+  },
+  Manifestor: {
+    zh: "你有发起和开路的力量，清楚自己的方向并让相关的人知情，会减少不必要的阻力",
+    en: "You have power to initiate and open paths; clarity about your direction and informing those affected can reduce needless resistance",
+  },
+  Reflector: {
+    zh: "你会敏锐映照环境与人群的状态，重要判断需要足够时间，才能分开环境的声音与自己的清楚",
+    en: "You sensitively reflect people and environments; important judgments need enough time to separate ambient pressure from your own clarity",
+  },
+};
+
+const chapterProfileLens: Record<string, { zh: string; en: string }> = {
+  "1/3": { zh: "先查清基础，再允许现实修正答案", en: "build a sound foundation, then let lived experience revise the answer" },
+  "1/4": { zh: "先形成可靠理解，再通过信任关系发挥影响", en: "form a dependable understanding, then let trust carry its influence" },
+  "2/4": { zh: "给自然才能留出独处空间，也让熟悉关系在合适时看见你", en: "protect solitude for natural talent and let trusted relationships recognize it at the right time" },
+  "2/5": { zh: "分清自己的自然能力与别人投射给你的解题期待", en: "separate your natural gifts from other people's expectation that you solve everything" },
+  "3/5": { zh: "让真实试验告诉你什么有效，同时谨慎承接别人对答案的期待", en: "let real experiments show what works while holding others' expectations for solutions carefully" },
+  "3/6": { zh: "允许经验逐步沉淀，不必把一次尝试过早变成最终结论", en: "let experience mature without turning one experiment into a final conclusion too soon" },
+  "4/6": { zh: "让长期示范与关系信任说话，不必用即时结果证明价值", en: "let long-term example and relational trust speak without proving your value through instant results" },
+  "4/1": { zh: "守住稳定的内在基础，并在真正信任的关系中发挥影响", en: "stay grounded in your stable foundation and influence through genuinely trusted relationships" },
+  "5/1": { zh: "先查清关键事实并界定承诺，再决定是否承担别人期待的解决者角色", en: "investigate the essential facts and define the commitment before accepting the projected role of problem-solver" },
+  "5/2": { zh: "辨认哪些期待真正看见了你的能力，哪些只是把难题投射给你", en: "discern which expectations truly recognize your gifts and which merely project a difficult problem onto you" },
+  "6/2": { zh: "给自然才能与人生经验充分的沉淀时间，让示范自然发生", en: "give natural talent and lived experience time to mature so example can emerge naturally" },
+  "6/3": { zh: "尊重亲身试验的节奏，让经验慢慢成为可以长久使用的智慧", en: "honor the pace of direct experimentation and let experience become durable wisdom" },
+};
+
+const chapterStrategyLens: Record<string, { zh: string; en: string }> = {
+  "To Respond": {
+    zh: "用“等待回应”让具体的人、事或选项先来到面前，再留意身体是自然靠近还是退开",
+    en: "Use “Wait to respond”: let a concrete person, event, or option arrive, then notice whether your body naturally moves toward it or away",
+  },
+  "Wait for the Invitation": {
+    zh: "用“等待邀请”确认你的洞察已被看见，也确认这份邀请的范围与关系是否适合你",
+    en: "Use “Wait for the invitation”: confirm that your insight is recognized and that the scope and relationship are right for you",
+  },
+  "To Inform": {
+    zh: "当方向已经清楚，用“告知后行动”让会受影响的人知道你的动向，减少无谓阻力",
+    en: "Once direction is clear, use “Inform before acting” to let those affected know your movement and reduce avoidable resistance",
+  },
+  "Wait a Lunar Cycle": {
+    zh: "用“等待月亮周期”让时间与不同环境呈现更多角度，不必在单一时刻定案",
+    en: "Use “Wait a lunar cycle,” allowing time and changing environments to reveal more angles before deciding",
+  },
+};
+
+const chapterAuthorityLens: Record<string, { zh: string; en: string }> = {
+  "Emotional - Solar Plexus": {
+    zh: "再让情绪权威走过高低波动，等到不再被一时情绪推着走时辨认较稳定的清楚",
+    en: "Then let Emotional authority move through its wave and recognize the steadier clarity that remains beyond a passing high or low",
+  },
+  Sacral: {
+    zh: "再让荐骨权威确认身体是否有持续的“愿意”，而不只听头脑给出的理由",
+    en: "Then let Sacral authority confirm whether the body has a sustained yes, rather than relying only on the mind's reasons",
+  },
+  Splenic: {
+    zh: "再留意脾脏权威在当下安静而短暂的直觉提醒，它通常不会反复高声证明自己",
+    en: "Then notice the quiet, momentary signal of Splenic authority in the present; it rarely repeats itself loudly",
+  },
+  "Ego - Manifested": {
+    zh: "再用意志力权威辨认自己是否真心愿意作出这个承诺，而不是为了证明价值而硬撑",
+    en: "Then let Ego authority ask whether you genuinely want to make this commitment, rather than forcing it to prove your worth",
+  },
+  "Ego - Projected": {
+    zh: "再用意志力权威辨认这份关系与承诺是否真正值得你的意志投入",
+    en: "Then let Ego authority discern whether this relationship and commitment truly deserve your will",
+  },
+  "Self-Projected": {
+    zh: "再让自我投射权威通过说出不同可能，听见哪一种表达更像真实的自己",
+    en: "Then let Self-projected authority speak the possibilities aloud and hear which one sounds most like your true direction",
+  },
+  "Mental - Environmental": {
+    zh: "再让环境权威在合适的空间与可信任的对话中听见自己的清楚，而不由别人替你决定",
+    en: "Then let Environmental authority hear its own clarity in the right place and trusted conversation, without letting others decide for you",
+  },
+  "Mental - Environment": {
+    zh: "再让环境权威在合适的空间与可信任的对话中听见自己的清楚，而不由别人替你决定",
+    en: "Then let Environmental authority hear its own clarity in the right place and trusted conversation, without letting others decide for you",
+  },
+  Lunar: {
+    zh: "再让月亮权威经过完整周期与多个环境，观察哪些认识始终稳定地回来",
+    en: "Then let Lunar authority move through a full cycle and several environments, noticing which understanding returns consistently",
+  },
+};
+
+function chapterInspiration(chapter: Chapter, language: Language) {
+  const expectedTitle = language === "zh" ? "对我们的启发" : "What this teaches us";
+  const item = chapter[language].related.find((candidate) => candidate.title === expectedTitle);
+  const body = item?.body ?? chapter[language].related[4]?.body ?? "";
+  const sentence = body.match(language === "zh" ? /^.*?[。！？]/ : /^.*?[.!?](?:\s|$)/)?.[0]?.trim();
+  return sentence || body;
+}
+
+function personalizedAdvice(chapter: Chapter, chart: ChartSnapshot, language: Language) {
+  const copy = chapter[language];
   const type = hdLabel(chart.core.type, language);
   const strategy = hdLabel(chart.core.strategy, language);
   const authority = hdLabel(chart.core.authority, language);
+  const profile = chart.core.profile;
+  const typeLens = chapterTypeLens[chart.core.type]?.[language];
+  const profileLens = chapterProfileLens[profile]?.[language];
+  const strategyLens = chapterStrategyLens[chart.core.strategy]?.[language];
+  const authorityLens = chapterAuthorityLens[chart.core.authority]?.[language];
+  const inspiration = chapterInspiration(chapter, language);
+
   if (language === "en") {
-    if (chapterId === 8) {
-      return `For you as a ${type}, “Be like water” begins with ${strategy}: let the situation arrive before spending your energy. Use ${authority} to sense which opening has a natural current. Flexibility here is not retreat; it is changing form without abandoning your direction.`;
-    }
-    if (chapterId === 9) {
-      return `Your ${type} energy is valuable precisely because it is not meant to prove itself without end. In this chapter, ${strategy} helps you notice when the essential work is complete, while ${authority} helps distinguish a true next step from pressure to add more. Define an “enough line,” then allow yourself to stop.`;
-    }
-    if (chapterId === 1) {
-      return `Labels such as ${type} and ${authority} can help you observe yourself, but they are not your final name. Practice ${strategy} as an experiment rather than an identity: describe what your body is showing now, and leave room for tomorrow to reveal something different.`;
-    }
-    return `For you as a ${type}, “${chapter.title}” becomes a distinct experiment: use ${strategy} to notice where this chapter's movement is already present, then let ${authority} clarify whether your next step belongs to its theme. Try the chapter's practice—“${chapter.action}”—and judge the insight by what actually changes, not by the label alone.`;
+    const typeSentence = typeLens || `Your ${type} design offers a particular way to meet this chapter`;
+    const profileSentence = profileLens || "notice how your life role shapes what others expect from you";
+    const strategySentence = strategyLens || `Use ${strategy} to meet what is actually present`;
+    const authoritySentence = authorityLens || `then let ${authority} clarify whether a direction is truly yours`;
+    return `For you as a ${type} with a ${profile} profile, “${copy.title}” offers this chapter-specific lens: ${inspiration} ${typeSentence}. ${strategySentence}. ${authoritySentence}. Your ${profile} profile is reminded to ${profileSentence}. This is a reflective Human Design lens on the chapter, not a decision made for you.`;
   }
-  if (chapterId === 8) {
-    return `对${type}的你来说，“如水”可以先从“${strategy}”开始：让局面来到面前，再把力量给真正有回应的方向。结合${authority}辨认哪一道缝隙有自然的流动。这里的柔软不是退让，而是改变形态，却不背离自己的方向。`;
-  }
-  if (chapterId === 9) {
-    return `${type}的生命力之所以珍贵，正因为它不必被用来无止境地证明自己。这一章里，“${strategy}”帮助你看见事情何时已经完成，${authority}则帮助你分辨：下一步来自真实需要，还是来自“还不够好”的压力。为一件事划出“足够线”，到达便停。`;
-  }
-  if (chapterId === 1) {
-    return `${type}、${authority}这些名字可以帮助你观察自己，却不是你的最终定义。把“${strategy}”当作一种生活实验，而不是新的身份标签：描述此刻身体正在呈现什么，也给明天的自己留下变化的空间。`;
-  }
-  return `对${type}的你，《${chapter.title}》是一项只属于本章主题的生活实验：先用“${strategy}”观察这股变化已经在哪里发生，再让${authority}澄清下一步是否真的与本章相应。试做“${chapter.action}”，用实际变化而不是身份标签检验它。`;
+  const typeSentence = typeLens || `你的${type}设计提供了一种理解本章的独特方式`;
+  const profileSentence = profileLens || "留意人生角色怎样影响别人对你的期待";
+  const strategySentence = strategyLens || `用“${strategy}”辨认现实中真正来到你面前的方向`;
+  const authoritySentence = authorityLens || `再让${authority}澄清它是否属于你`;
+  return `对${type}、${profile}人生角色的你来说，《${copy.title}》先照见的是：“${inspiration}”${typeSentence}。${strategySentence}；${authoritySentence}。你的${profile}人生角色尤其适合${profileSentence}。这是结合本章与人类图的观察镜，不替你做决定。`;
 }
 
 function questionResponse(question: string, chapter: ChapterCopyBase, chart: ChartSnapshot, language: Language) {
@@ -2092,7 +2194,7 @@ export default function Prototype() {
                         .map((item) => (
                         <div className="related-item" data-share-section={isLifeManualItem(item) ? "manual" : undefined} key={item.title}>
                           <h2>{item.title}</h2>
-                          <p>{isLifeManualItem(item) && chart ? personalizedAdvice(chapter.id, copy, chart, language) : item.body}</p>
+                          <p>{isLifeManualItem(item) && chart ? personalizedAdvice(chapter, chart, language) : item.body}</p>
                         </div>
                         ))}
                       <div className="practice-card">
@@ -2279,7 +2381,7 @@ export default function Prototype() {
         <ShareCardPanel
           chapter={shareChapter}
           language={language}
-          manualText={chart ? personalizedAdvice(shareChapter.id, shareCopy, chart, language) : undefined}
+          manualText={chart ? personalizedAdvice(shareChapter, chart, language) : undefined}
           profileReady={profileReady}
           initialKind={shareInitialKind}
         />

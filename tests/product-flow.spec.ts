@@ -521,6 +521,33 @@ test("shared inspiration is bilingual and remains visible without a life-manual 
   await expect(chapter.getByRole("heading", { name: "Your life manual", exact: true })).toHaveCount(0);
 });
 
+test("keeps verified chapter life-manual guidance personal and separate from today's practice", async ({ page }) => {
+  await page.addInitScript((storedChart) => {
+    window.localStorage.setItem("wendao-chart-snapshot", JSON.stringify(storedChart));
+  }, chartSnapshot);
+  await page.goto("/?chapter=21&lang=zh");
+
+  const chapter = page.locator('.chapter-current[data-chapter-id="21"]');
+  const manual = chapter.locator('[data-share-section="manual"]');
+  const practice = chapter.locator(".practice-card");
+  await expect(manual).toContainText("生产者、5/1人生角色");
+  await expect(manual).toContainText("方向比一时的技巧更重要");
+  await expect(manual).toContainText("等待回应");
+  await expect(manual).toContainText("荐骨权威");
+  await expect(manual).toContainText("身体是否有持续的“愿意”");
+  await expect(manual).not.toContainText("三次慢呼吸");
+  await expect(manual).not.toContainText("写下一个");
+  await expect(practice).toContainText("三次慢呼吸");
+
+  await page.getByRole("button", { name: "切换到英文", exact: true }).click();
+  await expect(manual).toContainText("Generator with a 5/1 profile");
+  await expect(manual).toContainText("Direction matters more than a momentary technique");
+  await expect(manual).toContainText("Wait to respond");
+  await expect(manual).toContainText("Sacral authority");
+  await expect(manual).not.toContainText("three slow breaths");
+  await expect(practice).toContainText("three slow breaths");
+});
+
 test("sets an honest expectation for future AI personalization", async ({ page }) => {
   await page.addInitScript((storedChart) => {
     window.localStorage.setItem("wendao-chart-snapshot", JSON.stringify(storedChart));
