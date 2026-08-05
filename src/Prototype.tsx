@@ -873,12 +873,10 @@ function SideDrawer({
 
   const contacts = [
     { label: isZh ? "邮箱" : "Email", value: "hustyy986@gmail.com", href: "mailto:hustyy986@gmail.com" },
-    { label: isZh ? "微博" : "Weibo", value: "@1228222295", href: "https://weibo.com/u/1228222295" },
     { label: isZh ? "小红书" : "RED", value: isZh ? "打开主页" : "Open profile", href: "https://xhslink.cn/m/3OF5qu7Peui" },
     { label: isZh ? "抖音" : "Douyin", value: isZh ? "打开主页" : "Open profile", href: "https://v.douyin.com/d9L1thkye0Y/" },
     { label: "X", value: "@yongyuan1", href: "https://x.com/yongyuan1?s=11" },
     { label: "TikTok", value: "@wonderelian", href: "https://www.tiktok.com/@wonderelian?_r=1&_t=ZP-98Tvaldfrpe" },
-    { label: "Facebook", value: isZh ? "打开主页" : "Open profile", href: "https://www.facebook.com/share/1Gga69WThA/?mibextid=wwXIfr" },
   ];
 
   return (
@@ -1137,10 +1135,6 @@ function SideDrawer({
               )}
               {chart ? (
                 <section className="profile-result" aria-label={isZh ? "人类图解读结果" : "Human Design result"}>
-                  <div className="profile-result-heading">
-                    <span>{isZh ? "计算结果" : "Your result"}</span>
-                    <small>{isZh ? "不出图，只呈现与你有关的信息" : "Insight without the diagram"}</small>
-                  </div>
                   <dl className="profile-facts">
                     <div><dt>{isZh ? "类型" : "Type"}</dt><dd>{hdLabel(chart.core.type, language)}</dd></div>
                     <div><dt>{isZh ? "策略" : "Strategy"}</dt><dd>{hdLabel(chart.core.strategy, language)}</dd></div>

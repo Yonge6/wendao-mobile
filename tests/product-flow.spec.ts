@@ -60,7 +60,8 @@ test("shows the calculated life manual even when background profile persistence 
   await page.getByLabel("出生地点").fill("武汉市");
   await page.getByRole("button", { name: "生成我的人生说明书" }).click();
 
-  await expect(page.getByText("计算结果", { exact: true })).toBeVisible();
+  await expect(page.getByText("计算结果", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("不出图，只呈现与你有关的信息", { exact: true })).toHaveCount(0);
   await expect(page.getByText("生产者", { exact: true })).toBeVisible();
   await expect(page.getByText("荐骨权威", { exact: true })).toBeVisible();
   await expect(page.getByText("正在识别并计算…", { exact: true })).toHaveCount(0);
@@ -371,6 +372,8 @@ test("About separates the textual lineage from claims of direct descent", async 
   await page.goto("/");
   await page.getByRole("button", { name: "打开更多功能" }).click();
   await page.getByRole("button", { name: "关于三慢问道" }).click();
+  await expect(page.getByRole("link", { name: /^微博/ })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: /^Facebook/ })).toHaveCount(0);
   const lineage = page.getByRole("region", { name: "道德经文本谱系" });
   await expect(lineage).toBeVisible();
   await expect(lineage.locator("li")).toHaveCount(5);
@@ -380,6 +383,8 @@ test("About separates the textual lineage from claims of direct descent", async 
   await page.getByRole("button", { name: "切换到英文", exact: true }).click();
   await page.getByRole("button", { name: "Open more", exact: true }).click();
   await page.getByRole("button", { name: "About Wendao" }).click();
+  await expect(page.getByRole("link", { name: /^Weibo/ })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: /^Facebook/ })).toHaveCount(0);
   const englishLineage = page.getByRole("region", { name: "Textual lineage of the Daodejing" });
   await expect(englishLineage.getByText("Wang Bi edition", { exact: true })).toBeVisible();
   await expect(englishLineage.getByText(/not a single direct line of transmission/)).toBeVisible();

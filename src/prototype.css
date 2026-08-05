@@ -2348,30 +2348,11 @@ textarea {
     var(--field-surface);
 }
 
-.profile-result-heading {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-  color: var(--gold);
-  font-family: var(--sans);
-}
-
-.profile-result-heading span {
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.1em;
-}
-
-.profile-result-heading small {
-  font-size: 9px;
-}
-
 .profile-facts {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1px;
-  margin: 17px 0;
+  margin: 0 0 17px;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--gold) 17%, transparent);
   border-radius: 12px;
