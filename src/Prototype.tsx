@@ -984,6 +984,29 @@ function SideDrawer({
                   </span>
                   <ChevronRightIcon />
                 </button>
+                <section className="contact-section contact-section-home" aria-labelledby="drawer-contact-title">
+                  <span className="drawer-kicker" id="drawer-contact-title">{isZh ? "联系我们" : "Contact"}</span>
+                  <div className="contact-list">
+                    {contacts.map((contact) => (
+                      <a
+                        key={contact.label}
+                        href={contact.href}
+                        target={contact.href.startsWith("mailto:") ? undefined : "_blank"}
+                        rel={contact.href.startsWith("mailto:") ? undefined : "noreferrer"}
+                        onClick={() => onContactClick(contact.label)}
+                      >
+                        <span>{contact.label}</span>
+                        <strong>{contact.value}</strong>
+                        <ArrowRightIcon />
+                      </a>
+                    ))}
+                    <button type="button" onClick={onVideoChannelOpen}>
+                      <span>{isZh ? "视频号" : "WeChat Channels"}</span>
+                      <strong>{isZh ? "查看二维码" : "View QR code"}</strong>
+                      <ArrowRightIcon />
+                    </button>
+                  </div>
+                </section>
                 <button type="button" onClick={() => onViewChange("feedback")}>
                   <span className="drawer-nav-icon"><ChatBubbleIcon /></span>
                   <span>
@@ -1294,29 +1317,6 @@ function SideDrawer({
                     : "We hope to accompany one another through valleys and peaks, exploring healthier ways to work and live: facing self and world truthfully, treating life with kindness, and creating and appreciating beauty."}
                 </p>
               </section>
-              <div className="contact-section">
-                <span className="drawer-kicker">{isZh ? "联系我们" : "Contact"}</span>
-                <div className="contact-list">
-                  {contacts.map((contact) => (
-                    <a
-                      key={contact.label}
-                      href={contact.href}
-                      target={contact.href.startsWith("mailto:") ? undefined : "_blank"}
-                      rel={contact.href.startsWith("mailto:") ? undefined : "noreferrer"}
-                      onClick={() => onContactClick(contact.label)}
-                    >
-                      <span>{contact.label}</span>
-                      <strong>{contact.value}</strong>
-                      <ArrowRightIcon />
-                    </a>
-                  ))}
-                  <button type="button" onClick={onVideoChannelOpen}>
-                    <span>{isZh ? "视频号" : "WeChat Channels"}</span>
-                    <strong>{isZh ? "查看二维码" : "View QR code"}</strong>
-                    <ArrowRightIcon />
-                  </button>
-                </div>
-              </div>
             </section>
           ) : null}
 

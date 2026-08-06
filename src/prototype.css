@@ -2600,7 +2600,7 @@ textarea {
 }
 
 .contact-section {
-  margin-top: 34px;
+  margin: 22px 3px 18px;
 }
 
 .contact-list {
@@ -2633,6 +2633,7 @@ textarea {
 
 .contact-list strong {
   overflow: hidden;
+  font-family: var(--sans);
   font-size: 12px;
   font-weight: 400;
   text-overflow: ellipsis;
