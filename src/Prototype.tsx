@@ -18,6 +18,7 @@ import {
   ChatBubbleIcon,
   CheckIcon,
   ChevronRightIcon,
+  EnvelopeClosedIcon,
   GlobeIcon,
   HamburgerMenuIcon,
   InfoCircledIcon,
@@ -45,7 +46,7 @@ import { initializeNativeShell, nativeImpact, runtimeSurface, syncNativeTheme } 
 type Language = "zh" | "en";
 type Theme = "light" | "dark";
 type ReadingSize = "small" | "medium" | "large";
-type DrawerView = "home" | "profile" | "profile-detail" | "about" | "feedback";
+type DrawerView = "home" | "profile" | "profile-detail" | "about" | "contact" | "feedback";
 type ChapterEntrySource = "daily" | "directory" | "chance" | "link";
 
 type LifeProfile = {
@@ -839,6 +840,8 @@ function SideDrawer({
         ? (isZh ? "详细解读" : "Detailed reading")
       : view === "about"
         ? (isZh ? "关于三慢问道" : "About Wendao")
+        : view === "contact"
+          ? (isZh ? "联系我们" : "Contact")
         : (isZh ? "留下回响" : "Leave a note");
 
   const works = [
@@ -984,29 +987,14 @@ function SideDrawer({
                   </span>
                   <ChevronRightIcon />
                 </button>
-                <section className="contact-section contact-section-home" aria-labelledby="drawer-contact-title">
-                  <span className="drawer-kicker" id="drawer-contact-title">{isZh ? "联系我们" : "Contact"}</span>
-                  <div className="contact-list">
-                    {contacts.map((contact) => (
-                      <a
-                        key={contact.label}
-                        href={contact.href}
-                        target={contact.href.startsWith("mailto:") ? undefined : "_blank"}
-                        rel={contact.href.startsWith("mailto:") ? undefined : "noreferrer"}
-                        onClick={() => onContactClick(contact.label)}
-                      >
-                        <span>{contact.label}</span>
-                        <strong>{contact.value}</strong>
-                        <ArrowRightIcon />
-                      </a>
-                    ))}
-                    <button type="button" onClick={onVideoChannelOpen}>
-                      <span>{isZh ? "视频号" : "WeChat Channels"}</span>
-                      <strong>{isZh ? "查看二维码" : "View QR code"}</strong>
-                      <ArrowRightIcon />
-                    </button>
-                  </div>
-                </section>
+                <button type="button" onClick={() => onViewChange("contact")}>
+                  <span className="drawer-nav-icon"><EnvelopeClosedIcon /></span>
+                  <span>
+                    <strong>{isZh ? "联系我们" : "Contact"}</strong>
+                    <small>{isZh ? "邮箱与社交媒体" : "Email and social channels"}</small>
+                  </span>
+                  <ChevronRightIcon />
+                </button>
                 <button type="button" onClick={() => onViewChange("feedback")}>
                   <span className="drawer-nav-icon"><ChatBubbleIcon /></span>
                   <span>
@@ -1016,6 +1004,26 @@ function SideDrawer({
                   <ChevronRightIcon />
                 </button>
               </nav>
+
+              {showSupport ? (
+                <section className="drawer-support" aria-labelledby="drawer-support-title">
+                  <span className="drawer-kicker">{isZh ? "有余相助" : "If you have something to spare"}</span>
+                  <h3 id="drawer-support-title">{isZh ? "随喜相助" : "Support the journey"}</h3>
+                  <p>
+                    {isZh
+                      ? "若这段慢读于你有用，可以让一份心意继续流动；也可以把它留给自己，照顾此刻真正需要的生活。"
+                      : "If this slow reading has helped, you may let a little support keep it flowing—or keep that care for what your own life needs now."}
+                  </p>
+                  <button type="button" className="drawer-support-button" onClick={onSupportOpen}>
+                    <span className="drawer-support-mark" aria-hidden="true">水</span>
+                    <span>
+                      <strong>{isZh ? "随喜相助" : "Offer support"}</strong>
+                      <small>{isZh ? "有余则助，无余亦安" : "Give freely, or simply read in peace"}</small>
+                    </span>
+                    <ChevronRightIcon />
+                  </button>
+                </section>
+              ) : null}
 
               <section className="drawer-works" aria-labelledby="drawer-works-title">
                 <header className="drawer-works-header">
@@ -1048,25 +1056,6 @@ function SideDrawer({
                 </div>
               </section>
 
-              {showSupport ? (
-                <section className="drawer-support" aria-labelledby="drawer-support-title">
-                  <span className="drawer-kicker">{isZh ? "有余相助" : "If you have something to spare"}</span>
-                  <h3 id="drawer-support-title">{isZh ? "随喜相助" : "Support the journey"}</h3>
-                  <p>
-                    {isZh
-                      ? "若这段慢读于你有用，可以让一份心意继续流动；也可以把它留给自己，照顾此刻真正需要的生活。"
-                      : "If this slow reading has helped, you may let a little support keep it flowing—or keep that care for what your own life needs now."}
-                  </p>
-                  <button type="button" className="drawer-support-button" onClick={onSupportOpen}>
-                    <span className="drawer-support-mark" aria-hidden="true">水</span>
-                    <span>
-                      <strong>{isZh ? "随喜相助" : "Offer support"}</strong>
-                      <small>{isZh ? "有余则助，无余亦安" : "Give freely, or simply read in peace"}</small>
-                    </span>
-                    <ChevronRightIcon />
-                  </button>
-                </section>
-              ) : null}
             </>
           ) : null}
 
@@ -1317,6 +1306,31 @@ function SideDrawer({
                     : "We hope to accompany one another through valleys and peaks, exploring healthier ways to work and live: facing self and world truthfully, treating life with kindness, and creating and appreciating beauty."}
                 </p>
               </section>
+            </section>
+          ) : null}
+
+          {view === "contact" ? (
+            <section className="contact-section" aria-label={isZh ? "联系方式" : "Contact methods"}>
+              <div className="contact-list">
+                {contacts.map((contact) => (
+                  <a
+                    key={contact.label}
+                    href={contact.href}
+                    target={contact.href.startsWith("mailto:") ? undefined : "_blank"}
+                    rel={contact.href.startsWith("mailto:") ? undefined : "noreferrer"}
+                    onClick={() => onContactClick(contact.label)}
+                  >
+                    <span>{contact.label}</span>
+                    <strong>{contact.value}</strong>
+                    <ArrowRightIcon />
+                  </a>
+                ))}
+                <button type="button" onClick={onVideoChannelOpen}>
+                  <span>{isZh ? "视频号" : "WeChat Channels"}</span>
+                  <strong>{isZh ? "查看二维码" : "View QR code"}</strong>
+                  <ArrowRightIcon />
+                </button>
+              </div>
             </section>
           ) : null}
 

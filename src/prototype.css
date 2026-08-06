@@ -2600,11 +2600,10 @@ textarea {
 }
 
 .contact-section {
-  margin: 22px 3px 18px;
+  margin: 0;
 }
 
 .contact-list {
-  margin-top: 12px;
   border-top: 1px solid color-mix(in srgb, var(--gold) 18%, transparent);
 }
 

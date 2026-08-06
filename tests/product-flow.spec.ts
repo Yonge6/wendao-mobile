@@ -275,43 +275,58 @@ test("drawer presents three bilingual related works with safe external links", a
   await expect(page.getByRole("region", { name: "Works along the way" })).toContainText("Learn to see a style");
 });
 
-test("keeps contact details directly below About on the drawer home", async ({ page }) => {
+test("opens contact details from a dedicated drawer entry below About", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "打开更多功能" }).click();
 
   const drawer = page.getByRole("dialog", { name: "你的空间" });
-  const contact = drawer.getByRole("region", { name: "联系我们" });
+  const contactEntry = drawer.getByRole("button", { name: /联系我们/ });
+  await expect(contactEntry).toBeVisible();
+  await expect(drawer.locator(".contact-list")).toHaveCount(0);
+  expect(await drawer.evaluate((element) => {
+    const about = [...element.querySelectorAll("button")].find((button) => button.textContent?.includes("关于三慢问道"));
+    const contact = [...element.querySelectorAll("button")].find((button) => button.textContent?.includes("联系我们"));
+    return about?.nextElementSibling === contact;
+  })).toBe(true);
+
+  await contactEntry.click();
+  const contactDrawer = page.getByRole("dialog", { name: "联系我们" });
+  const contact = contactDrawer.getByRole("region", { name: "联系方式" });
   await expect(contact).toBeVisible();
   await expect(contact.getByRole("link")).toHaveCount(5);
   await expect(contact.getByRole("link", { name: /邮箱/ })).toHaveAttribute("href", "mailto:hustyy986@gmail.com");
   await expect(contact.getByRole("link", { name: /^微博/ })).toHaveCount(0);
   await expect(contact.getByRole("link", { name: /^Facebook/ })).toHaveCount(0);
-  expect(await drawer.evaluate((element) => {
-    const about = [...element.querySelectorAll("button")].find((button) => button.textContent?.includes("关于三慢问道"));
-    const contactSection = element.querySelector(".contact-section-home");
-    return about?.nextElementSibling === contactSection;
-  })).toBe(true);
-
   await contact.getByRole("button", { name: "视频号 查看二维码" }).click();
   const qrDialog = page.getByRole("dialog", { name: "视频号二维码" });
   await expect(qrDialog.getByRole("img", { name: "三慢问道视频号二维码" })).toBeVisible();
   await qrDialog.locator("figure").getByRole("button", { name: "关闭" }).click();
 
-  await drawer.getByRole("button", { name: /关于三慢问道/ }).click();
-  await expect(page.getByRole("dialog", { name: "关于三慢问道" }).getByRole("region", { name: "联系我们" })).toHaveCount(0);
+  await contactDrawer.getByRole("button", { name: "返回" }).click();
+  await expect(page.getByRole("dialog", { name: "你的空间" }).locator(".contact-list")).toHaveCount(0);
+  await page.getByRole("dialog", { name: "你的空间" }).getByRole("button", { name: /关于三慢问道/ }).click();
+  await expect(page.getByRole("dialog", { name: "关于三慢问道" }).getByRole("region", { name: "联系方式" })).toHaveCount(0);
 
   await page.getByRole("button", { name: "关闭菜单", exact: true }).last().click();
   await page.getByRole("button", { name: "切换到英文", exact: true }).click();
   await page.getByRole("button", { name: "Open more", exact: true }).click();
-  await expect(page.getByRole("dialog", { name: "Your space" }).getByRole("region", { name: "Contact" })).toBeVisible();
+  const englishDrawer = page.getByRole("dialog", { name: "Your space" });
+  await expect(englishDrawer.locator(".contact-list")).toHaveCount(0);
+  await englishDrawer.getByRole("button", { name: /Contact/ }).click();
+  await expect(page.getByRole("dialog", { name: "Contact" }).getByRole("region", { name: "Contact methods" })).toBeVisible();
 });
 
-test("opens a pressure-free bilingual support modal from the bottom of the drawer", async ({ page }) => {
+test("opens a pressure-free bilingual support modal before the related works", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "打开更多功能" }).click();
   const supportSection = page.getByRole("region", { name: "随喜相助" });
   await expect(supportSection).toBeVisible();
   await expect(supportSection).toContainText("有余则助，无余亦安");
+  expect(await page.getByRole("dialog", { name: "你的空间" }).evaluate((element) => {
+    const support = element.querySelector(".drawer-support");
+    const works = element.querySelector(".drawer-works");
+    return support?.nextElementSibling === works;
+  })).toBe(true);
   await supportSection.getByRole("button", { name: /随喜相助/ }).click();
 
   const supportDialog = page.getByRole("dialog", { name: "随喜相助" });
