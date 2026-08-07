@@ -151,8 +151,9 @@ export function buildShareCardContent(
 }
 
 function wrapLine(context: CanvasRenderingContext2D, text: string, maxWidth: number) {
+  const hasCjk = /[\u3400-\u9fff\uf900-\ufaff]/.test(text);
   const isSpaced = /\s/.test(text);
-  const tokens = isSpaced ? text.split(/(\s+)/).filter(Boolean) : Array.from(text);
+  const tokens = hasCjk || !isSpaced ? Array.from(text) : text.split(/(\s+)/).filter(Boolean);
   const lines: string[] = [];
   let current = "";
   for (const token of tokens) {

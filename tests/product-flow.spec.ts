@@ -203,6 +203,17 @@ test("switches all four complete posters and keeps life-manual details anonymous
   expect(manualCardLabel).not.toContain("武汉市");
 });
 
+test("wraps numbered Chinese insights instead of clipping each point to one line", async ({ page }) => {
+  await page.goto("/?chapter=64&lang=zh");
+  const relatedSection = page.locator('.chapter-current [data-share-section="inspiration"]');
+  await relatedSection.getByRole("button", { name: "分享这一层", exact: true }).click();
+
+  const preview = page.getByRole("img", { name: "启发分享卡预览", exact: true });
+  await expect(preview).toBeVisible();
+  const naturalHeight = await preview.evaluate((image: HTMLImageElement) => image.naturalHeight);
+  expect(naturalHeight).toBeGreaterThan(3000);
+});
+
 test("keeps text selection for copying without creating a share-selection mode", async ({ page }) => {
   await page.goto("/?chapter=8&lang=zh");
   const inspiration = page.locator('.chapter-current .related-item').filter({ hasText: "对我们的启发" }).locator(".related-insight-list");
