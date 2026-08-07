@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFile } from "node:fs/promises";
-import { chapterInspirations, inspirationFor } from "../scripts/chapter-inspirations.mjs";
+import { chapterInspirations, chapterThemeFor, insightsFor, inspirationFor } from "../scripts/chapter-inspirations.mjs";
 
 const chapters = JSON.parse(await readFile(new URL("../src/data/chapters.json", import.meta.url), "utf8"));
 
@@ -17,26 +17,29 @@ test("provides distinct bilingual inspiration for all 81 chapters", () => {
   }
 });
 
-test("places shared inspiration after four life lenses and before life manual", () => {
-  const expectedZhLenses = ["焦虑｜", "关系｜", "选择｜", "行动｜"];
-  const expectedEnLenses = ["Anxiety ·", "Relationships ·", "Choice ·", "Action ·"];
+test("uses a chapter theme and at least three insights before life manual", () => {
   assert.equal(chapters.length, 81);
   for (const chapter of chapters) {
-    assert.equal(chapter.zh.related.length, 6, `Chapter ${chapter.id} zh related count`);
-    assert.equal(chapter.en.related.length, 6, `Chapter ${chapter.id} en related count`);
-    expectedZhLenses.forEach((prefix, index) => assert.ok(chapter.zh.related[index].title.startsWith(prefix)));
-    expectedEnLenses.forEach((prefix, index) => assert.ok(chapter.en.related[index].title.startsWith(prefix)));
-    assert.equal(chapter.zh.related[4].title, "对我们的启发");
-    assert.equal(chapter.en.related[4].title, "What this teaches us");
-    assert.equal(chapter.zh.related[5].title, "你的人生说明书");
-    assert.equal(chapter.en.related[5].title, "Your life manual");
-    assert.equal(chapter.zh.related[4].body, inspirationFor(chapter.id).zh);
-    assert.equal(chapter.en.related[4].body, inspirationFor(chapter.id).en);
+    assert.equal(chapter.zh.explanation[1].title, "本章主旨");
+    assert.equal(chapter.en.explanation[1].title, "Chapter theme");
+    assert.deepEqual(chapter.zh.explanation[1].body, chapterThemeFor(chapter.id).zh);
+    assert.deepEqual(chapter.en.explanation[1].body, chapterThemeFor(chapter.id).en);
+    assert.equal(chapter.zh.related.length, 2, `Chapter ${chapter.id} zh related count`);
+    assert.equal(chapter.en.related.length, 2, `Chapter ${chapter.id} en related count`);
+    assert.equal(chapter.zh.related[0].title, "对我们的启发");
+    assert.equal(chapter.en.related[0].title, "What this teaches us");
+    assert.equal(chapter.zh.related[1].title, "你的人生说明书");
+    assert.equal(chapter.en.related[1].title, "Your life manual");
+    const expected = insightsFor(chapter.id, chapter.theme.zh, chapter.theme.en);
+    assert.deepEqual(chapter.zh.related[0].points, expected.zh);
+    assert.deepEqual(chapter.en.related[0].points, expected.en);
+    assert.equal(chapter.zh.related[0].points.length, 3);
+    assert.equal(chapter.en.related[0].points.length, 3);
   }
 });
 
 test("chapter 8 carries the reference image's six practical directions in original wording", () => {
-  const body = inspirationFor(8).zh;
+  const body = chapterThemeFor(8).zh;
   for (const keyword of ["向下", "柔弱", "利他", "适应", "不争", "时机"]) {
     assert.ok(body.includes(keyword), `Chapter 8 inspiration must include ${keyword}`);
   }

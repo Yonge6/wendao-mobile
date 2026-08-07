@@ -80,6 +80,12 @@ function inspirationItem(chapter: Chapter, language: ShareLanguage) {
   return copy.related.find((item) => item.title === expected) ?? copy.related[copy.related.length - 1];
 }
 
+function relatedItemText(item: ReturnType<typeof inspirationItem>) {
+  return item.points?.length
+    ? item.points.map((point, index) => `${String(index + 1).padStart(2, "0")}  ${point}`).join("\n")
+    : item.body;
+}
+
 export function buildShareCardContent(
   chapter: Chapter,
   language: ShareLanguage,
@@ -108,7 +114,7 @@ export function buildShareCardContent(
     if (language === "zh") secondaryPinyin = pinyinVerse(chapter);
   } else if (kind === "inspiration") {
     const item = inspirationItem(chapter, language);
-    primary = item.body;
+    primary = relatedItemText(item);
     secondaryLabel = language === "zh" ? "原文" : "Original text";
     secondary = fullVerse(chapter, language);
     if (language === "zh") secondaryPinyin = pinyinVerse(chapter);
@@ -118,7 +124,7 @@ export function buildShareCardContent(
       : "Complete your life manual to create a personal reading rooted in this chapter.");
     const item = inspirationItem(chapter, language);
     secondaryLabel = language === "zh" ? "对我们的启发" : "What this teaches us";
-    secondary = item.body;
+    secondary = relatedItemText(item);
   }
 
   const brand = language === "zh" ? "三慢问道" : "Wendao";

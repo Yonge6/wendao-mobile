@@ -3,7 +3,7 @@ import { markReconstructionSupplies, reconstructedTokens, requiredSupplyDetails 
 import { literalTranslationFor } from "./chapter-literal-translations.mjs";
 import { pinyinLinesForChapter } from "./chapter-pinyin.mjs";
 import { AUTO_FIX_NOTE } from "./silk-auto-proofread-core.mjs";
-import { inspirationFor } from "./chapter-inspirations.mjs";
+import { chapterThemeFor, insightsFor } from "./chapter-inspirations.mjs";
 
 const ACCESS_DATE = "2026-08-01";
 const TAOLIB_URL = "https://raw.githubusercontent.com/xinetzone/tao/main/docs/general/philosophy/laozi-boshu/appendix/phonetic.md";
@@ -225,7 +225,8 @@ function chapterCopy(id, silkOrder, reading, literal, received, english) {
     throw new Error(`Chapter ${id}: ${lineByLineTranslation.length} translations for ${reconstructedVerse.length} reconstructed lines`);
   }
   const [topicZh, topicEn] = topics[id - 1];
-  const inspiration = inspirationFor(id);
+  const chapterTheme = chapterThemeFor(id);
+  const insights = insightsFor(id, topicZh, topicEn);
   const anchor = correctedReading[0].replace(/[。！？；]/g, "").slice(0, 12);
   // Chapter 16's visible-witness correction must not rewrite the already
   // published modern interpretation or life-practice copy in this audit.
@@ -266,15 +267,11 @@ function chapterCopy(id, silkOrder, reading, literal, received, english) {
       variant: `版本参照：以马王堆帛书乙本为底本，残缺处参考甲本及传世本校补。这是整理后的校读版本，不是影印转写。${uncertaintyZh} 传世参照的主要逐位差异（校勘索引，需结合王弼注本人工复核）：${collation}。`,
       explanation: [
         { title: "直译｜逐句读懂这一章", body: "以下今译逐句对应上方校读正文；〔〕中的校补字也参与翻译，但不因此变成帛书乙本原字。" },
-        { title: "思想｜让力量回到结构里", body: `“${topicZh}”不是消极退让，而是辨认什么正在自然生成，什么只是由恐惧、虚荣或控制推动。老子把注意力从“我要证明”移向“事情如何长久”。` },
+        { title: "本章主旨", body: chapterTheme.zh },
         { title: "校读｜原字、缺损与参照分层", body: `${uncertaintyZh} 上方已公开完整乙本字符段，“□”保留缺损；主文的可读字、拼音与断句属校读层。传世差异仅作参照，不倒灌成“帛书原文”。` },
       ],
       related: [
-        { title: "焦虑｜不急着把不确定填满", body: `当焦虑催你立刻得出结论，用“${topicZh}”检查：此刻真正已知的是什么，哪一部分还需要时间。` },
-        { title: "关系｜把人与当下的行为分开", body: `别用一次反应定义整个人。围绕“${topicZh}”只谈可观察的事实、需要和边界，让关系仍有变化的空间。` },
-        { title: "选择｜辨认哪个选项更少违背自己", body: `不只比较哪个选项更快、更光鲜，也比较它们是否与“${topicZh}”相容，是否需要你长期扮演一个不是自己的人。` },
-        { title: "行动｜先做最小可逆的一步", body: `把“${topicZh}”变成一个可观察的小实验：不急着一次到位，先做一步，再用实际反馈决定下一步。` },
-        { title: "对我们的启发", body: inspiration.zh },
+        { title: "对我们的启发", body: insights.zh.join("\n"), points: insights.zh },
         { title: "你的人生说明书", body: `这一章的个人化镜头是“${topicZh}”。验证后的人类图会把你的类型、策略、权威与侧写带入这一主题，用来拓宽选择，不替你做决定。` },
       ],
       action: `今天用三次慢呼吸读一遍“${modernCopyAnchor}”，然后写下一个与“${topicZh}”有关的最小行动。`,
@@ -286,15 +283,11 @@ function chapterCopy(id, silkOrder, reading, literal, received, english) {
       variant: `Received-text reference: this is a Silk B Based Reconstruction, not a facsimile transcription. ${uncertaintyEn} Received-text alignment differences: ${collation}. The English scripture uses James Legge's public-domain received-text translation as a transparent comparison, so it must not be treated as a literal translation of every damaged Silk B graph.`,
       explanation: [
         { title: "Plain reading · Read the movement of the whole chapter", body: `Beginning from “${modernCopyAnchor},” this chapter explores ${topicEn}. It does not demand a rigid answer; it asks how conditions, opposites, limits, and timing change what wise action looks like.` },
-        { title: "Thought · Return force to the larger pattern", body: `${topicEn} is not passive withdrawal. It distinguishes what is growing of itself from what is being driven by fear, display, or control, shifting attention from proving the self to helping life endure.` },
+        { title: "Chapter theme", body: chapterTheme.en },
         { title: "Collation · Keep witness, supply, and comparison separate", body: `${uncertaintyEn} The full literal segment and its lacuna marks are disclosed above. Readable characters, punctuation, and pronunciation belong to the edited reading layer; received editions remain comparisons only.` },
       ],
       related: [
-        { title: "Anxiety · Do not fill uncertainty too quickly", body: `When anxiety demands an immediate conclusion, use ${topicEn} as a check: name what is actually known and what still needs time.` },
-        { title: "Relationships · Separate a person from one response", body: `Speak about observable facts, needs, and boundaries through the lens of ${topicEn}. Leave room for the relationship and the people in it to change.` },
-        { title: "Choice · Notice which option asks for less self-betrayal", body: `Compare more than speed or prestige. Ask which option can live with ${topicEn}, and which would require you to perform a false self for a long time.` },
-        { title: "Action · Take the smallest reversible step", body: `Turn ${topicEn} into a small experiment. Take one reversible step, observe the real response, and let that evidence shape the next move.` },
-        { title: "What this teaches us", body: inspiration.en },
+        { title: "What this teaches us", body: insights.en.join("\n"), points: insights.en },
         { title: "Your life manual", body: `The personalized lens for this chapter is ${topicEn}. After chart verification, your type, strategy, authority, and profile are brought into this distinct theme to widen choices, never to issue a verdict.` },
       ],
       action: `Read the opening “${modernCopyAnchor}” with three slow breaths, then write one low-effort action related to ${topicEn}.`,

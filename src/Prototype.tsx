@@ -418,9 +418,7 @@ const chapterAuthorityLens: Record<string, { zh: string; en: string }> = {
 };
 
 function chapterInspiration(chapter: Chapter, language: Language) {
-  const expectedTitle = language === "zh" ? "对我们的启发" : "What this teaches us";
-  const item = chapter[language].related.find((candidate) => candidate.title === expectedTitle);
-  const body = item?.body ?? chapter[language].related[4]?.body ?? "";
+  const body = chapter[language].explanation[1]?.body ?? "";
   const sentence = body.match(language === "zh" ? /^.*?[。！？]/ : /^.*?[.!?](?:\s|$)/)?.[0]?.trim();
   return sentence || body;
 }
@@ -475,12 +473,12 @@ function chapterSearchText(chapter: (typeof chapters)[number]) {
     ...chapter.zh.reconstructedVerse,
     ...chapter.zh.lineByLineTranslation,
     ...chapter.zh.explanation.flatMap((item) => [item.title, item.body]),
-    ...chapter.zh.related.flatMap((item) => [item.title, item.body]),
+    ...chapter.zh.related.flatMap((item) => [item.title, item.body, ...(item.points ?? [])]),
     chapter.zh.action,
     chapter.en.title,
     ...chapter.en.verse,
     ...chapter.en.explanation.flatMap((item) => [item.title, item.body]),
-    ...chapter.en.related.flatMap((item) => [item.title, item.body]),
+    ...chapter.en.related.flatMap((item) => [item.title, item.body, ...(item.points ?? [])]),
     chapter.en.action,
   ].join(" ").toLocaleLowerCase().replace(/\s+/g, "");
 }
@@ -2202,7 +2200,18 @@ export default function Prototype() {
                         .map((item) => (
                         <div className="related-item" data-share-section={isLifeManualItem(item) ? "manual" : undefined} key={item.title}>
                           <h2>{item.title}</h2>
-                          <p>{isLifeManualItem(item) && chart ? personalizedAdvice(chapter, chart, language) : item.body}</p>
+                          {item.points?.length ? (
+                            <ol className="related-insight-list">
+                              {item.points.map((point, pointIndex) => (
+                                <li key={point}>
+                                  <span>{String(pointIndex + 1).padStart(2, "0")}</span>
+                                  <p>{point}</p>
+                                </li>
+                              ))}
+                            </ol>
+                          ) : (
+                            <p>{isLifeManualItem(item) && chart ? personalizedAdvice(chapter, chart, language) : item.body}</p>
+                          )}
                         </div>
                         ))}
                       <div className="practice-card">

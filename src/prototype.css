@@ -663,6 +663,35 @@ textarea {
   margin: 0;
 }
 
+.related-insight-list {
+  display: grid;
+  gap: 0;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid color-mix(in srgb, var(--gold) 18%, transparent);
+}
+
+.related-insight-list li {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 10px;
+  padding: 15px 0 16px;
+  border-bottom: 1px solid color-mix(in srgb, var(--gold) 15%, transparent);
+}
+
+.related-insight-list li > span {
+  padding-top: 4px;
+  color: var(--gold);
+  font-family: var(--sans);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
+
+.related-insight-list p {
+  min-width: 0;
+}
+
 .practice-card {
   margin: 27px 0 4px;
   padding: 16px 17px 17px;

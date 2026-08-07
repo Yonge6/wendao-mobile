@@ -333,3 +333,42 @@ export function inspirationFor(chapterId) {
   }
   return inspiration;
 }
+
+const chapter64Theme = {
+  zh: "本章以“慎终如始”为主旨：事情尚未显露时，要在细微处预作照看；事情接近完成时，更要保持开始时的专注。老子提醒我们，真正可持续的成果，不靠最后一刻用力补救，而靠从萌芽、推进到收尾都尊重条件、节奏与边界。",
+  en: "This chapter centers on caring for the end as attentively as the beginning. Tend to conditions while problems are still small, and renew your attention when completion is near. Durable results do not come from a final burst of control, but from respecting conditions, timing, and limits from first movement through handoff.",
+};
+
+const chapter64Insights = {
+  zh: [
+    "越接近完成，越不能把熟悉误当成稳妥。许多失败并非能力不足，而是在最后阶段松懈、求快或过早庆祝。",
+    "“做完”不等于真正完成。交接是否清楚、维护是否可持续、退出是否有安排，决定成果能否离开个人仍然运转。",
+    "把收尾重新当作一次开始：复核最初目的，处理尚未显露的小风险，并为下一位接手者留下清楚、可继续的路径。",
+  ],
+  en: [
+    "The closer work comes to completion, the less we should mistake familiarity for safety. Many failures come not from lack of ability, but from rushing, relaxing attention, or celebrating too early.",
+    "Finished is not the same as complete. Clear handoff, sustainable maintenance, and a thoughtful exit determine whether a result can keep working without depending on one person.",
+    "Treat the ending as another beginning: revisit the original purpose, address small risks before they grow, and leave a clear path for whoever continues the work.",
+  ],
+};
+
+export function chapterThemeFor(chapterId) {
+  if (chapterId === 64) return chapter64Theme;
+  return inspirationFor(chapterId);
+}
+
+export function insightsFor(chapterId, topicZh, topicEn) {
+  if (chapterId === 64) return chapter64Insights;
+  return {
+    zh: [
+      `先辨认现实：面对“${topicZh}”，把已经发生的事实与尚未确定的判断分开，不急着用结论填满空白。`,
+      `再检视选择：比较的不只是快慢与得失，也要看哪一种做法更符合“${topicZh}”，并能在时间中持续。`,
+      `最后落到行动：从一个小而可验证的改变开始，观察真实反馈，再决定下一步，而不是一次把结果抓死。`,
+    ],
+    en: [
+      `Begin with reality: through ${topicEn}, separate what has actually happened from what remains uncertain instead of filling every gap with a conclusion.`,
+      `Then examine the choice: compare more than speed, status, or gain; ask which course can stay aligned with ${topicEn} over time.`,
+      `Finally, make it practical: begin with one small, observable change, learn from the real response, and let that evidence shape the next step.`,
+    ],
+  };
+}

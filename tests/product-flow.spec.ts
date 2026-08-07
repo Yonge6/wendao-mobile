@@ -5,6 +5,10 @@ import type { Chapter } from "../src/data/chapters";
 const chapters = JSON.parse(readFileSync(new URL("../src/data/chapters.json", import.meta.url), "utf8")) as Chapter[];
 const chapter8 = chapters.find((chapter) => chapter.id === 8)!;
 const chapter64 = chapters.find((chapter) => chapter.id === 64)!;
+const chapter8Insights = chapter8.zh.related.find((item) => item.title === "对我们的启发")!;
+const chapter8ShareInsights = chapter8Insights.points!
+  .map((point, index) => `${String(index + 1).padStart(2, "0")}  ${point}`)
+  .join("\n");
 
 const chartSnapshot = {
   schemaVersion: "1.0",
@@ -184,7 +188,7 @@ test("switches all four complete posters and keeps life-manual details anonymous
     await expect(page.getByRole("button", { name: "分享链接" })).toHaveAttribute("data-share-link", new RegExp(`chapter=8&section=${section}&lang=zh`));
     if (section === "inspiration") {
       const inspirationLabel = await page.locator(".share-card-preview").getAttribute("aria-label");
-      expect(inspirationLabel).toContain(chapter8.zh.related.find((item) => item.title === "对我们的启发")!.body);
+      expect(inspirationLabel).toContain(chapter8ShareInsights);
       expect(inspirationLabel).toContain(chapter8.zh.reconstructedVerse.at(-1));
       expect(inspirationLabel).toContain(chapter8.zh.pinyin.at(-1)?.join(" "));
     }
@@ -193,7 +197,7 @@ test("switches all four complete posters and keeps life-manual details anonymous
   const manualCardLabel = await page.locator(".share-card-preview").getAttribute("aria-label");
   expect(manualCardLabel).toContain("生产者");
   expect(manualCardLabel).toContain("对我们的启发");
-  expect(manualCardLabel).toContain(chapter8.zh.related.find((item) => item.title === "对我们的启发")!.body);
+  expect(manualCardLabel).toContain(chapter8ShareInsights);
   expect(manualCardLabel).not.toContain("不应出现在分享卡上的姓名");
   expect(manualCardLabel).not.toContain("1990-01-01");
   expect(manualCardLabel).not.toContain("武汉市");
@@ -201,7 +205,7 @@ test("switches all four complete posters and keeps life-manual details anonymous
 
 test("keeps text selection for copying without creating a share-selection mode", async ({ page }) => {
   await page.goto("/?chapter=8&lang=zh");
-  const inspiration = page.locator('.chapter-current .related-item').filter({ hasText: "对我们的启发" }).locator("p");
+  const inspiration = page.locator('.chapter-current .related-item').filter({ hasText: "对我们的启发" }).locator(".related-insight-list");
   await inspiration.evaluate((element) => {
     const range = document.createRange();
     range.selectNodeContents(element);
@@ -233,7 +237,7 @@ test("grows a long chapter poster instead of shrinking or cropping its full text
   const preview = page.locator(".share-card-preview img");
   await expect(preview).toBeVisible();
   await expect.poll(() => preview.evaluate((image: HTMLImageElement) => image.naturalHeight)).toBeGreaterThan(2340);
-  expect(await preview.evaluate((image: HTMLImageElement) => image.naturalHeight)).toBeLessThan(4500);
+  expect(await preview.evaluate((image: HTMLImageElement) => image.naturalHeight)).toBeLessThan(5000);
   const label = await page.locator(".share-card-preview").getAttribute("aria-label");
   expect(label).toContain(chapter64.zh.lineByLineTranslation.at(-1));
   expect(label).toContain(chapter64.zh.reconstructedVerse.at(-1));
@@ -516,7 +520,7 @@ test("renders a source-aligned modern Chinese translation for every line", async
 
   await page.getByRole("button", { name: "切换到英文", exact: true }).click();
   await expect(chapter.getByRole("heading", { name: "Collation · Keep witness, supply, and comparison separate", exact: true })).toHaveCount(0);
-  await expect(chapter.getByRole("heading", { name: "Thought · Return force to the larger pattern", exact: true })).toBeVisible();
+  await expect(chapter.getByRole("heading", { name: "Chapter theme", exact: true })).toBeVisible();
 });
 
 test("representative supplied chapters expose accessible reading text, copy cleanly, and do not overflow", async ({ page, context }) => {
@@ -558,17 +562,24 @@ test("representative supplied chapters expose accessible reading text, copy clea
 });
 
 test("shared inspiration is bilingual and remains visible without a life-manual profile", async ({ page }) => {
-  await page.goto("/");
-  await page.getByRole("button", { name: "目录", exact: true }).click();
-  await page.locator('.directory-item[data-chapter-id="8"]').click();
-  const chapter = page.locator('.chapter-current[data-chapter-id="8"]');
+  await page.goto("/?chapter=64&lang=zh");
+  const chapter = page.locator('.chapter-current[data-chapter-id="64"]');
+  await expect(chapter.getByRole("heading", { name: "本章主旨", exact: true })).toBeVisible();
+  await expect(chapter.getByText(/事情尚未显露时，要在细微处预作照看/)).toBeVisible();
+  for (const removedHeading of ["焦虑｜不急着把不确定填满", "关系｜把人与当下的行为分开", "选择｜辨认哪个选项更少违背自己", "行动｜先做最小可逆的一步"]) {
+    await expect(chapter.getByRole("heading", { name: removedHeading, exact: true })).toHaveCount(0);
+  }
   await expect(chapter.getByRole("heading", { name: "对我们的启发", exact: true })).toBeVisible();
-  await expect(chapter.getByText(/向下不等于失败/)).toBeVisible();
+  const chineseInsights = chapter.locator(".related-insight-list > li");
+  await expect(chineseInsights).toHaveCount(3);
+  await expect(chapter.getByText(/“做完”不等于真正完成/)).toBeVisible();
   await expect(chapter.getByRole("heading", { name: "你的人生说明书", exact: true })).toHaveCount(0);
 
   await page.getByRole("button", { name: "切换到英文", exact: true }).click();
+  await expect(chapter.getByRole("heading", { name: "Chapter theme", exact: true })).toBeVisible();
   await expect(chapter.getByRole("heading", { name: "What this teaches us", exact: true })).toBeVisible();
-  await expect(chapter.getByText(/going low is not failure/)).toBeVisible();
+  await expect(chapter.locator(".related-insight-list > li")).toHaveCount(3);
+  await expect(chapter.getByText(/Finished is not the same as complete/)).toBeVisible();
   await expect(chapter.getByRole("heading", { name: "Your life manual", exact: true })).toHaveCount(0);
 });
 

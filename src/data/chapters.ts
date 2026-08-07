@@ -3,6 +3,7 @@ import chapterData from "./chapters.json";
 export type RelatedItem = {
   title: string;
   body: string;
+  points?: string[];
 };
 
 export type ChapterCopyBase = {

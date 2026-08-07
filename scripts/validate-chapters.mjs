@@ -4,6 +4,7 @@ import { pinyinLinesForChapter } from "./chapter-pinyin.mjs";
 
 const chapters = JSON.parse(await readFile(new URL("../src/data/chapters.json", import.meta.url), "utf8"));
 const errors = [];
+const chapterThemes = { zh: [], en: [] };
 const inspirationBodies = { zh: [], en: [] };
 const hanziCount = (value) => Array.from(value).filter((character) => /\p{Script=Han}/u.test(character)).length;
 const hasTone = (value) => /[āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜńňǹḿ]/u.test(value);
@@ -38,29 +39,32 @@ for (const chapter of chapters) {
   });
   for (const language of ["zh", "en"]) {
     const copy = chapter[language];
-    const expectedLifeLensPrefixes = language === "zh"
-      ? ["焦虑｜", "关系｜", "选择｜", "行动｜"]
-      : ["Anxiety ·", "Relationships ·", "Choice ·", "Action ·"];
     if (!copy?.eyebrow || !copy.title || !copy.variant || !copy.action) errors.push(`${prefix}/${language}: incomplete core structure`);
     if (copy.explanation?.length !== 3) errors.push(`${prefix}/${language}: expected three explanation layers`);
-    if (copy.related?.length !== 6) errors.push(`${prefix}/${language}: expected four life lenses, shared inspiration, and life manual`);
-    if (expectedLifeLensPrefixes.some((expected, index) => !copy.related?.[index]?.title?.startsWith(expected))) {
-      errors.push(`${prefix}/${language}: the four life lenses must retain their order before shared inspiration`);
-    }
+    const expectedThemeTitle = language === "zh" ? "本章主旨" : "Chapter theme";
+    if (copy.explanation?.[1]?.title !== expectedThemeTitle || copy.explanation?.[1]?.body?.length < 40) errors.push(`${prefix}/${language}: chapter theme must be complete`);
+    else chapterThemes[language].push(copy.explanation[1].body);
+    if (copy.related?.length !== 2) errors.push(`${prefix}/${language}: expected insights and life manual only`);
     const expectedInspirationTitle = language === "zh" ? "对我们的启发" : "What this teaches us";
-    if (copy.related?.[4]?.title !== expectedInspirationTitle || copy.related?.[4]?.body?.length < 40) {
-      errors.push(`${prefix}/${language}: shared inspiration must be complete and precede life manual`);
+    const inspiration = copy.related?.[0];
+    if (inspiration?.title !== expectedInspirationTitle || inspiration?.body?.length < 40) {
+      errors.push(`${prefix}/${language}: insights must be complete and precede life manual`);
+    } else if (!Array.isArray(inspiration.points) || inspiration.points.length < 3 || inspiration.points.some((point) => point.length < 24)) {
+      errors.push(`${prefix}/${language}: insights must contain at least three complete points`);
     } else {
-      inspirationBodies[language].push(copy.related[4].body);
+      inspirationBodies[language].push(inspiration.points.join("\n"));
     }
-    if (!copy.related?.[5]?.title?.toLowerCase().includes(language === "zh" ? "人生说明书" : "life manual")) errors.push(`${prefix}/${language}: life manual must be last`);
+    if (!copy.related?.[1]?.title?.toLowerCase().includes(language === "zh" ? "人生说明书" : "life manual")) errors.push(`${prefix}/${language}: life manual must be last`);
   }
   if (!chapter.en.verse?.length || chapter.en.verse.join(" ").length < 20) errors.push(`${prefix}: English scripture appears incomplete`);
 }
 
 for (const language of ["zh", "en"]) {
+  if (chapterThemes[language].length !== 81 || new Set(chapterThemes[language]).size !== 81) {
+    errors.push(`${language}: every chapter must have a distinct chapter theme`);
+  }
   if (inspirationBodies[language].length !== 81 || new Set(inspirationBodies[language]).size !== 81) {
-    errors.push(`${language}: every chapter must have a distinct shared inspiration`);
+    errors.push(`${language}: every chapter must have a distinct insight set`);
   }
 }
 
@@ -68,4 +72,4 @@ if (errors.length) {
   console.error(errors.join("\n"));
   process.exit(1);
 }
-console.log(`Validated ${chapters.length} chapters: unique 1-81, complete bilingual structure, distinct shared inspirations, three-layer Silk B fields, marked supplies, high-risk phrase gate, and strict Hanzi/Pinyin alignment.`);
+console.log(`Validated ${chapters.length} chapters: unique 1-81, distinct bilingual chapter themes, three-point insights, three-layer Silk B fields, marked supplies, high-risk phrase gate, and strict Hanzi/Pinyin alignment.`);
