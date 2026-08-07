@@ -226,7 +226,7 @@ function chapterCopy(id, silkOrder, reading, literal, received, english) {
   }
   const [topicZh, topicEn] = topics[id - 1];
   const chapterTheme = chapterThemeFor(id);
-  const insights = insightsFor(id, topicZh, topicEn);
+  const insights = insightsFor(id);
   const anchor = correctedReading[0].replace(/[。！？；]/g, "").slice(0, 12);
   // Chapter 16's visible-witness correction must not rewrite the already
   // published modern interpretation or life-practice copy in this audit.

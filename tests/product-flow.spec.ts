@@ -583,14 +583,14 @@ test("shared inspiration is bilingual and remains visible without a life-manual 
   await expect(chapter.getByRole("heading", { name: "对我们的启发", exact: true })).toBeVisible();
   const chineseInsights = chapter.locator(".related-insight-list > li");
   await expect(chineseInsights).toHaveCount(3);
-  await expect(chapter.getByText(/“做完”不等于真正完成/)).toBeVisible();
+  await expect(chapter.getByText(/越接近完成，越要稳住自己/)).toBeVisible();
   await expect(chapter.getByRole("heading", { name: "你的人生说明书", exact: true })).toHaveCount(0);
 
   await page.getByRole("button", { name: "切换到英文", exact: true }).click();
   await expect(chapter.getByRole("heading", { name: "Chapter theme", exact: true })).toBeVisible();
   await expect(chapter.getByRole("heading", { name: "What this teaches us", exact: true })).toBeVisible();
   await expect(chapter.locator(".related-insight-list > li")).toHaveCount(3);
-  await expect(chapter.getByText(/Finished is not the same as complete/)).toBeVisible();
+  await expect(chapter.getByText(/Become steadier as completion approaches/)).toBeVisible();
   await expect(chapter.getByRole("heading", { name: "Your life manual", exact: true })).toHaveCount(0);
 });
 

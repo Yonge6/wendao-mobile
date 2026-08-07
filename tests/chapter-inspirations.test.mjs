@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { readFile } from "node:fs/promises";
 import { chapterInspirations, chapterThemeFor, insightsFor, inspirationFor } from "../scripts/chapter-inspirations.mjs";
+import { chapterPracticalInsights } from "../scripts/chapter-practical-insights.mjs";
 
 const chapters = JSON.parse(await readFile(new URL("../src/data/chapters.json", import.meta.url), "utf8"));
 
@@ -17,7 +18,7 @@ test("provides distinct bilingual inspiration for all 81 chapters", () => {
   }
 });
 
-test("uses a chapter theme and at least three insights before life manual", () => {
+test("uses a chapter theme and exactly three insights before life manual", () => {
   assert.equal(chapters.length, 81);
   for (const chapter of chapters) {
     assert.equal(chapter.zh.explanation[1].title, "本章主旨");
@@ -30,11 +31,30 @@ test("uses a chapter theme and at least three insights before life manual", () =
     assert.equal(chapter.en.related[0].title, "What this teaches us");
     assert.equal(chapter.zh.related[1].title, "你的人生说明书");
     assert.equal(chapter.en.related[1].title, "Your life manual");
-    const expected = insightsFor(chapter.id, chapter.theme.zh, chapter.theme.en);
+    const expected = insightsFor(chapter.id);
     assert.deepEqual(chapter.zh.related[0].points, expected.zh);
     assert.deepEqual(chapter.en.related[0].points, expected.en);
     assert.equal(chapter.zh.related[0].points.length, 3);
     assert.equal(chapter.en.related[0].points.length, 3);
+  }
+});
+
+test("uses distinct substantial bilingual insight paragraphs instead of shared frames", () => {
+  const insights = chapterPracticalInsights.slice(1);
+  assert.equal(insights.length, 81);
+  const chinese = insights.flatMap((item) => item.zh);
+  const english = insights.flatMap((item) => item.en);
+  assert.equal(chinese.length, 243);
+  assert.equal(english.length, 243);
+  assert.equal(new Set(chinese).size, 243);
+  assert.equal(new Set(english).size, 243);
+  for (const [index, paragraph] of chinese.entries()) {
+    assert.ok(paragraph.length >= 55, `Chinese insight ${index + 1} is too short`);
+    assert.doesNotMatch(paragraph, /先辨认现实|再检视选择|最后落到行动/);
+  }
+  for (const [index, paragraph] of english.entries()) {
+    assert.ok(paragraph.length >= 110, `English insight ${index + 1} is too short`);
+    assert.doesNotMatch(paragraph, /Begin with reality|Then examine the choice|Finally, make it practical/);
   }
 });
 

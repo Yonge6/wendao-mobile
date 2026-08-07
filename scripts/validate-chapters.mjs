@@ -6,6 +6,7 @@ const chapters = JSON.parse(await readFile(new URL("../src/data/chapters.json", 
 const errors = [];
 const chapterThemes = { zh: [], en: [] };
 const inspirationBodies = { zh: [], en: [] };
+const inspirationParagraphs = { zh: [], en: [] };
 const hanziCount = (value) => Array.from(value).filter((character) => /\p{Script=Han}/u.test(character)).length;
 const hasTone = (value) => /[āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜńňǹḿ]/u.test(value);
 
@@ -49,10 +50,16 @@ for (const chapter of chapters) {
     const inspiration = copy.related?.[0];
     if (inspiration?.title !== expectedInspirationTitle || inspiration?.body?.length < 40) {
       errors.push(`${prefix}/${language}: insights must be complete and precede life manual`);
-    } else if (!Array.isArray(inspiration.points) || inspiration.points.length < 3 || inspiration.points.some((point) => point.length < 24)) {
-      errors.push(`${prefix}/${language}: insights must contain at least three complete points`);
+    }
+    const minimumInsightLength = language === "zh" ? 55 : 110;
+    const forbiddenFrame = language === "zh"
+      ? /先辨认现实|再检视选择|最后落到行动/
+      : /Begin with reality|Then examine the choice|Finally, make it practical/;
+    if (!Array.isArray(inspiration?.points) || inspiration.points.length !== 3 || inspiration.points.some((point) => point.length < minimumInsightLength || forbiddenFrame.test(point))) {
+      errors.push(`${prefix}/${language}: insights must contain exactly three substantial practical points without shared frames`);
     } else {
       inspirationBodies[language].push(inspiration.points.join("\n"));
+      inspirationParagraphs[language].push(...inspiration.points);
     }
     if (!copy.related?.[1]?.title?.toLowerCase().includes(language === "zh" ? "人生说明书" : "life manual")) errors.push(`${prefix}/${language}: life manual must be last`);
   }
@@ -66,10 +73,13 @@ for (const language of ["zh", "en"]) {
   if (inspirationBodies[language].length !== 81 || new Set(inspirationBodies[language]).size !== 81) {
     errors.push(`${language}: every chapter must have a distinct insight set`);
   }
+  if (inspirationParagraphs[language].length !== 243 || new Set(inspirationParagraphs[language]).size !== 243) {
+    errors.push(`${language}: all 243 insight paragraphs must be distinct`);
+  }
 }
 
 if (errors.length) {
   console.error(errors.join("\n"));
   process.exit(1);
 }
-console.log(`Validated ${chapters.length} chapters: unique 1-81, distinct bilingual chapter themes, three-point insights, three-layer Silk B fields, marked supplies, high-risk phrase gate, and strict Hanzi/Pinyin alignment.`);
+console.log(`Validated ${chapters.length} chapters: unique 1-81, distinct bilingual chapter themes, 243 substantial practical insight paragraphs per language, three-layer Silk B fields, marked supplies, high-risk phrase gate, and strict Hanzi/Pinyin alignment.`);
