@@ -1422,17 +1422,17 @@ function SupportModal({ open, onClose, language }: { open: boolean; onClose: () 
           </div>
           <img
             className="support-payment-code"
-            src="/assets/wendao/support-wechat-qr.png"
-            alt={isZh ? "微信支付收款码" : "WeChat Pay support QR code"}
+            src="/assets/wendao/support-wechat-appreciation-code.png"
+            alt={isZh ? "微信赞赏码" : "WeChat appreciation code"}
           />
           <div className="support-qr-recognition">
             <strong>{isZh ? "长按二维码，识别并支付" : "Press and hold the QR code to recognize it"}</strong>
             <span>
-              <a href="/assets/wendao/support-wechat-qr.png" target="_blank" rel="noreferrer">
+              <a href="/assets/wendao/support-wechat-appreciation-code.png" target="_blank" rel="noreferrer">
                 {isZh ? "单独打开二维码" : "Open the QR code on its own"}
               </a>
-              <a href="/assets/wendao/support-wechat.jpg" target="_blank" rel="noreferrer">
-                {isZh ? "查看完整收款海报" : "View the complete payment poster"}
+              <a href="/assets/wendao/support-wechat-appreciation.webp" target="_blank" rel="noreferrer">
+                {isZh ? "查看完整赞赏海报" : "View the complete appreciation poster"}
               </a>
             </span>
           </div>

@@ -347,15 +347,15 @@ test("opens a pressure-free bilingual support modal before the related works", a
   const supportDialog = page.getByRole("dialog", { name: "随喜相助" });
   await expect(supportDialog).toBeVisible();
   await expect(supportDialog).toContainText("阅读、停留与分享，本身已经是同行");
-  const paymentCode = supportDialog.getByRole("img", { name: "微信支付收款码" });
-  await expect(paymentCode).toHaveAttribute("src", "/assets/wendao/support-wechat-qr.png");
+  const paymentCode = supportDialog.getByRole("img", { name: "微信赞赏码" });
+  await expect(paymentCode).toHaveAttribute("src", "/assets/wendao/support-wechat-appreciation-code.png");
   await expect(paymentCode).not.toHaveAttribute("draggable", "true");
   await expect(paymentCode).not.toHaveAttribute("data-native-drag", "true");
   await expect(supportDialog.getByText("长按二维码，识别并支付", { exact: true })).toBeVisible();
   const rawImageLink = supportDialog.getByRole("link", { name: "单独打开二维码", exact: true });
-  await expect(rawImageLink).toHaveAttribute("href", "/assets/wendao/support-wechat-qr.png");
+  await expect(rawImageLink).toHaveAttribute("href", "/assets/wendao/support-wechat-appreciation-code.png");
   await expect(rawImageLink).toHaveAttribute("target", "_blank");
-  await expect(supportDialog.getByRole("link", { name: "查看完整收款海报", exact: true })).toHaveAttribute("href", "/assets/wendao/support-wechat.jpg");
+  await expect(supportDialog.getByRole("link", { name: "查看完整赞赏海报", exact: true })).toHaveAttribute("href", "/assets/wendao/support-wechat-appreciation.webp");
   const supportClose = supportDialog.locator(".support-modal-close");
   await expect(supportClose).toHaveCount(1);
   const closeTop = await supportClose.evaluate((element) => element.getBoundingClientRect().top);
@@ -379,13 +379,13 @@ for (const width of [320, 390, 720]) {
     await page.getByRole("region", { name: "随喜相助" }).getByRole("button", { name: /随喜相助/ }).click();
 
     const supportDialog = page.getByRole("dialog", { name: "随喜相助" });
-    const paymentCode = supportDialog.getByRole("img", { name: "微信支付收款码" });
+    const paymentCode = supportDialog.getByRole("img", { name: "微信赞赏码" });
     await expect(paymentCode).toBeVisible();
     await expect.poll(() => paymentCode.evaluate((image: HTMLImageElement) => ({
       complete: image.complete,
       width: image.naturalWidth,
       height: image.naturalHeight,
-    }))).toEqual({ complete: true, width: 440, height: 440 });
+    }))).toEqual({ complete: true, width: 588, height: 588 });
 
     const layout = await page.evaluate(() => {
       const figure = document.querySelector<HTMLElement>(".support-modal figure")!;
