@@ -662,15 +662,19 @@ test("searches all textual layers from the directory", async ({ page }) => {
   await expect(page.getByText("没有找到相关章节，换一个词试试。", { exact: true })).toBeVisible();
 });
 
-test("uses compact header icons and keeps one-result search above a reduced viewport", async ({ page }) => {
+test("uses a compact text language toggle and keeps one-result search above a reduced viewport", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
 
   const languageToggle = page.getByRole("button", { name: "切换到英文", exact: true });
   const searchButton = page.getByRole("button", { name: "搜索章节", exact: true });
-  await expect(languageToggle.locator("svg")).toHaveCount(1);
+  await expect(languageToggle.locator("svg")).toHaveCount(0);
+  await expect(languageToggle).toHaveText("EN");
   await expect(searchButton.locator("svg")).toHaveCount(1);
-  await expect(page.getByRole("button", { name: "EN", exact: true })).toHaveCount(0);
+  await languageToggle.click();
+  const chineseToggle = page.getByRole("button", { name: "Switch to Chinese", exact: true });
+  await expect(chineseToggle).toHaveText("中文");
+  await chineseToggle.click();
 
   await searchButton.click();
   const input = page.getByRole("searchbox", { name: "搜索章节" });

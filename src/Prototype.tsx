@@ -19,7 +19,6 @@ import {
   CheckIcon,
   ChevronRightIcon,
   EnvelopeClosedIcon,
-  GlobeIcon,
   HamburgerMenuIcon,
   InfoCircledIcon,
   LockClosedIcon,
@@ -2029,7 +2028,7 @@ export default function Prototype() {
           title={isZh ? "切换到英文" : "Switch to Chinese"}
           onClick={() => changeLanguage(isZh ? "en" : "zh")}
         >
-          <GlobeIcon />
+          <span aria-hidden="true">{isZh ? "EN" : "中文"}</span>
         </button>
         <button
           className="header-menu-button"

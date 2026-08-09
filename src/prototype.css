@@ -238,6 +238,20 @@ textarea {
   height: 16px;
 }
 
+.language-toggle {
+  width: auto;
+  min-width: 30px;
+  padding-right: 4px !important;
+  padding-left: 4px !important;
+  border-radius: 999px !important;
+  font-family: var(--sans);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
 .header-menu-button {
   margin-left: -2px;
 }
@@ -3243,6 +3257,11 @@ textarea {
     height: 28px;
   }
 
+  .language-toggle {
+    width: auto;
+    min-width: 28px;
+  }
+
   .reading-shell {
     padding-left: 19px;
     padding-right: 19px;
@@ -3302,6 +3321,14 @@ textarea {
   .header-menu-button {
     width: 26px;
     height: 26px;
+  }
+
+  .language-toggle {
+    width: auto;
+    min-width: 27px;
+    padding-right: 2px !important;
+    padding-left: 2px !important;
+    font-size: 9px;
   }
 }
 
