@@ -17,6 +17,7 @@ test("iOS and H5 builds share the same client build gate", () => {
 test("Capacitor app identity and bundled web directory are stable", () => {
   assert.match(capacitorConfig, /appId: "com\.yonge6\.wendao"/);
   assert.match(capacitorConfig, /webDir: "dist\/client"/);
+  assert.match(capacitorConfig, /contentInset: "never"/);
   assert.match(capacitorConfig, /CapacitorHttp:[\s\S]*enabled: true/);
   assert.match(project, /PRODUCT_BUNDLE_IDENTIFIER = com\.yonge6\.wendao;/);
   assert.match(project, /DEVELOPMENT_TEAM = L855ZVM679;/);
