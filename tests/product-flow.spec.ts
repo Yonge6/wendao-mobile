@@ -308,7 +308,10 @@ test("opens contact details from a dedicated drawer entry below About", async ({
   const contactDrawer = page.getByRole("dialog", { name: "联系我们" });
   const contact = contactDrawer.getByRole("region", { name: "联系方式" });
   await expect(contact).toBeVisible();
-  await expect(contact.getByRole("link")).toHaveCount(5);
+  await expect(contact.getByRole("link")).toHaveCount(6);
+  const wonderElian = contact.getByRole("link", { name: "WonderElian wonderelian.com" });
+  await expect(wonderElian).toHaveAttribute("href", "https://wonderelian.com/");
+  await expect(contact.getByRole("link").first()).toHaveAttribute("href", "https://wonderelian.com/");
   await expect(contact.getByRole("link", { name: /邮箱/ })).toHaveAttribute("href", "mailto:hustyy986@gmail.com");
   await expect(contact.getByRole("link", { name: /^微博/ })).toHaveCount(0);
   await expect(contact.getByRole("link", { name: /^Facebook/ })).toHaveCount(0);
@@ -328,7 +331,9 @@ test("opens contact details from a dedicated drawer entry below About", async ({
   const englishDrawer = page.getByRole("dialog", { name: "Your space" });
   await expect(englishDrawer.locator(".contact-list")).toHaveCount(0);
   await englishDrawer.getByRole("button", { name: /Contact/ }).click();
-  await expect(page.getByRole("dialog", { name: "Contact" }).getByRole("region", { name: "Contact methods" })).toBeVisible();
+  const englishContact = page.getByRole("dialog", { name: "Contact" }).getByRole("region", { name: "Contact methods" });
+  await expect(englishContact).toBeVisible();
+  await expect(englishContact.getByRole("link", { name: "WonderElian wonderelian.com" })).toHaveAttribute("href", "https://wonderelian.com/");
 });
 
 test("opens a pressure-free bilingual support modal before the related works", async ({ page }) => {
