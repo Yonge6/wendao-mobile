@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { readFile } from "node:fs/promises";
 import { chapterInspirations, chapterThemeFor, insightsFor, inspirationFor } from "../scripts/chapter-inspirations.mjs";
+import { chapterPracticalInsightDetails } from "../scripts/chapter-practical-insight-details.mjs";
 import { chapterPracticalInsights } from "../scripts/chapter-practical-insights.mjs";
 
 const chapters = JSON.parse(await readFile(new URL("../src/data/chapters.json", import.meta.url), "utf8"));
@@ -49,13 +50,24 @@ test("uses distinct substantial bilingual insight paragraphs instead of shared f
   assert.equal(new Set(chinese).size, 243);
   assert.equal(new Set(english).size, 243);
   for (const [index, paragraph] of chinese.entries()) {
-    assert.ok(paragraph.length >= 55, `Chinese insight ${index + 1} is too short`);
+    assert.ok([...paragraph].length >= 90, `Chinese insight ${index + 1} is too short`);
     assert.doesNotMatch(paragraph, /先辨认现实|再检视选择|最后落到行动/);
   }
   for (const [index, paragraph] of english.entries()) {
-    assert.ok(paragraph.length >= 110, `English insight ${index + 1} is too short`);
+    assert.ok(paragraph.trim().split(/\s+/).length >= 45, `English insight ${index + 1} is too short`);
     assert.doesNotMatch(paragraph, /Begin with reality|Then examine the choice|Finally, make it practical/);
   }
+});
+
+test("keeps every added practical detail chapter-specific", () => {
+  const details = chapterPracticalInsightDetails.slice(1);
+  assert.equal(details.length, 81);
+  const chinese = details.flatMap((item) => item.zh);
+  const english = details.flatMap((item) => item.en);
+  assert.equal(chinese.length, 243);
+  assert.equal(english.length, 243);
+  assert.equal(new Set(chinese).size, 243);
+  assert.equal(new Set(english).size, 243);
 });
 
 test("chapter 8 carries the reference image's six practical directions in original wording", () => {

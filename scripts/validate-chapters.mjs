@@ -51,11 +51,13 @@ for (const chapter of chapters) {
     if (inspiration?.title !== expectedInspirationTitle || inspiration?.body?.length < 40) {
       errors.push(`${prefix}/${language}: insights must be complete and precede life manual`);
     }
-    const minimumInsightLength = language === "zh" ? 55 : 110;
     const forbiddenFrame = language === "zh"
       ? /先辨认现实|再检视选择|最后落到行动/
       : /Begin with reality|Then examine the choice|Finally, make it practical/;
-    if (!Array.isArray(inspiration?.points) || inspiration.points.length !== 3 || inspiration.points.some((point) => point.length < minimumInsightLength || forbiddenFrame.test(point))) {
+    const insightIsTooShort = (point) => language === "zh"
+      ? [...point].length < 90
+      : point.trim().split(/\s+/).length < 45;
+    if (!Array.isArray(inspiration?.points) || inspiration.points.length !== 3 || inspiration.points.some((point) => insightIsTooShort(point) || forbiddenFrame.test(point))) {
       errors.push(`${prefix}/${language}: insights must contain exactly three substantial practical points without shared frames`);
     } else {
       inspirationBodies[language].push(inspiration.points.join("\n"));

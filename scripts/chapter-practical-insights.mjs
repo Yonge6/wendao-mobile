@@ -1,4 +1,6 @@
-export const chapterPracticalInsights = [
+import { chapterPracticalInsightDetails } from "./chapter-practical-insight-details.mjs";
+
+const baseChapterPracticalInsights = [
   null,
   {
     zh: [
@@ -973,6 +975,15 @@ export const chapterPracticalInsights = [
     ],
   },
 ];
+
+export const chapterPracticalInsights = baseChapterPracticalInsights.map((insights, chapterId) => {
+  if (!insights) return null;
+  const details = chapterPracticalInsightDetails[chapterId];
+  return {
+    zh: insights.zh.map((point, pointIndex) => `${point}${details.zh[pointIndex]}`),
+    en: insights.en.map((point, pointIndex) => `${point} ${details.en[pointIndex]}`),
+  };
+});
 
 export function practicalInsightsFor(chapterId) {
   const insights = chapterPracticalInsights[chapterId];
