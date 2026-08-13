@@ -1,3 +1,5 @@
+import { humanDesignGuidance } from "./humanDesignGuidance";
+
 export type ReadingLanguage = "zh" | "en";
 
 type Activation = {
@@ -271,6 +273,8 @@ export function foundationalReading(chart: HumanDesignReadingChart, language: Re
   const authorityStrength = strength(authorityStrengths, chart.core.authority, language, language === "zh" ? "重要决定需要尊重自己的内在节奏" : "Important decisions benefit from respecting your inner timing");
   const profileText = strength(profileGuidance, profile, language, language === "zh" ? `${profile}人生角色结合了两种学习与贡献方式` : `Your ${profile} profile combines two ways of learning and contributing`);
   const definitionText = strength(definitionStrengths, chart.core.definition, language, language === "zh" ? "你有自己的信息整合方式" : "You have your own way of integrating information");
+  const strategyText = humanDesignGuidance.strategy(chart.core.type, language);
+  const resetText = humanDesignGuidance.reset(chart.core.type, language);
   const visibleSun = gateTheme(chartGates.consciousSun, language);
   const visibleEarth = gateTheme(chartGates.consciousEarth, language);
   const designSun = gateTheme(chartGates.designSun, language);
@@ -278,18 +282,18 @@ export function foundationalReading(chart: HumanDesignReadingChart, language: Re
 
   if (language === "en") {
     return [
-      { title: "Core advantage", body: `${typeStrength}. ${authorityStrength}. Your strategy—${strategy}—helps direct your energy toward people, work, and opportunities that can truly use it.` },
+      { title: "Core advantage", body: `${typeStrength}. Your strategy is to ${strategy}: ${strategyText}.` },
       { title: "Talent combination", body: `${profileText}. A visible gift is ${visibleSun}, grounded through ${visibleEarth}. Together, these qualities can turn natural ability into value other people can recognize and use.` },
       { title: "Life theme", body: `${visibleSun}, ${visibleEarth}, ${designSun}, and ${designEarth} may repeatedly meet in your work, relationships, and creations. This is not a fixed career or destiny; it is a pattern of contribution that becomes clearer as you live more honestly.` },
-      { title: "Best expression", body: `${definitionText}. Aligned engagement often brings ${chartSignal.sign}. If ${chartSignal.notSelf} persists, treat it as a recalibration signal: reduce pressure, return to ${authority}, and notice what remains true.` },
+      { title: "Best expression", body: `${definitionText}. ${authorityStrength}. ${chartSignal.sign} is a useful sign of alignment; when ${chartSignal.notSelf} persists, ${resetText}.` },
     ];
   }
 
   return [
-    { title: "核心优势", body: `${typeStrength}。${authorityStrength}。你的策略是“${strategy}”，它能帮助你把宝贵能量放到真正值得的人、事情与机会中。` },
+    { title: "核心优势", body: `${typeStrength}。你的策略是“${strategy}”：${strategyText}。` },
     { title: "天赋组合", body: `${profileText}。你最容易被看见的天赋是${visibleSun}，并能通过${visibleEarth}把它落到现实。这组组合让你的优势更容易转化成别人能感受到的价值。` },
     { title: "生命主题", body: `${visibleSun}、${visibleEarth}、${designSun}与${designEarth}，可能反复出现在工作、关系和创作中。它不指定职业或命运，而是在提醒你：越信任自己的节奏，这些能力越容易形成独特贡献。` },
-    { title: "最佳发挥方式", body: `${definitionText}。当你把优势用在正确方向，通常更容易体验${chartSignal.sign}；若${chartSignal.notSelf}持续出现，把它当成校准信号，而不是缺点，先降低压力，再回到${authority}。` },
+    { title: "最佳发挥方式", body: `${definitionText}。${authorityStrength}。${chartSignal.sign}可以作为对齐的参考；若${chartSignal.notSelf}持续出现，${resetText}。` },
   ];
 }
 
@@ -311,6 +315,14 @@ export function detailedReading(chart: HumanDesignReadingChart, language: Readin
   const consciousEarth = gateTheme(chartGates.consciousEarth, language);
   const designSun = gateTheme(chartGates.designSun, language);
   const designEarth = gateTheme(chartGates.designEarth, language);
+  const strategyText = humanDesignGuidance.strategy(chart.core.type, language);
+  const resetText = humanDesignGuidance.reset(chart.core.type, language);
+  const decisionText = humanDesignGuidance.authorityDecision(chart.core.authority, language);
+  const authorityPractice = humanDesignGuidance.authorityPractice(chart.core.authority, language);
+  const relationshipText = humanDesignGuidance.profileRelationship(profile, language);
+  const expectationText = humanDesignGuidance.profileExpectation(profile, language);
+  const profilePractice = humanDesignGuidance.profilePractice(profile, language);
+  const integrationPractice = humanDesignGuidance.definitionPractice(chart.core.definition, language);
 
   if (language === "en") {
     const bodyContext = chartVariables
@@ -318,17 +330,17 @@ export function detailedReading(chart: HumanDesignReadingChart, language: Readin
       : "Your body and environment are part of how clarity arrives; notice the conditions that help your nervous system settle.";
     return [
       { title: "You do not need to become someone else", body: `${typeStrength}. A different rhythm is not a defect. This reading is an invitation to notice where life feels more honest, sustainable, and alive—not a standard you must perform perfectly.` },
-      { title: "Your core energy and strategy", body: `You are a ${type}, and your strategy is to ${strategy}. Strategy is not a rule that makes life smaller. It helps protect your energy from commitments that look correct externally but create ongoing resistance internally.` },
+      { title: "Your core energy and strategy", body: `You are a ${type}, and your strategy is to ${strategy}. ${strategyText}. Strategy is not a standard to perform; it is a practical filter for where your energy can remain honest and sustainable.` },
       { title: "The gifts people can see", body: `Your conscious Sun highlights ${consciousSun}; your conscious Earth grounds it through ${consciousEarth}. Your value lies not only in having a gift, but in translating it into something another person can genuinely receive.` },
       { title: "The strengths working underneath", body: `Your design Sun and Earth bring ${designSun} and ${designEarth} into the background of your life. Other people may notice these qualities before you name them. They become more trustworthy when you leave room for the body to respond.` },
       { title: "Your life theme and contribution", body: `Your incarnation cross is ${chart.core.incarnationCross}. It does not prescribe an occupation or destiny. It describes a recurring pattern that becomes clearer as your visible and underlying gifts meet in work, relationships, and creation.` },
-      { title: "How your best decisions feel", body: `Your authority is ${authority}. ${authorityStrength}. The goal is not perfect certainty; it is a decision your whole system can support without constant inner negotiation afterward.` },
-      { title: "Profile, expectations, and being understood", body: `${profileText}. Other people may recognize a role in you before you consciously choose it. Clear boundaries allow generosity and influence to remain genuine instead of becoming an obligation built from someone else's projection.` },
-      { title: "Relationships and emotional honesty", body: `Notice which relationships let your body soften, your voice become clearer, and your natural pace feel welcome. The right people do not require you to erase your timing in order to remain connected.` },
-      { title: "Work, creativity, and sustainable impact", body: `${workText}. Your visible themes of ${consciousSun} and ${consciousEarth} can become especially useful when the task respects both your energy pattern and your decision-making process.` },
-      { title: "Rhythm, body, and environment", body: `${definitionText}. ${bodyContext} Treat these as gentle experiments rather than strict lifestyle rules; keep the conditions that bring steadier attention and easier breathing.` },
-      { title: "When you drift away from yourself", body: `${chartSignal.sign} often appears when your strengths are serving the right context. ${chartSignal.notSelf} is not a weakness or verdict; it is an early signal that your energy may be serving pressure instead of truth.` },
-      { title: "A gentle practice", body: `Before one meaningful decision each day, pause long enough to notice ${authority} before explaining the choice. Record what creates energy, what reduces it, and what brings ${chartSignal.sign}. One honest response and one clearer boundary are enough to begin.` },
+      { title: "How your best decisions feel", body: `Your authority is ${authority}. ${authorityStrength}. ${decisionText}. The goal is not perfect certainty, but a choice reached through the process your system can actually trust.` },
+      { title: "Profile, expectations, and being understood", body: `${profileText}. ${expectationText}. This is where a profile becomes practical: it shows which expectations support contribution and which quietly turn a gift into a role you never agreed to carry.` },
+      { title: "Relationships that fit your way of growing", body: `${relationshipText}. Let closeness include the right to learn, withdraw, revise, or define an ending; connection becomes more durable when it does not require you to betray your natural process.` },
+      { title: "Work, creativity, and sustainable impact", body: `${workText}. Use ${consciousSun} as the visible contribution and ${consciousEarth} as its grounding question. Work that fits should make ${chartSignal.sign} more available over time, so accomplishment becomes evidence of fit rather than prolonged self-override.` },
+      { title: "Rhythm, body, and environment", body: `${definitionText}. ${bodyContext} ${integrationPractice}. Treat the result as an observation to compare across real situations, not a lifestyle rule you must obey perfectly.` },
+      { title: "Your personal route back from pressure", body: `${chartSignal.notSelf} is an early signal, not a flaw. ${resetText}. Before recommitting, give ${authority} enough room to become available again. A useful reset changes the conditions of the decision instead of demanding more discipline inside the same pressure.` },
+      { title: "A practice built from your own design", body: `${authorityPractice}. Then ${profilePractice}. During the same experiment, ${integrationPractice}. Review what changed in energy, clarity, and ${chartSignal.sign}; keep only what your lived experience confirms.` },
     ];
   }
 
@@ -337,16 +349,16 @@ export function detailedReading(chart: HumanDesignReadingChart, language: Readin
     : "身体与环境也参与清晰的形成，可以观察什么条件会让呼吸更深、注意力更稳、内心不再那么急。";
   return [
     { title: "先说最重要的：你不需要变成别人", body: `${typeStrength}。与周围人不同的节奏并不是缺点。这份解读不是要你把自己修理成更标准的人，而是帮助你辨认：哪些选择让自己更真实、稳定、有生命力。` },
-    { title: "你的核心能量与策略", body: `你是${type}，策略是“${strategy}”。策略不是让人生变小的规定，而是帮你筛掉那些表面正确、实际却不断消耗你的方向。真正适合的事情未必轻松，但通常会让投入本身逐渐成为能量来源。` },
+    { title: "你的核心能量与策略", body: `你是${type}，策略是“${strategy}”。${strategyText}。策略不是需要表演正确的规定，而是筛选承诺的现实工具，让能量更可能流向真实且可持续的方向。` },
     { title: "别人最容易看见的天赋", body: `你的人格太阳提示${consciousSun}，人格地球则通过${consciousEarth}帮助这份天赋在现实中站稳。你的价值不只在于“拥有一种天赋”，还在于把看到的、理解的和坚持的东西，变成别人真正感受得到的帮助。` },
     { title: "你未必意识到的潜在力量", body: `设计太阳与地球带来${designSun}和${designEarth}。这部分更像身体自带的推动力，常在临场选择、压力反应和他人对你的评价里出现。越少急着管理别人怎么看，它们越容易稳定出现。` },
     { title: "你的生命主题与独特贡献", body: `你的轮回交叉是${chart.core.incarnationCross}。它不指定职业，也不是一项必须完成的命运任务；它更像一个逐渐浮现的主题：当人格与设计的四项能力在工作、关系和创作中相遇，你独特的贡献方式会越来越清楚。` },
-    { title: "做决定时，怎样才算对自己诚实", body: `你的内在权威是${authority}。${authorityStrength}。不必追求头脑里百分之百确定的答案，更重要的是找到一个身体愿意支持、之后不需要持续说服自己的选择。` },
-    { title: "人生角色：你如何成长，也如何被看见", body: `你的人生角色是${profile}。${profileText}。别人可能比你更早看见某种角色和能力；清楚自己能提供什么、暂时不能承担什么，会保护你的善意与影响力。` },
-    { title: "关系中的你：亲近不等于失去自己", body: `观察哪些人让你的身体更放松、声音更自然、节奏被尊重；又有哪些关系让你总在提前答应、解释自己或担心拒绝后会失去爱。一个经过内在确认的“愿意”，比出于害怕给出的“可以”更有温度。` },
-    { title: "工作、创造力与可持续的成就感", body: `${workText}。你尤其可以在工作中发挥${consciousSun}与${consciousEarth}。与其只问“什么工作最体面”，不如也问：什么成果完成后，身体会出现真实的满足或轻松？` },
-    { title: "你的整合节奏、身体与环境", body: `${definitionText}。${bodyContext}这些线索不是必须严格执行的生活规定，而是邀请你小范围测试：什么空间、声音、光线和信息密度更支持真实的自己。` },
-    { title: "当你偏离自己时，请先不要责怪自己", body: `${chartSignal.sign}常提示优势正在正确场景中运作；${chartSignal.notSelf}不是缺点、惩罚或失败，而是一盏预警灯。当它反复出现，可以先问：我是不是在内在权威准备好之前就答应了？` },
-    { title: "接下来可以怎样温柔地实践", body: `每天只挑一个有分量的选择，在回答前多停一会儿，先留意${authority}，再听头脑解释。记录什么让你更有能量、什么让你明显收缩、什么时刻带来${chartSignal.sign}。一个真实回应和一个清楚边界，就足以开始。` },
+    { title: "做决定时，怎样才算对自己诚实", body: `你的内在权威是${authority}。${authorityStrength}。${decisionText}。重点不是追求头脑里百分之百确定，而是让决定经过一条你真正能够信任的过程。` },
+    { title: "人生角色：你如何成长，也如何被看见", body: `你的人生角色是${profile}。${profileText}。${expectationText}。人生角色在这里不是身份标签，而是帮助你分辨：哪些期待支持贡献，哪些期待正在把天赋变成未曾同意的义务。` },
+    { title: "适合你的关系，不会抹掉成长方式", body: `${relationshipText}。让亲近包含学习、退回自己、修正和说明结束点的权利；不必用固定角色换取归属，关系反而更可能长久。` },
+    { title: "工作、创造力与可持续的影响", body: `${workText}。可以把${consciousSun}视为外界容易看见的贡献，把${consciousEarth}当作让它站稳的现实问题。适合的工作会让${chartSignal.sign}逐渐增多，使成果成为适配的证据，而不是长期违背自己。` },
+    { title: "你的整合节奏、身体与环境", body: `${definitionText}。${bodyContext}${integrationPractice}。把这些当作可比较的生活观察，不是必须完美执行的规定，只保留真实经验反复证实的部分。` },
+    { title: "压力来临时，你自己的回程路线", body: `${chartSignal.notSelf}是一项早期提醒，不是缺点。${resetText}。重新承诺以前，给${authority}足够空间重新出现。有效复位会改变决定所处的条件，而不是逼自己在同一份压力里更努力。` },
+    { title: "一项真正从你的结构出发的练习", body: `${authorityPractice}。接着，${profilePractice}。同一次观察中，${integrationPractice}。最后比较能量、清晰度与${chartSignal.sign}是否变化，只留下亲身经验能够证实的方法。` },
   ];
 }
