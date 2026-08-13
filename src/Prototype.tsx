@@ -843,6 +843,15 @@ function SideDrawer({
 
   const works = [
     {
+      id: "yixiu",
+      href: "https://yixiu.wonderelian.com/",
+      name: isZh ? "一休冥想" : "Yixiu Meditation",
+      tagline: isZh ? "让声音带你回到当下" : "Return to the present",
+      description: isZh
+        ? "用真实自然声、定时聆听与水之呼吸，陪你在工作、阅读、睡眠或情绪起伏时先停一停。"
+        : "Nature sounds, timed listening, and water breathing help you pause during work, reading, sleep, or emotional shifts.",
+    },
+    {
       id: "xiazi",
       href: "https://xiazishuo.com/",
       name: isZh ? "虾子曰" : "Xiazi Says",
@@ -854,7 +863,7 @@ function SideDrawer({
     {
       id: "human-design",
       href: "https://human-design.wonderelian.com/",
-      name: isZh ? "人类图" : "Human Design",
+      name: isZh ? "不二 认识自己" : "Bu'er · Know Yourself",
       tagline: isZh ? "人生使用说明书" : "A manual for your life",
       description: isZh
         ? "从出生信息生成中英双语人类图与基础解读，换一个角度认识自己的运行方式。"
@@ -1039,7 +1048,7 @@ function SideDrawer({
                       onClick={() => onWorkClick(work.id)}
                     >
                       <span className="drawer-work-index" aria-hidden="true">
-                        {isZh ? ["一", "二", "三"][index] : `0${index + 1}`}
+                        {isZh ? ["一", "二", "三", "四"][index] : `0${index + 1}`}
                       </span>
                       <span className="drawer-work-copy">
                         <span className="drawer-work-title">
