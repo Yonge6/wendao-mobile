@@ -12,17 +12,17 @@ const copy = {
     ["慢下来，读一章", "《道德经》"],
     ["帛书乙本", "底本校读"],
     ["逐字拼音", "逐句今译"],
-    ["焦虑 · 关系", "选择 · 行动"],
+    ["每章三条启发", "落到当下生活"],
     ["完整 81 章", "离线也能读"],
-    ["认识自己", "如水而行"],
+    ["人生说明书", "因你的结构而不同"],
   ],
   "en-US": [
     ["Slow down", "with one chapter"],
     ["A Silk B", "based reading"],
     ["Pinyin and", "line-by-line meaning"],
-    ["Anxiety · Relationships", "Choices · Action"],
+    ["Three insights", "for daily life"],
     ["All 81 chapters", "available offline"],
-    ["Know yourself", "Move like water"],
+    ["A Life Manual", "shaped by your design"],
   ],
 };
 

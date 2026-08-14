@@ -22,10 +22,10 @@ With Wendao, you can:
 
 - Read all 81 received chapter numbers through contents, full-text search, chance selection, and continuous reading;
 - Follow tone-marked pinyin and a line-by-line modern translation;
-- See each chapter through anxiety, relationships, choices, and action;
+- Read a distinct chapter theme and three detailed practical insights explaining why the reminder matters, where it appears, and how to respond;
 - Turn reflection into one small, practical daily exercise;
 - Switch between day and night reading and choose a comfortable text size;
-- Optionally create a Life Manual that connects verified profile information with the distinct theme of each chapter.
+- Optionally create a Life Manual whose foundational reading and 12 detailed themes reflect type, strategy, authority, profile, and definition.
 
 All 81 chapters and the core reading interface are bundled with the app, so no account is needed for offline reading. The optional Life Manual, questions, and feedback use network services only when you choose them. Their guidance is reflective, not medical, psychological, legal, or deterministic advice.
 
@@ -37,4 +37,4 @@ True to yourself. Flow with life.
 
 ## What's New in Version 1.0
 
-The first App Store release: all 81 chapters offline, a Silk B based reading, line-by-line meaning, full-text search, bilingual reading, day and night modes, and native sharing.
+The first App Store release: all 81 chapters offline, a Silk B based reading, line-by-line meaning, three practical insights per chapter, a differentiated Life Manual, full-text search, bilingual reading, day and night modes, and native sharing.
