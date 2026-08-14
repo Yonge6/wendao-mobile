@@ -843,6 +843,15 @@ function SideDrawer({
 
   const works = [
     {
+      id: "wonderelian",
+      href: "https://wonderelian.com/",
+      name: "WonderElian",
+      tagline: isZh ? "让复杂的想法变得清晰、好看而有人情味" : "Make complex ideas clear, beautiful, and human",
+      description: isZh
+        ? "一个从武汉出发的独立创造世界，以设计、AI 与数字产品连接视觉文化、身心健康和真实生活。"
+        : "An independent creative world from Wuhan, connecting visual culture, wellbeing, and real life through design, AI, and digital products.",
+    },
+    {
       id: "yixiu",
       href: "https://yixiu.wonderelian.com/",
       name: isZh ? "一休冥想" : "Yixiu Meditation",
@@ -1048,7 +1057,7 @@ function SideDrawer({
                       onClick={() => onWorkClick(work.id)}
                     >
                       <span className="drawer-work-index" aria-hidden="true">
-                        {isZh ? ["一", "二", "三", "四"][index] : `0${index + 1}`}
+                        {isZh ? ["一", "二", "三", "四", "五"][index] : `0${index + 1}`}
                       </span>
                       <span className="drawer-work-copy">
                         <span className="drawer-work-title">

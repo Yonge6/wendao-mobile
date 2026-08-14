@@ -262,7 +262,7 @@ test("opens shared chapter links in the requested language and section", async (
   await expect(page.locator('.chapter-current [data-share-section="inspiration"]')).toBeVisible();
 });
 
-test("drawer presents four bilingual related works in the intended order with safe external links", async ({ page }) => {
+test("drawer presents five bilingual related works in the intended order with safe external links", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "打开更多功能" }).click();
   await expect(page.getByRole("button", { name: "分享问道" })).toHaveCount(0);
@@ -270,18 +270,21 @@ test("drawer presents four bilingual related works in the intended order with sa
   const works = page.getByRole("region", { name: "沿途所作" });
   await expect(works).toBeVisible();
   const links = works.getByRole("link");
-  await expect(links).toHaveCount(4);
+  await expect(links).toHaveCount(5);
+  const wonderElianLink = works.getByRole("link", { name: /WonderElian/ });
+  await expect(wonderElianLink).toHaveAttribute("href", "https://wonderelian.com/");
+  await expect(wonderElianLink).toContainText("让复杂的想法变得清晰、好看而有人情味");
+  await expect(links.first()).toHaveAttribute("href", "https://wonderelian.com/");
   const yixiuLink = works.getByRole("link", { name: /一休冥想/ });
   await expect(yixiuLink).toHaveAttribute("href", "https://yixiu.wonderelian.com/");
   await expect(yixiuLink).toContainText("让声音带你回到当下");
-  await expect(links.first()).toHaveAttribute("href", "https://yixiu.wonderelian.com/");
   const xiaziLink = works.getByRole("link", { name: /虾子曰/ });
   await expect(xiaziLink).toHaveAttribute("href", "https://xiazishuo.com/");
   await expect(xiaziLink).toContainText("昨日世界");
   await expect(xiaziLink).not.toContainText("每日昨日世界");
   await expect(works.getByRole("link", { name: /不二 认识自己/ })).toHaveAttribute("href", "https://human-design.wonderelian.com/");
   await expect(works.getByRole("link", { name: /艺术风格图鉴/ })).toHaveAttribute("href", "https://style-atlas.wonderelian.com/");
-  for (let index = 0; index < 4; index += 1) {
+  for (let index = 0; index < 5; index += 1) {
     await expect(links.nth(index)).toHaveAttribute("target", "_blank");
     await expect(links.nth(index)).toHaveAttribute("rel", "noreferrer");
   }
@@ -289,6 +292,7 @@ test("drawer presents four bilingual related works in the intended order with sa
   await page.getByRole("button", { name: "关闭菜单", exact: true }).last().click();
   await page.getByRole("button", { name: "切换到英文", exact: true }).click();
   await page.getByRole("button", { name: "Open more", exact: true }).click();
+  await expect(page.getByRole("region", { name: "Works along the way" })).toContainText("Make complex ideas clear, beautiful, and human");
   await expect(page.getByRole("region", { name: "Works along the way" })).toContainText("Yixiu Meditation");
   await expect(page.getByRole("region", { name: "Works along the way" })).toContainText("Bu'er · Know Yourself");
   await expect(page.getByRole("region", { name: "Works along the way" })).toContainText("Yesterday’s World");
