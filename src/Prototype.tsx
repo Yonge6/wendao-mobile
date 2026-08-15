@@ -1732,6 +1732,14 @@ export default function Prototype() {
   );
 
   const trackEvent = (eventName: string, metadata: Record<string, string | number> = {}, eventChapter = chapterId) => {
+    const googleTag = (window as typeof window & { gtag?: (...args: unknown[]) => void }).gtag;
+    if ((eventName === "chapter_view" || eventName === "chance_chapter") && typeof googleTag === "function") {
+      googleTag("event", "chapter_read", {
+        site_id: "site-wendao",
+        chapter_id: String(eventChapter),
+        entry_source: String(metadata.source ?? (eventName === "chance_chapter" ? "chance" : "reading")),
+      });
+    }
     void apiRequest<{ saved: boolean }>("/v1/events", {
       method: "POST",
       body: JSON.stringify({
@@ -1765,6 +1773,7 @@ export default function Prototype() {
     if (appOpenTracked.current) return;
     appOpenTracked.current = true;
     trackEvent("app_open", { source: runtimeSurface() });
+    trackEvent("chapter_view", { source: "initial" }, chapterId);
   }, []);
 
   useEffect(() => {
