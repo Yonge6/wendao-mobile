@@ -848,7 +848,7 @@ function SideDrawer({
       name: "WonderElian",
       tagline: isZh ? "让复杂的想法变得清晰、好看而有人情味" : "Make complex ideas clear, beautiful, and human",
       description: isZh
-        ? "一个从武汉出发的独立创造世界，以设计、AI 与数字产品连接视觉文化、身心健康和真实生活。"
+        ? "WonderElian 是永歌 Elian 的个人创作空间。这里记录作品，也记录关于设计、AI、产品，以及如何慢慢成为自己的思考与探索。"
         : "An independent creative world from Wuhan, connecting visual culture, wellbeing, and real life through design, AI, and digital products.",
     },
     {

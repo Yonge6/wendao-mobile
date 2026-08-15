@@ -274,6 +274,7 @@ test("drawer presents five bilingual related works in the intended order with sa
   const wonderElianLink = works.getByRole("link", { name: /WonderElian/ });
   await expect(wonderElianLink).toHaveAttribute("href", "https://wonderelian.com/");
   await expect(wonderElianLink).toContainText("让复杂的想法变得清晰、好看而有人情味");
+  await expect(wonderElianLink).toContainText("WonderElian 是永歌 Elian 的个人创作空间");
   await expect(links.first()).toHaveAttribute("href", "https://wonderelian.com/");
   const yixiuLink = works.getByRole("link", { name: /一休冥想/ });
   await expect(yixiuLink).toHaveAttribute("href", "https://yixiu.wonderelian.com/");
