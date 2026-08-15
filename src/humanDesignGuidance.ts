@@ -1,6 +1,7 @@
 import type { ReadingLanguage } from "./humanDesignReading";
 
 type Guidance = { zh: string; en: string };
+type PracticalGuidance = { work: Guidance; life: Guidance; action: Guidance };
 
 function select(map: Record<string, Guidance>, key: string, language: ReadingLanguage, fallback: Guidance) {
   return (map[key] ?? fallback)[language];
@@ -26,6 +27,79 @@ const strategyGuidance: Record<string, Guidance> = {
   Reflector: {
     zh: "重要方向不要在一个场景、一次情绪或一个人的期待里定案；让时间和不同环境照出什么始终成立",
     en: "Do not settle an important direction inside one setting, one mood, or one person's expectation; let time and changing environments reveal what remains true",
+  },
+};
+
+const typePracticalGuidance: Record<string, PracticalGuidance> = {
+  Generator: {
+    work: {
+      zh: "收到新任务时，先别只看职位、薪酬或别人是否期待你答应。把任务想成一个具体动作，观察身体是更想靠近，还是已经开始发沉。真正有回应的工作，忙过以后往往仍有踏实的满足感",
+      en: "When a new task arrives, look beyond title, pay, or other people's expectations. Picture the actual work and notice whether your body leans in or already feels heavy. Work you genuinely respond to can be demanding and still leave grounded satisfaction",
+    },
+    life: {
+      zh: "安排运动、学习或周末活动时，尽量从眼前真实可选的事情里挑，不必凭头脑设计一个‘应该喜欢的人生’。连续几天都只剩挫败和硬撑，可以把它当成重新选择的提醒",
+      en: "Choose exercise, learning, and weekend plans from real options in front of you instead of designing a life you think you should enjoy. Several days of frustration and forcing are useful reasons to reassess",
+    },
+    action: {
+      zh: "今天遇到一个请求时，先把它变成能用‘愿意／不愿意’回答的具体问题，再决定是否承诺",
+      en: "For one request today, turn it into a concrete yes-or-no question and notice your body's response before committing",
+    },
+  },
+  "Manifesting Generator": {
+    work: {
+      zh: "把大项目拆成短实验：先做一版、看反馈、再调整。临时发现更短路径不是问题，但换方向前要告诉受影响的同事，避免速度变成返工或沟通成本",
+      en: "Break a large project into short experiments: make a first version, gather feedback, and adjust. Finding a faster route is useful, but tell affected teammates before changing direction so speed does not create avoidable rework",
+    },
+    life: {
+      zh: "兴趣多、节奏快并不等于三分钟热度。可以同时探索，但别一次答应所有邀约；留下可以退出和修正的空间，比强迫自己把每条路都走到底更可持续",
+      en: "Many interests and a fast pace do not automatically mean inconsistency. Explore more than one path, but leave room to revise or exit instead of promising to finish everything you begin",
+    },
+    action: {
+      zh: "为正在推进的事设一个小检查点：继续、调整或停止，只选当前身体最有回应的一项",
+      en: "Set one checkpoint for current work and choose only one next move: continue, adjust, or stop",
+    },
+  },
+  Manifestor: {
+    work: {
+      zh: "当你想启动项目、调整流程或改变分工时，先用一句话告诉会被影响的人：你准备做什么、为什么、接下来需要什么。告知不是请示，而是减少阻力，让发起真正落地",
+      en: "Before starting a project, changing a process, or shifting responsibilities, tell the people affected what you are doing, why, and what you need next. Informing is not asking permission; it reduces resistance around your initiative",
+    },
+    life: {
+      zh: "你需要自主和不被打断的空间。与其忍到生气后突然抽离，不如提前说清自己的安排、边界和可联系时间，让亲近的人知道这不是拒绝关系",
+      en: "You may need autonomy and uninterrupted space. Rather than withdrawing after anger builds, name your plans, boundaries, and available time early so people close to you do not mistake space for rejection",
+    },
+    action: {
+      zh: "下一次准备直接行动前，先给相关的人发一条简短告知，再观察事情是否更顺",
+      en: "Before your next independent move, send one concise update to the people it affects and see whether the path becomes smoother",
+    },
+  },
+  Projector: {
+    work: {
+      zh: "开会时不必抢着证明自己看得最清楚。先确认对方是否真的想听，再把洞察说成一个关键问题或一项高杠杆建议。被认可的判断，往往比替团队包办所有执行更有价值",
+      en: "In a meeting, you do not need to prove that you see the issue first. Check whether your view is wanted, then offer one key question or one high-leverage adjustment. Recognized judgment is often more valuable than taking over all the execution",
+    },
+    life: {
+      zh: "朋友来倾诉时，可以先问‘你想让我听你说，还是一起想办法？’这会帮你分清陪伴与指导，也避免好意变成不被需要的建议或长期救火",
+      en: "When a friend brings a problem, ask whether they want listening or help finding a solution. This separates companionship from guidance and keeps care from turning into unwanted advice or permanent rescue work",
+    },
+    action: {
+      zh: "今天先少给一个未经邀请的答案，多问一次‘你希望我怎么支持你？’",
+      en: "Offer one fewer uninvited answer today and ask once, ‘How would you like me to support you?’",
+    },
+  },
+  Reflector: {
+    work: {
+      zh: "评估新团队、合作或工作机会时，不要只看岗位说明。分几次进入那个环境，观察自己在不同人群中是放松、清醒，还是持续紧绷；环境感受本身就是重要信息",
+      en: "When considering a team, partnership, or job offer, evaluate more than the role description. Visit the environment more than once and notice whether different people leave you settled and clear or consistently tense",
+    },
+    life: {
+      zh: "重大决定可以多放一段时间，并在不同日期、地点和人面前谈一谈。感受变化并不代表反复无常，而是在分辨哪些是环境带来的、哪些会稳定留下",
+      en: "Give major decisions more time and discuss them across different days, places, and people. Changing feelings are not inconsistency; they help reveal what belongs to the environment and what reliably remains",
+    },
+    action: {
+      zh: "为一个重要选择做环境记录：在哪里、和谁在一起、身体是什么感受，先收集而不急着定论",
+      en: "Keep an environment log for one important choice: where you were, who was present, and how your body felt. Gather first without forcing a conclusion",
+    },
   },
 };
 
@@ -165,6 +239,11 @@ const generic = {
   profileRelationship: { zh: "让关系理解你的学习方式与边界，不用固定角色交换归属感", en: "Let relationships understand your way of learning and your boundaries instead of trading a fixed role for belonging" },
   profilePractice: { zh: "选择一个与你的成长方式相符的小实验，并保留调整边界", en: "Choose one small experiment that fits your way of growing and preserve room to revise" },
   definitionPractice: { zh: "尊重自己的信息整合速度，并观察什么条件让清晰更自然地出现", en: "Respect your pace of integration and observe the conditions in which clarity arrives more naturally" },
+  practical: {
+    work: { zh: "把任务放进真实工作场景，观察投入之后是更清楚有力，还是持续需要强迫自己", en: "Place the task in a real work setting and notice whether engagement builds clarity and capacity or requires ongoing self-forcing" },
+    life: { zh: "在日常安排与关系里观察，什么让身体更安定、选择更诚实，也更能长久", en: "In daily plans and relationships, notice what helps the body settle and makes choices more honest and sustainable" },
+    action: { zh: "挑一个可逆的小选择，按自己的策略试一次，并记录真实结果", en: "Choose one reversible decision, test it through your strategy, and record the actual result" },
+  },
 };
 
 export const humanDesignGuidance = {
@@ -176,4 +255,12 @@ export const humanDesignGuidance = {
   profileExpectation: (profile: string, language: ReadingLanguage) => select(profileExpectationGuidance, profile, language, generic.profileRelationship),
   profilePractice: (profile: string, language: ReadingLanguage) => select(profilePracticeGuidance, profile, language, generic.profilePractice),
   definitionPractice: (definition: string, language: ReadingLanguage) => select(definitionPracticeGuidance, definition, language, generic.definitionPractice),
+  practical: (type: string, language: ReadingLanguage) => {
+    const guidance = typePracticalGuidance[type] ?? generic.practical;
+    return {
+      work: guidance.work[language],
+      life: guidance.life[language],
+      action: guidance.action[language],
+    };
+  },
 };

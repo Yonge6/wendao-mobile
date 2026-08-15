@@ -62,34 +62,62 @@ function storedSnapshot(current: HumanDesignReadingChart) {
 test("keeps the life manual deterministic and complete in both languages", () => {
   for (const language of ["zh", "en"] as const) {
     expect(foundationalReading(generator, language)).toHaveLength(4);
-    expect(detailedReading(generator, language)).toHaveLength(12);
+    expect(detailedReading(generator, language)).toHaveLength(14);
     expect(detailedReading(generator, language)).toEqual(detailedReading(generator, language));
-    expect(new Set(detailedReading(generator, language).map((section) => section.title)).size).toBe(12);
+    expect(new Set(detailedReading(generator, language).map((section) => section.title)).size).toBe(14);
   }
+});
+
+test("keeps the foundational and detailed readings strengths-first and practical", () => {
+  const zhFoundation = foundationalReading(generator, "zh");
+  const enFoundation = foundationalReading(generator, "en");
+  expect(zhFoundation.map((section) => section.title)).toEqual([
+    "你的三项核心优势",
+    "工作场景",
+    "生活场景",
+    "做决定时可以这样试",
+  ]);
+  expect(enFoundation.map((section) => section.title)).toEqual([
+    "Your three core strengths",
+    "Work example",
+    "Daily-life example",
+    "Try this when deciding",
+  ]);
+  expect(zhFoundation[0].body).toContain("1. 核心能量优势");
+  expect(zhFoundation[1].body).toContain("收到新任务时");
+  expect(zhFoundation[2].body).toContain("安排运动、学习或周末活动");
+  expect(zhFoundation[3].body).toContain("自我观察练习");
+
+  const zhDetailed = detailedReading(generator, "zh");
+  const enDetailed = detailedReading(generator, "en");
+  expect(zhDetailed[0].title).toBe("先看重点：你的三项核心优势");
+  expect(zhDetailed.at(-1)?.title).toBe("未来七天，只做一个小实验");
+  expect(enDetailed[0].title).toBe("Your three core strengths");
+  expect(enDetailed.at(-1)?.title).toBe("A small experiment for the next seven days");
 });
 
 test("changes latter-half guidance across type authority profile and definition", () => {
   for (const language of ["zh", "en"] as const) {
-    const generatorTail = detailedReading(generator, language).slice(5).map((section) => section.body);
-    const projectorTail = detailedReading(projector, language).slice(5).map((section) => section.body);
+    const generatorTail = detailedReading(generator, language).slice(6).map((section) => section.body);
+    const projectorTail = detailedReading(projector, language).slice(6).map((section) => section.body);
     expect(generatorTail).not.toEqual(projectorTail);
     expect(generatorTail.filter((body, index) => body !== projectorTail[index]).length).toBeGreaterThanOrEqual(6);
   }
 
   const generatorZh = detailedReading(generator, "zh");
   const projectorZh = detailedReading(projector, "zh");
-  expect(generatorZh[5].body).toContain("具体选项");
-  expect(generatorZh[6].body).toContain("深入调查");
-  expect(generatorZh[7].body).toContain("能落地的答案");
-  expect(generatorZh[9].body).toContain("完整独处时间");
-  expect(generatorZh[10].body).toContain("挫败");
-  expect(generatorZh[11].body).toContain("是非问题");
-  expect(projectorZh[5].body).toContain("情绪起伏");
-  expect(projectorZh[6].body).toContain("独处");
-  expect(projectorZh[7].body).toContain("熟悉的人");
-  expect(projectorZh[9].body).toContain("对话对象");
-  expect(projectorZh[10].body).toContain("苦涩");
-  expect(projectorZh[11].body).toContain("推迟到明天");
+  expect(generatorZh[6].body).toContain("具体选项");
+  expect(generatorZh[7].body).toContain("深入调查");
+  expect(generatorZh[8].body).toContain("能落地的答案");
+  expect(generatorZh[10].body).toContain("完整独处时间");
+  expect(generatorZh[12].body).toContain("挫败");
+  expect(generatorZh[13].body).toContain("是非问题");
+  expect(projectorZh[6].body).toContain("情绪起伏");
+  expect(projectorZh[7].body).toContain("独处");
+  expect(projectorZh[8].body).toContain("熟悉的人");
+  expect(projectorZh[10].body).toContain("对话对象");
+  expect(projectorZh[12].body).toContain("苦涩");
+  expect(projectorZh[13].body).toContain("推迟到明天");
 });
 
 test("does not restore the former universal closing paragraphs", () => {
@@ -131,8 +159,8 @@ test("gives every supported type authority profile and definition its own guidan
       type,
       strategy,
     }), language));
-    expect(new Set(typeReadings.map((reading) => reading[1].body)).size).toBe(typeCases.length);
-    expect(new Set(typeReadings.map((reading) => reading[10].body)).size).toBe(typeCases.length);
+    expect(new Set(typeReadings.map((reading) => reading[2].body)).size).toBe(typeCases.length);
+    expect(new Set(typeReadings.map((reading) => reading[12].body)).size).toBe(typeCases.length);
     expect(new Set(typeCases.map(([type, strategy]) => foundationalReading(chart({
       ...generator.core,
       type,
@@ -143,21 +171,21 @@ test("gives every supported type authority profile and definition its own guidan
       ...generator.core,
       authority,
     }), language));
-    expect(new Set(authorityReadings.map((reading) => reading[5].body)).size).toBe(authorities.length);
-    expect(new Set(authorityReadings.map((reading) => reading[11].body)).size).toBe(authorities.length);
+    expect(new Set(authorityReadings.map((reading) => reading[6].body)).size).toBe(authorities.length);
+    expect(new Set(authorityReadings.map((reading) => reading[13].body)).size).toBe(authorities.length);
 
     const profileReadings = profiles.map((profile) => detailedReading(chart({
       ...generator.core,
       profile,
     }), language));
-    expect(new Set(profileReadings.map((reading) => reading[6].body)).size).toBe(profiles.length);
     expect(new Set(profileReadings.map((reading) => reading[7].body)).size).toBe(profiles.length);
+    expect(new Set(profileReadings.map((reading) => reading[8].body)).size).toBe(profiles.length);
 
     const definitionReadings = definitions.map((definition) => detailedReading(chart({
       ...generator.core,
       definition,
     }), language));
-    expect(new Set(definitionReadings.map((reading) => reading[9].body)).size).toBe(definitions.length);
+    expect(new Set(definitionReadings.map((reading) => reading[10].body)).size).toBe(definitions.length);
   }
 });
 
@@ -170,7 +198,8 @@ test("renders distinct latter-half guidance in the real life-manual drawer", asy
     await targetPage.getByRole("button", { name: "打开更多功能" }).click();
     await targetPage.getByRole("button", { name: "查看人生说明书" }).click();
     await targetPage.getByRole("button", { name: "查看详细解读" }).click();
-    await expect(targetPage.getByRole("heading", { name: "做决定时，怎样才算对自己诚实" })).toBeVisible();
+    await expect(targetPage.getByRole("heading", { name: "先看重点：你的三项核心优势" })).toBeVisible();
+    await expect(targetPage.getByRole("heading", { name: "遇到真实选择时，具体怎么做" })).toBeVisible();
     return targetPage.locator(".profile-detail-reading");
   }
 
@@ -178,14 +207,14 @@ test("renders distinct latter-half guidance in the real life-manual drawer", asy
   await expect(generatorReading).toContainText("把问题变成当下可回应的具体选项");
   await expect(generatorReading).toContainText("别人容易期待你拿出能落地的答案");
   await expect(generatorReading).toContainText("挫败反复出现时");
-  const generatorTail = await generatorReading.locator("article").evaluateAll((articles) => articles.slice(5).map((article) => article.textContent));
+  const generatorTail = await generatorReading.locator("article").evaluateAll((articles) => articles.slice(6).map((article) => article.textContent));
 
   const projectorPage = await page.context().newPage();
   const projectorReading = await openDetailedReading(projectorPage, storedSnapshot(projector));
   await expect(projectorReading).toContainText("至少经历一次情绪起伏");
   await expect(projectorReading).toContainText("独处不是拒绝关系");
   await expect(projectorReading).toContainText("苦涩常在洞察未被看见");
-  const projectorTail = await projectorReading.locator("article").evaluateAll((articles) => articles.slice(5).map((article) => article.textContent));
+  const projectorTail = await projectorReading.locator("article").evaluateAll((articles) => articles.slice(6).map((article) => article.textContent));
   expect(projectorTail).not.toEqual(generatorTail);
 
   const overflow = await projectorPage.locator(".drawer-scroll").evaluate((element) => element.scrollWidth - element.clientWidth);

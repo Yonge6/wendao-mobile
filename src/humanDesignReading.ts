@@ -265,7 +265,6 @@ function signal(chart: HumanDesignReadingChart, language: ReadingLanguage) {
 export function foundationalReading(chart: HumanDesignReadingChart, language: ReadingLanguage): ReadingSection[] {
   const type = translated(chart.core.type, language);
   const strategy = translated(chart.core.strategy, language);
-  const authority = translated(chart.core.authority, language);
   const profile = chart.core.profile;
   const chartGates = gates(chart);
   const chartSignal = signal(chart, language);
@@ -275,25 +274,25 @@ export function foundationalReading(chart: HumanDesignReadingChart, language: Re
   const definitionText = strength(definitionStrengths, chart.core.definition, language, language === "zh" ? "你有自己的信息整合方式" : "You have your own way of integrating information");
   const strategyText = humanDesignGuidance.strategy(chart.core.type, language);
   const resetText = humanDesignGuidance.reset(chart.core.type, language);
+  const decisionText = humanDesignGuidance.authorityDecision(chart.core.authority, language);
+  const practical = humanDesignGuidance.practical(chart.core.type, language);
   const visibleSun = gateTheme(chartGates.consciousSun, language);
   const visibleEarth = gateTheme(chartGates.consciousEarth, language);
-  const designSun = gateTheme(chartGates.designSun, language);
-  const designEarth = gateTheme(chartGates.designEarth, language);
 
   if (language === "en") {
     return [
-      { title: "Core advantage", body: `${typeStrength}. Your strategy is to ${strategy}: ${strategyText}.` },
-      { title: "Talent combination", body: `${profileText}. A visible gift is ${visibleSun}, grounded through ${visibleEarth}. Together, these qualities can turn natural ability into value other people can recognize and use.` },
-      { title: "Life theme", body: `${visibleSun}, ${visibleEarth}, ${designSun}, and ${designEarth} may repeatedly meet in your work, relationships, and creations. This is not a fixed career or destiny; it is a pattern of contribution that becomes clearer as you live more honestly.` },
-      { title: "Best expression", body: `${definitionText}. ${authorityStrength}. ${chartSignal.sign} is a useful sign of alignment; when ${chartSignal.notSelf} persists, ${resetText}.` },
+      { title: "Your three core strengths", body: `1. Core energy: ${typeStrength}.\n\n2. Visible talent: people are likely to notice your ${visibleSun}, grounded through ${visibleEarth}.\n\n3. Decision strength: ${authorityStrength}. These are strengths to recognize and test, not promises of success or fixed labels.` },
+      { title: "Work example", body: `${practical.work}. Your strategy is to ${strategy}: ${strategyText}. Try this: ${practical.action}.` },
+      { title: "Daily-life example", body: `${practical.life}. ${profileText}. Notice where your natural way of learning and contributing is welcomed rather than turned into an obligation.` },
+      { title: "Try this when deciding", body: `${decisionText}. ${definitionText}. ${chartSignal.sign} can be a useful sign of fit; if ${chartSignal.notSelf} persists, ${resetText}. Treat this as a reflection experiment, not a rule or scientific conclusion.` },
     ];
   }
 
   return [
-    { title: "核心优势", body: `${typeStrength}。你的策略是“${strategy}”：${strategyText}。` },
-    { title: "天赋组合", body: `${profileText}。你最容易被看见的天赋是${visibleSun}，并能通过${visibleEarth}把它落到现实。这组组合让你的优势更容易转化成别人能感受到的价值。` },
-    { title: "生命主题", body: `${visibleSun}、${visibleEarth}、${designSun}与${designEarth}，可能反复出现在工作、关系和创作中。它不指定职业或命运，而是在提醒你：越信任自己的节奏，这些能力越容易形成独特贡献。` },
-    { title: "最佳发挥方式", body: `${definitionText}。${authorityStrength}。${chartSignal.sign}可以作为对齐的参考；若${chartSignal.notSelf}持续出现，${resetText}。` },
+    { title: "你的三项核心优势", body: `1. 核心能量优势：${typeStrength}。\n\n2. 别人容易看见的优势：${visibleSun}，并能通过${visibleEarth}把它落到现实。\n\n3. 做决定时的优势：${authorityStrength}。这些是可以持续辨认和练习的优势，不是成功保证或固定标签。` },
+    { title: "工作场景", body: `${practical.work}。你的策略是“${strategy}”：${strategyText}。可以这样试：${practical.action}。` },
+    { title: "生活场景", body: `${practical.life}。${profileText}。留意自己的成长与贡献方式在哪里被尊重，而不是被变成没有边界的义务。` },
+    { title: "做决定时可以这样试", body: `${decisionText}。${definitionText}。${chartSignal.sign}可以作为适配的参考；若${chartSignal.notSelf}持续出现，${resetText}。这是一项自我观察练习，不是必须遵守的规则或科学定论。` },
   ];
 }
 
@@ -323,24 +322,27 @@ export function detailedReading(chart: HumanDesignReadingChart, language: Readin
   const expectationText = humanDesignGuidance.profileExpectation(profile, language);
   const profilePractice = humanDesignGuidance.profilePractice(profile, language);
   const integrationPractice = humanDesignGuidance.definitionPractice(chart.core.definition, language);
+  const practical = humanDesignGuidance.practical(chart.core.type, language);
 
   if (language === "en") {
     const bodyContext = chartVariables
       ? `Your digestion pattern is ${chartVariables.digestion}, cognition is ${chartVariables.cognition}, and supportive environment is ${chartVariables.environment}.`
       : "Your body and environment are part of how clarity arrives; notice the conditions that help your nervous system settle.";
     return [
+      { title: "Your three core strengths", body: `1. Core energy\n${typeStrength}.\n\n2. Visible talent\nPeople are likely to notice your ${consciousSun}; ${consciousEarth} helps turn that talent into something steady and useful.\n\n3. Decision strength\n${authorityStrength}.\n\nThese are qualities to notice first—not promises of success or fixed labels, but strengths you can recognize, test, and develop in ordinary life.` },
       { title: "You do not need to become someone else", body: `${typeStrength}. A different rhythm is not a defect. This reading is an invitation to notice where life feels more honest, sustainable, and alive—not a standard you must perform perfectly.` },
-      { title: "Your core energy and strategy", body: `You are a ${type}, and your strategy is to ${strategy}. ${strategyText}. Strategy is not a standard to perform; it is a practical filter for where your energy can remain honest and sustainable.` },
+      { title: "How this energy shows up in an ordinary workday", body: `You are a ${type}, and your strategy is to ${strategy}. ${strategyText}.\n\nWork example: ${practical.work}.\n\nTry this: ${practical.action}.` },
       { title: "The gifts people can see", body: `Your conscious Sun highlights ${consciousSun}; your conscious Earth grounds it through ${consciousEarth}. Your value lies not only in having a gift, but in translating it into something another person can genuinely receive.` },
       { title: "The strengths working underneath", body: `Your design Sun and Earth bring ${designSun} and ${designEarth} into the background of your life. Other people may notice these qualities before you name them. They become more trustworthy when you leave room for the body to respond.` },
       { title: "Your life theme and contribution", body: `Your incarnation cross is ${chart.core.incarnationCross}. It does not prescribe an occupation or destiny. It describes a recurring pattern that becomes clearer as your visible and underlying gifts meet in work, relationships, and creation.` },
-      { title: "How your best decisions feel", body: `Your authority is ${authority}. ${authorityStrength}. ${decisionText}. The goal is not perfect certainty, but a choice reached through the process your system can actually trust.` },
+      { title: "A practical way to make one real decision", body: `Your authority is ${authority}. ${authorityStrength}. ${decisionText}.\n\nTry this with one real choice: ${authorityPractice}. The goal is not perfect certainty, but a choice you can support without repeatedly talking yourself back into it afterward.` },
       { title: "Profile, expectations, and being understood", body: `${profileText}. ${expectationText}. This is where a profile becomes practical: it shows which expectations support contribution and which quietly turn a gift into a role you never agreed to carry.` },
-      { title: "Relationships that fit your way of growing", body: `${relationshipText}. Let closeness include the right to learn, withdraw, revise, or define an ending; connection becomes more durable when it does not require you to betray your natural process.` },
-      { title: "Work, creativity, and sustainable impact", body: `${workText}. Use ${consciousSun} as the visible contribution and ${consciousEarth} as its grounding question. Work that fits should make ${chartSignal.sign} more available over time, so accomplishment becomes evidence of fit rather than prolonged self-override.` },
-      { title: "Rhythm, body, and environment", body: `${definitionText}. ${bodyContext} ${integrationPractice}. Treat the result as an observation to compare across real situations, not a lifestyle rule you must obey perfectly.` },
+      { title: "How to use this in relationships and home life", body: `Daily-life example: ${practical.life}.\n\n${relationshipText}. Let closeness include the right to learn, withdraw, revise, or define an ending; connection becomes more durable when it does not require you to betray your natural process.` },
+      { title: "Your strengths at work", body: `${workText}. Use ${consciousSun} as the visible contribution and ${consciousEarth} as its grounding question. Notice what you see first in meetings, which problems people repeatedly bring to you, and which finished work leaves you clearer rather than depleted.` },
+      { title: "Your natural way of integrating", body: `${definitionText}. ${integrationPractice}. The right rhythm should be reusable, not one that requires a long recovery after every result.` },
+      { title: "Body, cognition, and supportive environments", body: `${bodyContext} Treat these variables as small experiments rather than lifestyle rules. Compare light, sound, space, company, and information load; keep only the conditions that repeatedly bring steadier attention, easier breathing, and clearer perception.` },
       { title: "Your personal route back from pressure", body: `${chartSignal.notSelf} is an early signal, not a flaw. ${resetText}. Before recommitting, give ${authority} enough room to become available again. A useful reset changes the conditions of the decision instead of demanding more discipline inside the same pressure.` },
-      { title: "A practice built from your own design", body: `${authorityPractice}. Then ${profilePractice}. During the same experiment, ${integrationPractice}. Review what changed in energy, clarity, and ${chartSignal.sign}; keep only what your lived experience confirms.` },
+      { title: "A small experiment for the next seven days", body: `Each day, pause before one meaningful choice and let your authority become available before explaining the answer. ${authorityPractice}. Then ${profilePractice}. Keep three short notes: what gave you energy, what reduced it, and what brought a sense of ${chartSignal.sign}. Treat this reading as a reflection tool, not a scientific conclusion or verdict; keep only what lived experience confirms.` },
     ];
   }
 
@@ -348,17 +350,19 @@ export function detailedReading(chart: HumanDesignReadingChart, language: Readin
     ? `你的消化倾向是${variableLabelsZh[chartVariables.digestion] ?? chartVariables.digestion}，认知感官是${variableLabelsZh[chartVariables.cognition] ?? chartVariables.cognition}，适合尝试的环境是${variableLabelsZh[chartVariables.environment] ?? chartVariables.environment}。`
     : "身体与环境也参与清晰的形成，可以观察什么条件会让呼吸更深、注意力更稳、内心不再那么急。";
   return [
+    { title: "先看重点：你的三项核心优势", body: `1. 核心能量优势\n${typeStrength}。\n\n2. 别人最容易看见的优势\n你天然容易展现${consciousSun}，并通过${consciousEarth}让这份能力变得稳定、实际、能被别人感受到。\n\n3. 做决定时的优势\n${authorityStrength}。\n\n这三项是整份解读最值得先记住的部分。它们不是成功保证或固定标签，而是可以在日常工作与生活里持续辨认、练习和放大的优势。` },
     { title: "先说最重要的：你不需要变成别人", body: `${typeStrength}。与周围人不同的节奏并不是缺点。这份解读不是要你把自己修理成更标准的人，而是帮助你辨认：哪些选择让自己更真实、稳定、有生命力。` },
-    { title: "你的核心能量与策略", body: `你是${type}，策略是“${strategy}”。${strategyText}。策略不是需要表演正确的规定，而是筛选承诺的现实工具，让能量更可能流向真实且可持续的方向。` },
+    { title: "放进日常工作里，你可以这样理解", body: `你是${type}，策略是“${strategy}”。${strategyText}。\n\n工作场景：${practical.work}。\n\n可以这样试：${practical.action}。` },
     { title: "别人最容易看见的天赋", body: `你的人格太阳提示${consciousSun}，人格地球则通过${consciousEarth}帮助这份天赋在现实中站稳。你的价值不只在于“拥有一种天赋”，还在于把看到的、理解的和坚持的东西，变成别人真正感受得到的帮助。` },
     { title: "你未必意识到的潜在力量", body: `设计太阳与地球带来${designSun}和${designEarth}。这部分更像身体自带的推动力，常在临场选择、压力反应和他人对你的评价里出现。越少急着管理别人怎么看，它们越容易稳定出现。` },
     { title: "你的生命主题与独特贡献", body: `你的轮回交叉是${chart.core.incarnationCross}。它不指定职业，也不是一项必须完成的命运任务；它更像一个逐渐浮现的主题：当人格与设计的四项能力在工作、关系和创作中相遇，你独特的贡献方式会越来越清楚。` },
-    { title: "做决定时，怎样才算对自己诚实", body: `你的内在权威是${authority}。${authorityStrength}。${decisionText}。重点不是追求头脑里百分之百确定，而是让决定经过一条你真正能够信任的过程。` },
+    { title: "遇到真实选择时，具体怎么做", body: `你的内在权威是${authority}。${authorityStrength}。${decisionText}。\n\n拿一个真实选择来试：${authorityPractice}。重点不是追求百分之百确定，而是找到一个之后不需要每天反复说服自己留下的答案。` },
     { title: "人生角色：你如何成长，也如何被看见", body: `你的人生角色是${profile}。${profileText}。${expectationText}。人生角色在这里不是身份标签，而是帮助你分辨：哪些期待支持贡献，哪些期待正在把天赋变成未曾同意的义务。` },
-    { title: "适合你的关系，不会抹掉成长方式", body: `${relationshipText}。让亲近包含学习、退回自己、修正和说明结束点的权利；不必用固定角色换取归属，关系反而更可能长久。` },
-    { title: "工作、创造力与可持续的影响", body: `${workText}。可以把${consciousSun}视为外界容易看见的贡献，把${consciousEarth}当作让它站稳的现实问题。适合的工作会让${chartSignal.sign}逐渐增多，使成果成为适配的证据，而不是长期违背自己。` },
-    { title: "你的整合节奏、身体与环境", body: `${definitionText}。${bodyContext}${integrationPractice}。把这些当作可比较的生活观察，不是必须完美执行的规定，只保留真实经验反复证实的部分。` },
+    { title: "放进生活和关系里，你可以这样观察", body: `生活场景：${practical.life}。\n\n${relationshipText}。让亲近包含学习、退回自己、修正和说明结束点的权利；一个经过内在确认的“愿意”，通常比出于害怕给出的“可以”更有温度，也更长久。` },
+    { title: "你的优势在工作里怎么落地", body: `${workText}。可以把${consciousSun}视为外界容易看见的贡献，把${consciousEarth}当作让它站稳的现实问题。观察开会时自己最容易看见什么、同事常因为什么来找你、哪类问题会让你愿意反复琢磨，这些线索往往比“什么职业最适合我”更接近真实优势。` },
+    { title: "你的整合方式与自然节奏", body: `${definitionText}。${integrationPractice}。真正稳定的节奏应该可以反复使用，而不是每次完成任务都需要很久才能恢复。` },
+    { title: "身体、认知与环境在默默支持你", body: `${bodyContext}把这些当作小范围生活实验，不是必须完美执行的规定。可以比较光线、声音、空间、人群密度与信息输入，观察什么条件反复带来更稳的注意力、更深的呼吸和更清楚的感受。` },
     { title: "压力来临时，你自己的回程路线", body: `${chartSignal.notSelf}是一项早期提醒，不是缺点。${resetText}。重新承诺以前，给${authority}足够空间重新出现。有效复位会改变决定所处的条件，而不是逼自己在同一份压力里更努力。` },
-    { title: "一项真正从你的结构出发的练习", body: `${authorityPractice}。接着，${profilePractice}。同一次观察中，${integrationPractice}。最后比较能量、清晰度与${chartSignal.sign}是否变化，只留下亲身经验能够证实的方法。` },
+    { title: "未来七天，只做一个小实验", body: `每天只挑一个有分量的选择，在回答前多停一会儿，先让内在权威出现，再听头脑解释。${authorityPractice}。接着，${profilePractice}。简单记录三件事：什么让你更有能量，什么让你明显收缩，什么时刻带来了${chartSignal.sign}。把这份解读当成自我观察工具，不当成科学定论或身份判决；有帮助的留下，不适合的放下。` },
   ];
 }
