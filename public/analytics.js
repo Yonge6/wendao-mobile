@@ -1,6 +1,7 @@
 (function () {
   "use strict";
 
+  if (window.location.hostname !== "wendao.wonderelian.com") return;
   if (window.Capacitor?.isNativePlatform?.() || new URLSearchParams(window.location.search).get("surface") === "ios") return;
 
   const measurementId = "G-HDHST6WKKB";
