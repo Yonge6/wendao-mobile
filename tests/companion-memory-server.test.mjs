@@ -30,6 +30,14 @@ test("rejects extra sensitive or invented fields", () => {
     kind: "life_manual_context",
     summary: "Generator",
   }] }), /kind/);
+  assert.throws(() => normalizeExtractedMemories({ memories: [{
+    kind: "current_situation",
+    summary: "联系邮箱是 reader@example.com",
+  }] }), /sensitive/);
+  assert.throws(() => normalizeExtractedMemories({ memories: [{
+    kind: "current_situation",
+    summary: "我的出生日是 1986-06-24",
+  }] }), /sensitive/);
 });
 
 test("memory extraction prompt treats the exchange as data and permits empty output", () => {

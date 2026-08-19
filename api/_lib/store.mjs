@@ -206,6 +206,51 @@ export function createCompanionStore(environment, dependencies = {}) {
       return rpc("clear_wendao_memories", { p_user_id: userId }, signal);
     },
 
+    async getEntitlement(userId, signal) {
+      const userFilter = encodeURIComponent(`eq.${userId}`);
+      const rows = await select(
+        `/wendao_entitlements?select=status,expires_at&user_id=${userFilter}&limit=1`,
+        signal,
+      );
+      return rows[0] ?? null;
+    },
+
+    async getWeeklyReflection(userId, weekStart, signal) {
+      const userFilter = encodeURIComponent(`eq.${userId}`);
+      const weekFilter = encodeURIComponent(`eq.${weekStart}`);
+      const rows = await select(
+        `/wendao_weekly_reflections?select=id,week_start,locale,content,chapter_ids,updated_at&user_id=${userFilter}&week_start=${weekFilter}&limit=1`,
+        signal,
+      );
+      return rows[0] ?? null;
+    },
+
+    async getWeeklySource(userId, since, signal) {
+      const userFilter = encodeURIComponent(`eq.${userId}`);
+      const sinceFilter = encodeURIComponent(`gte.${since}`);
+      const [messages, memories] = await Promise.all([
+        select(
+          `/wendao_messages?select=role,content,chapter_id,created_at&user_id=${userFilter}&created_at=${sinceFilter}&order=created_at.asc&limit=80`,
+          signal,
+        ),
+        select(
+          `/wendao_memories?select=kind,summary&user_id=${userFilter}&status=eq.active&order=updated_at.desc&limit=20`,
+          signal,
+        ),
+      ]);
+      return { messages, memories };
+    },
+
+    async saveWeeklyReflection(userId, weekStart, locale, content, chapterIds, signal) {
+      return rpc("save_wendao_weekly_reflection", {
+        p_user_id: userId,
+        p_week_start: weekStart,
+        p_locale: locale,
+        p_content: content,
+        p_chapter_ids: chapterIds,
+      }, signal);
+    },
+
     async getRecentMessages(userId, threadId, signal) {
       if (!threadId) return [];
       const userFilter = encodeURIComponent(`eq.${userId}`);

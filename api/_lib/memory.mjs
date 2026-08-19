@@ -5,6 +5,12 @@ const MEMORY_KINDS = new Set([
   "practice_outcome",
 ]);
 const ALLOWED_FIELDS = new Set(["kind", "summary", "confidence", "occurredAt", "expiresAt"]);
+const SENSITIVE_TEXT = [
+  /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i,
+  /\b(?:pi|pm|cus|sub|acct)_[A-Za-z0-9_]+\b/,
+  /(?:出生|生日|birth).{0,16}\b\d{4}[-/.]\d{1,2}[-/.]\d{1,2}\b/i,
+  /(?:手机|电话|phone).{0,8}\b\+?\d[\d\s-]{8,}\b/i,
+];
 
 function validTimestamp(value) {
   if (value === undefined || value === null || value === "") return null;
@@ -27,6 +33,9 @@ export function normalizeExtractedMemories(input, now = new Date()) {
     if (typeof candidate.summary !== "string") throw new TypeError("Memory summary is invalid");
     const summary = candidate.summary.trim().replace(/\s+/g, " ");
     if (!summary || summary.length > 800) throw new TypeError("Memory summary is invalid");
+    if (SENSITIVE_TEXT.some((pattern) => pattern.test(summary))) {
+      throw new TypeError("Memory summary contains sensitive account or birth data");
+    }
     const confidence = candidate.confidence === undefined ? 0.5 : Number(candidate.confidence);
     if (!Number.isFinite(confidence) || confidence < 0 || confidence > 1) {
       throw new TypeError("Memory confidence is invalid");

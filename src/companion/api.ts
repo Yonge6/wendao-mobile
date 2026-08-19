@@ -89,12 +89,13 @@ export type CompanionMemory = {
   updated_at: string;
 };
 
-async function memoryRequest<T>(
+async function authorizedJson<T>(
   apiUrl: string,
   accessToken: string,
+  path: string,
   init: RequestInit,
 ): Promise<T> {
-  const response = await fetch(`${apiUrl}/api/companion/memory`, {
+  const response = await fetch(`${apiUrl}${path}`, {
     ...init,
     headers: {
       authorization: `Bearer ${accessToken}`,
@@ -107,11 +108,11 @@ async function memoryRequest<T>(
 }
 
 export function loadCompanionMemories(apiUrl: string, accessToken: string) {
-  return memoryRequest<{ enabled: boolean; memories: CompanionMemory[] }>(apiUrl, accessToken, { method: "GET" });
+  return authorizedJson<{ enabled: boolean; memories: CompanionMemory[] }>(apiUrl, accessToken, "/api/companion/memory", { method: "GET" });
 }
 
 export function setCompanionMemoryEnabled(apiUrl: string, accessToken: string, enabled: boolean) {
-  return memoryRequest<{ enabled: boolean }>(apiUrl, accessToken, {
+  return authorizedJson<{ enabled: boolean }>(apiUrl, accessToken, "/api/companion/memory", {
     method: "PATCH",
     body: JSON.stringify({ action: "set_enabled", enabled }),
   });
@@ -123,12 +124,61 @@ export function setCompanionMemoryStatus(
   memoryId: string,
   status: CompanionMemory["status"],
 ) {
-  return memoryRequest<{ changed: boolean }>(apiUrl, accessToken, {
+  return authorizedJson<{ changed: boolean }>(apiUrl, accessToken, "/api/companion/memory", {
     method: "PATCH",
     body: JSON.stringify({ action: "set_status", memoryId, status }),
   });
 }
 
 export function clearCompanionMemories(apiUrl: string, accessToken: string) {
-  return memoryRequest<{ cleared: boolean }>(apiUrl, accessToken, { method: "DELETE" });
+  return authorizedJson<{ cleared: boolean }>(apiUrl, accessToken, "/api/companion/memory", { method: "DELETE" });
+}
+
+export type WeeklyReflection = {
+  id: string;
+  week_start: string;
+  locale: "zh" | "en";
+  content: string;
+  chapter_ids: number[];
+  updated_at: string;
+};
+
+export async function loadWeeklyReflection(apiUrl: string, accessToken: string) {
+  return authorizedJson<{ weekStart: string; reflection: WeeklyReflection | null }>(
+    apiUrl,
+    accessToken,
+    "/api/companion/weekly-reflection",
+    { method: "GET" },
+  );
+}
+
+export async function generateWeeklyReflection({
+  apiUrl,
+  accessToken,
+  locale,
+  handlers,
+}: {
+  apiUrl: string;
+  accessToken: string;
+  locale: "zh" | "en";
+  handlers: CompanionEventHandlers;
+}) {
+  const response = await fetch(`${apiUrl}/api/companion/weekly-reflection`, {
+    method: "POST",
+    headers: { authorization: `Bearer ${accessToken}`, "content-type": "application/json" },
+    body: JSON.stringify({ locale }),
+  });
+  if (!response.ok) {
+    const payload = await response.json().catch(() => null) as { error?: { message?: string } } | null;
+    throw new Error(payload?.error?.message || "Weekly reflection is temporarily unavailable");
+  }
+  const contentType = response.headers.get("content-type") ?? "";
+  if (contentType.includes("application/json")) {
+    const payload = await response.json() as { reflection?: WeeklyReflection };
+    if (payload.reflection?.content) handlers.delta?.({ text: payload.reflection.content });
+    handlers.done?.({ replayed: true });
+    return;
+  }
+  if (!response.body) throw new Error("Weekly reflection is temporarily unavailable");
+  await readCompanionEvents(response.body, handlers);
 }
