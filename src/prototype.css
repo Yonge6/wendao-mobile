@@ -1991,7 +1991,7 @@ textarea {
   gap: 10px;
 }
 
-.companion-plans article {
+.companion-plans button {
   position: relative;
   display: flex;
   min-height: 126px;
@@ -2002,14 +2002,17 @@ textarea {
   border: 1px solid color-mix(in srgb, var(--gold) 22%, transparent);
   border-radius: 16px;
   background: var(--field-surface);
+  color: var(--ink);
+  cursor: pointer;
+  text-align: left;
 }
 
-.companion-plans article.is-featured {
+.companion-plans button.is-featured {
   border-color: color-mix(in srgb, var(--gold) 58%, transparent);
   background: color-mix(in srgb, var(--gold) 8%, var(--field-surface));
 }
 
-.companion-plans article > span {
+.companion-plans button > span {
   position: absolute;
   top: 12px;
   right: 12px;
@@ -2027,6 +2030,11 @@ textarea {
   color: var(--ink-soft);
   font-size: 11px;
   line-height: 1.65;
+}
+
+.companion-plans button:disabled {
+  cursor: wait;
+  opacity: 0.68;
 }
 
 .companion-home header {

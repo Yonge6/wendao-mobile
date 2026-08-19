@@ -211,10 +211,49 @@ export function createCompanionStore(environment, dependencies = {}) {
     async getEntitlement(userId, signal) {
       const userFilter = encodeURIComponent(`eq.${userId}`);
       const rows = await select(
-        `/wendao_entitlements?select=status,expires_at&user_id=${userFilter}&limit=1`,
+        `/wendao_entitlements?select=status,source,product_id,provider_customer_id,provider_subscription_id,starts_at,expires_at&user_id=${userFilter}&limit=1`,
         signal,
       );
       return rows[0] ?? null;
+    },
+
+    async findStripeUserByCustomer(customerId, signal) {
+      const customerFilter = encodeURIComponent(`eq.${customerId}`);
+      const rows = await select(
+        `/wendao_entitlements?select=user_id&source=eq.stripe&provider_customer_id=${customerFilter}&limit=1`,
+        signal,
+      );
+      return rows[0]?.user_id ?? null;
+    },
+
+    async processBillingEvent(event, signal) {
+      const rows = await rpc("process_wendao_billing_event", {
+        p_provider: event.provider,
+        p_provider_event_id: event.providerEventId,
+        p_event_type: event.eventType,
+        p_payload_hash: event.payloadHash,
+        p_user_id: event.userId ?? null,
+        p_status: event.status ?? null,
+        p_product_id: event.productId ?? null,
+        p_provider_customer_id: event.customerId ?? null,
+        p_provider_subscription_id: event.subscriptionId ?? null,
+        p_starts_at: event.startsAt ?? null,
+        p_expires_at: event.expiresAt ?? null,
+      }, signal);
+      const result = Array.isArray(rows) ? rows[0] : rows;
+      return Boolean(result?.processed ?? result);
+    },
+
+    async reserveCheckout(userId, plan, signal) {
+      const result = await rpc("reserve_wendao_checkout", {
+        p_user_id: userId,
+        p_plan: plan,
+      }, signal);
+      return Boolean(result);
+    },
+
+    async releaseCheckout(userId, signal) {
+      return rpc("release_wendao_checkout", { p_user_id: userId }, signal);
     },
 
     async getWeeklyReflection(userId, weekStart, signal) {

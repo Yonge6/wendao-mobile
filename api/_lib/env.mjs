@@ -38,16 +38,11 @@ function positiveInteger(value, fallback, name) {
   return parsed;
 }
 
-export function readCoreEnvironment(environment = process.env) {
+export function readServiceEnvironment(environment = process.env) {
   return Object.freeze({
     supabaseUrl: secureUrl(required(environment, "SUPABASE_URL"), "SUPABASE_URL"),
     supabaseAnonKey: required(environment, "SUPABASE_ANON_KEY"),
     supabaseServiceRoleKey: required(environment, "SUPABASE_SERVICE_ROLE_KEY"),
-    deepSeekApiKey: required(environment, "DEEPSEEK_API_KEY"),
-    deepSeekBaseUrl: secureUrl(
-      environment.DEEPSEEK_BASE_URL?.trim() || "https://api.deepseek.com",
-      "DEEPSEEK_BASE_URL",
-    ),
     publicOrigins: publicOrigins(required(environment, "PUBLIC_ORIGINS")),
     requestTimeoutMs: positiveInteger(
       environment.REQUEST_TIMEOUT_MS,
@@ -57,6 +52,42 @@ export function readCoreEnvironment(environment = process.env) {
   });
 }
 
+export function readCoreEnvironment(environment = process.env) {
+  return Object.freeze({
+    ...readServiceEnvironment(environment),
+    deepSeekApiKey: required(environment, "DEEPSEEK_API_KEY"),
+    deepSeekBaseUrl: secureUrl(
+      environment.DEEPSEEK_BASE_URL?.trim() || "https://api.deepseek.com",
+      "DEEPSEEK_BASE_URL",
+    ),
+  });
+}
+
 export function readCompanionEnvironment(environment = process.env) {
   return readCoreEnvironment(environment);
+}
+
+function stripeSecret(environment) {
+  const value = required(environment, "STRIPE_SECRET_KEY");
+  if (!value.startsWith("sk_")) throw new Error("STRIPE_SECRET_KEY is invalid");
+  return value;
+}
+
+export function readStripeCheckoutEnvironment(environment = process.env) {
+  return Object.freeze({
+    ...readServiceEnvironment(environment),
+    stripeSecretKey: stripeSecret(environment),
+    stripeMonthlyPriceId: required(environment, "STRIPE_PRICE_MONTHLY"),
+    stripeAnnualPriceId: required(environment, "STRIPE_PRICE_ANNUAL"),
+  });
+}
+
+export function readStripeWebhookEnvironment(environment = process.env) {
+  const webhookSecret = required(environment, "STRIPE_WEBHOOK_SECRET");
+  if (!webhookSecret.startsWith("whsec_")) throw new Error("STRIPE_WEBHOOK_SECRET is invalid");
+  return Object.freeze({
+    ...readServiceEnvironment(environment),
+    stripeSecretKey: stripeSecret(environment),
+    stripeWebhookSecret: webhookSecret,
+  });
 }

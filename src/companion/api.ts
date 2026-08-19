@@ -182,3 +182,20 @@ export async function generateWeeklyReflection({
   if (!response.body) throw new Error("Weekly reflection is temporarily unavailable");
   await readCompanionEvents(response.body, handlers);
 }
+
+export function createStripeCheckout(
+  apiUrl: string,
+  accessToken: string,
+  plan: "monthly" | "annual",
+) {
+  return authorizedJson<{ url: string }>(apiUrl, accessToken, "/api/billing/stripe-checkout", {
+    method: "POST",
+    body: JSON.stringify({ plan }),
+  });
+}
+
+export function createStripePortal(apiUrl: string, accessToken: string) {
+  return authorizedJson<{ url: string }>(apiUrl, accessToken, "/api/billing/stripe-portal", {
+    method: "POST",
+  });
+}

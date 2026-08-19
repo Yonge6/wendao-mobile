@@ -91,7 +91,7 @@ function SignedInCompanion({
     return <div className="companion-loading" role="status">{isZh ? "正在打开你的问道…" : "Opening your Wendao…"}</div>;
   }
   if (!entitlementActive(state.entitlement)) {
-    return <SubscriptionPanel language={language} onSignOut={onSignOut} />;
+    return <SubscriptionPanel language={language} session={session} onSignOut={onSignOut} />;
   }
 
   if (view === "memory") {
