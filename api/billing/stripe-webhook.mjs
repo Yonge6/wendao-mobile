@@ -1,10 +1,10 @@
 import { readStripeWebhookEnvironment } from "../_lib/env.mjs";
+import { billingPayloadHash } from "../_lib/billing.mjs";
 import { errorResponse, HttpError, requestId } from "../_lib/http.mjs";
 import { createCompanionStore } from "../_lib/store.mjs";
 import {
   createStripeClient,
   normalizeStripeEvent,
-  stripePayloadHash,
 } from "../_lib/stripe.mjs";
 
 const MAX_WEBHOOK_BYTES = 1_000_000;
@@ -39,7 +39,7 @@ export async function handleStripeWebhook(request, dependencies = {}) {
     }
     const processed = await store.processBillingEvent({
       ...normalized,
-      payloadHash: stripePayloadHash(rawBody),
+      payloadHash: billingPayloadHash(rawBody),
     }, request.signal);
     return Response.json({ received: true, processed });
   } catch (error) {

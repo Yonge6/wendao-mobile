@@ -129,7 +129,9 @@ begin
       );
   end if;
 
-  if p_user_id is not null and p_event_type = 'checkout.session.completed' then
+  if p_user_id is not null and p_event_type in (
+    'checkout.session.completed', 'client.transaction.verified'
+  ) then
     delete from public.wendao_checkout_locks where user_id = p_user_id;
   end if;
 

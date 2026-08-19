@@ -30,4 +30,5 @@ test("privacy manifest is bundled and explicitly disables tracking", () => {
   assert.match(privacy, /<key>NSPrivacyTracking<\/key>\s*<false\/>/);
   assert.match(privacy, /NSPrivacyCollectedDataTypeOtherUserContent/);
   assert.match(privacy, /NSPrivacyCollectedDataTypeProductInteraction/);
+  assert.match(privacy, /NSPrivacyCollectedDataTypePurchaseHistory/);
 });

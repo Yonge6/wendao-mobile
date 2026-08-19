@@ -226,6 +226,15 @@ export function createCompanionStore(environment, dependencies = {}) {
       return rows[0]?.user_id ?? null;
     },
 
+    async findAppleUserByOriginalTransaction(originalTransactionId, signal) {
+      const subscriptionFilter = encodeURIComponent(`eq.${originalTransactionId}`);
+      const rows = await select(
+        `/wendao_entitlements?select=user_id&source=eq.apple&provider_subscription_id=${subscriptionFilter}&limit=1`,
+        signal,
+      );
+      return rows[0]?.user_id ?? null;
+    },
+
     async processBillingEvent(event, signal) {
       const rows = await rpc("process_wendao_billing_event", {
         p_provider: event.provider,

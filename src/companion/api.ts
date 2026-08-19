@@ -199,3 +199,25 @@ export function createStripePortal(apiUrl: string, accessToken: string) {
     method: "POST",
   });
 }
+
+export function verifyAppleTransaction(apiUrl: string, accessToken: string, signedTransaction: string) {
+  return authorizedJson<{ verified: boolean; processed: boolean; entitlement: string }>(
+    apiUrl,
+    accessToken,
+    "/api/billing/apple-transaction",
+    { method: "POST", body: JSON.stringify({ signedTransaction }) },
+  );
+}
+
+export function reserveApplePurchase(apiUrl: string, accessToken: string, plan: "monthly" | "annual") {
+  return authorizedJson<{ ready: boolean }>(apiUrl, accessToken, "/api/billing/apple-purchase-intent", {
+    method: "POST",
+    body: JSON.stringify({ plan }),
+  });
+}
+
+export function releaseApplePurchase(apiUrl: string, accessToken: string) {
+  return authorizedJson<{ released: boolean }>(apiUrl, accessToken, "/api/billing/apple-purchase-intent", {
+    method: "DELETE",
+  });
+}

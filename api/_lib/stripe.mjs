@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import Stripe from "stripe";
 
 import { HttpError } from "./http.mjs";
@@ -10,10 +9,6 @@ export function createStripeClient(environment, dependencies = {}) {
     maxNetworkRetries: 2,
     timeout: environment.requestTimeoutMs,
   });
-}
-
-export function stripePayloadHash(rawBody) {
-  return createHash("sha256").update(rawBody).digest("hex");
 }
 
 function objectId(value) {

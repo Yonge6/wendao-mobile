@@ -4,8 +4,11 @@ import CompanionAuth from "./CompanionAuth";
 import SubscriptionPanel from "./SubscriptionPanel";
 import { companionClient, companionPublicConfig } from "./client";
 import { streamCompanionAnswer } from "./api";
+import { createStripePortal } from "./api";
 import MemoryPanel from "./MemoryPanel";
 import WeeklyReflectionPanel from "./WeeklyReflectionPanel";
+import { Capacitor } from "@capacitor/core";
+import { manageStoreKit } from "./storekit";
 
 type CompanionPanelProps = {
   language: "zh" | "en";
@@ -20,7 +23,7 @@ type ConversationMessage = {
 };
 
 type CompanionState = {
-  entitlement: { status: string; expires_at: string | null } | null;
+  entitlement: { status: string; source: string; expires_at: string | null } | null;
   usage: { question_allowance: number | null; used_questions: number } | null;
   memoryEnabled: boolean;
 };
@@ -59,7 +62,7 @@ function SignedInCompanion({
     if (!client) return;
     setError("");
     const [entitlementResult, usageResult, accountResult] = await Promise.all([
-      client.from("wendao_entitlements").select("status,expires_at").eq("user_id", session.user.id).maybeSingle(),
+      client.from("wendao_entitlements").select("status,source,expires_at").eq("user_id", session.user.id).maybeSingle(),
       client.from("wendao_usage_periods").select("question_allowance,used_questions").eq("user_id", session.user.id).order("period_start", { ascending: false }).limit(1).maybeSingle(),
       client.from("wendao_accounts").select("memory_enabled").eq("user_id", session.user.id).maybeSingle(),
     ]);
@@ -91,7 +94,7 @@ function SignedInCompanion({
     return <div className="companion-loading" role="status">{isZh ? "正在打开你的问道…" : "Opening your Wendao…"}</div>;
   }
   if (!entitlementActive(state.entitlement)) {
-    return <SubscriptionPanel language={language} session={session} onSignOut={onSignOut} />;
+    return <SubscriptionPanel language={language} session={session} onSignOut={onSignOut} onMembershipChanged={refresh} />;
   }
 
   if (view === "memory") {
@@ -162,6 +165,24 @@ function SignedInCompanion({
     }
   };
 
+  const manageMembership = async () => {
+    const config = companionPublicConfig();
+    if (!config) return;
+    setError("");
+    try {
+      if (Capacitor.getPlatform() === "ios" && state.entitlement?.source === "apple") {
+        await manageStoreKit();
+        return;
+      }
+      if (!Capacitor.isNativePlatform() && state.entitlement?.source === "stripe") {
+        const result = await createStripePortal(config.apiUrl, session.access_token);
+        window.location.assign(result.url);
+      }
+    } catch (nextError) {
+      setError(nextError instanceof Error ? nextError.message : (isZh ? "暂时无法管理订阅。" : "Unable to manage membership."));
+    }
+  };
+
   return (
     <section className="companion-home">
       <header>
@@ -209,6 +230,10 @@ function SignedInCompanion({
       </form>
       {error ? <p className="companion-error" role="alert">{error}</p> : null}
       <div className="companion-home-actions">
+        {(!Capacitor.isNativePlatform() && state.entitlement?.source === "stripe")
+          || (Capacitor.getPlatform() === "ios" && state.entitlement?.source === "apple") ? (
+            <button className="companion-text-button" type="button" onClick={() => void manageMembership()}>{isZh ? "管理会员" : "Manage membership"}</button>
+          ) : null}
         <button className="companion-text-button" type="button" onClick={() => setView("weekly")}>{isZh ? "本周回看" : "Weekly reflection"}</button>
         <button className="companion-text-button" type="button" onClick={() => setView("memory")}>{isZh ? "管理自动记忆" : "Manage memory"}</button>
         {asking ? <button className="companion-text-button" type="button" onClick={() => abortRef.current?.abort()}>{isZh ? "停止回答" : "Stop response"}</button> : null}

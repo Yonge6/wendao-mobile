@@ -21,6 +21,7 @@ function publicOrigins(value) {
   const origins = value.split(",").map((entry) => entry.trim()).filter(Boolean);
   if (origins.length === 0) throw new Error("PUBLIC_ORIGINS must not be empty");
   return origins.map((origin) => {
+    if (origin === "capacitor://localhost") return origin;
     const url = new URL(origin);
     if (url.origin !== origin.replace(/\/$/, "")) {
       throw new Error("PUBLIC_ORIGINS entries must be origins without paths");
@@ -89,5 +90,28 @@ export function readStripeWebhookEnvironment(environment = process.env) {
     ...readServiceEnvironment(environment),
     stripeSecretKey: stripeSecret(environment),
     stripeWebhookSecret: webhookSecret,
+  });
+}
+
+function rootCertificate(environment, name) {
+  const encoded = required(environment, name);
+  const certificate = Buffer.from(encoded, "base64");
+  if (certificate.length < 500) throw new Error(`${name} is invalid`);
+  return certificate;
+}
+
+export function readAppleEnvironment(environment = process.env) {
+  const appAppleId = Number(required(environment, "APPLE_APP_ID"));
+  if (!Number.isSafeInteger(appAppleId) || appAppleId < 1) {
+    throw new Error("APPLE_APP_ID must be a positive integer");
+  }
+  return Object.freeze({
+    ...readServiceEnvironment(environment),
+    appleBundleId: required(environment, "APPLE_BUNDLE_ID"),
+    appleAppId: appAppleId,
+    appleRootCertificates: [
+      rootCertificate(environment, "APPLE_ROOT_CA_G2_BASE64"),
+      rootCertificate(environment, "APPLE_ROOT_CA_G3_BASE64"),
+    ],
   });
 }
