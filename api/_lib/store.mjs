@@ -164,6 +164,48 @@ export function createCompanionStore(environment, dependencies = {}) {
       };
     },
 
+    async getMemories(userId, signal) {
+      const userFilter = encodeURIComponent(`eq.${userId}`);
+      const [accounts, memories] = await Promise.all([
+        select(`/wendao_accounts?select=memory_enabled&user_id=${userFilter}&limit=1`, signal),
+        select(
+          `/wendao_memories?select=id,kind,summary,status,confidence,occurred_at,expires_at,updated_at&user_id=${userFilter}&order=updated_at.desc&limit=100`,
+          signal,
+        ),
+      ]);
+      return {
+        enabled: accounts[0]?.memory_enabled !== false,
+        memories,
+      };
+    },
+
+    async applyMemoryCandidates(userId, threadId, candidates, signal) {
+      return rpc("apply_wendao_memory_candidates", {
+        p_user_id: userId,
+        p_source_thread_id: threadId,
+        p_candidates: candidates,
+      }, signal);
+    },
+
+    async setMemoryEnabled(userId, enabled, signal) {
+      return rpc("set_wendao_memory_enabled", {
+        p_user_id: userId,
+        p_enabled: enabled,
+      }, signal);
+    },
+
+    async setMemoryStatus(userId, memoryId, status, signal) {
+      return rpc("set_wendao_memory_status", {
+        p_user_id: userId,
+        p_memory_id: memoryId,
+        p_status: status,
+      }, signal);
+    },
+
+    async clearMemories(userId, signal) {
+      return rpc("clear_wendao_memories", { p_user_id: userId }, signal);
+    },
+
     async getRecentMessages(userId, threadId, signal) {
       if (!threadId) return [];
       const userFilter = encodeURIComponent(`eq.${userId}`);

@@ -54,12 +54,13 @@ test("streams a grounded answer and saves it after reserving quota", async () =>
   const actions = [];
   const store = {
     reserveQuestion: async () => ({ state: "reserved", remainingQuestions: 59 }),
-    getContext: async () => ({ memories: [], lifeManual: null }),
+    getContext: async () => ({ memoryEnabled: true, memories: [], lifeManual: null }),
     getRecentMessages: async () => [],
     finishExchange: async (exchange) => {
       actions.push(exchange);
       return { threadId: "33333333-3333-4333-8333-333333333333", answerMessageId: "44444444-4444-4444-8444-444444444444" };
     },
+    applyMemoryCandidates: async (_userId, _threadId, memories) => actions.push({ memories }),
     releaseQuestion: async () => actions.push("released"),
   };
   let modelMessages;
@@ -73,6 +74,9 @@ test("streams a grounded answer and saves it after reserving quota", async () =>
         modelMessages = messages;
         return providerStream(["先检查交接，", "再完成退出。"]);
       },
+      background: async () => ({
+        data: { memories: [{ kind: "current_situation", summary: "正在收尾一个项目", confidence: 0.8 }] },
+      }),
     },
   });
   assert.equal(response.status, 200);
@@ -82,6 +86,7 @@ test("streams a grounded answer and saves it after reserving quota", async () =>
   assert.match(stream, /event: done/);
   assert.match(modelMessages[0].content, /慎终如始/);
   assert.equal(actions[0].answer, "先检查交接，再完成退出。");
+  assert.equal(actions[1].memories[0].summary, "正在收尾一个项目");
   assert.notEqual(actions.at(-1), "released");
 });
 

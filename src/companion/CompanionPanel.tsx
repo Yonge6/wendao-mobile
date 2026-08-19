@@ -4,6 +4,7 @@ import CompanionAuth from "./CompanionAuth";
 import SubscriptionPanel from "./SubscriptionPanel";
 import { companionClient, companionPublicConfig } from "./client";
 import { streamCompanionAnswer } from "./api";
+import MemoryPanel from "./MemoryPanel";
 
 type CompanionPanelProps = {
   language: "zh" | "en";
@@ -42,6 +43,7 @@ function SignedInCompanion({
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
   const [threadId, setThreadId] = useState<string | null>(null);
   const [asking, setAsking] = useState(false);
+  const [view, setView] = useState<"conversation" | "memory">("conversation");
   const abortRef = useRef<AbortController | null>(null);
   const isZh = language === "zh";
 
@@ -94,6 +96,10 @@ function SignedInCompanion({
   const remaining = state.usage
     ? Math.max(0, state.usage.question_allowance - state.usage.used_questions)
     : null;
+
+  if (view === "memory") {
+    return <MemoryPanel session={session} language={language} onBack={() => setView("conversation")} />;
+  }
 
   const ask = async (event: FormEvent) => {
     event.preventDefault();
@@ -207,6 +213,7 @@ function SignedInCompanion({
       {error ? <p className="companion-error" role="alert">{error}</p> : null}
       {remaining === 0 ? <p className="companion-error">{isZh ? "本月问答额度已用完。" : "This month’s question allowance has been used."}</p> : null}
       <div className="companion-home-actions">
+        <button className="companion-text-button" type="button" onClick={() => setView("memory")}>{isZh ? "管理自动记忆" : "Manage memory"}</button>
         {asking ? <button className="companion-text-button" type="button" onClick={() => abortRef.current?.abort()}>{isZh ? "停止回答" : "Stop response"}</button> : null}
         <button className="companion-text-button" type="button" onClick={() => void onSignOut()}>{isZh ? "退出当前账号" : "Sign out"}</button>
       </div>

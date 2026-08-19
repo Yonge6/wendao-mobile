@@ -82,3 +82,27 @@ test("context reads only memory summaries and chart core", async () => {
   assert.ok(urls.every((url) => !url.includes("birth_date") && !url.includes("email")));
   assert.ok(urls.some((url) => url.includes("select=chart_core")));
 });
+
+test("memory changes use owned server-only RPCs", async () => {
+  const calls = [];
+  const store = createCompanionStore(environment, {
+    fetchImpl: async (url, init) => {
+      calls.push({ url, body: JSON.parse(init.body) });
+      return Response.json(true);
+    },
+  });
+  await store.setMemoryEnabled("11111111-1111-4111-8111-111111111111", false);
+  await store.setMemoryStatus(
+    "11111111-1111-4111-8111-111111111111",
+    "22222222-2222-4222-8222-222222222222",
+    "resolved",
+  );
+  await store.clearMemories("11111111-1111-4111-8111-111111111111");
+  assert.match(calls[0].url, /set_wendao_memory_enabled$/);
+  assert.deepEqual(calls[0].body, {
+    p_user_id: "11111111-1111-4111-8111-111111111111",
+    p_enabled: false,
+  });
+  assert.match(calls[1].url, /set_wendao_memory_status$/);
+  assert.match(calls[2].url, /clear_wendao_memories$/);
+});

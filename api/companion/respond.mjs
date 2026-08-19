@@ -11,6 +11,10 @@ import {
 } from "../_lib/http.mjs";
 import { createModelProvider } from "../_lib/providers/index.mjs";
 import {
+  buildMemoryExtractionMessages,
+  normalizeExtractedMemories,
+} from "../_lib/memory.mjs";
+import {
   classifySafetyRisk,
   immediateSafetyResponse,
   validateCompanionQuestion,
@@ -211,6 +215,24 @@ export async function handleCompanionRequest(request, dependencies = {}) {
               provider: "deepseek",
               model: generated.model,
             });
+            if (context.memoryEnabled) {
+              try {
+                const extraction = await provider.background(
+                  buildMemoryExtractionMessages({
+                    question: payload.question,
+                    answer: generated.answer,
+                    locale: payload.locale,
+                  }),
+                  { requestId: payload.requestId },
+                );
+                const memories = normalizeExtractedMemories(extraction.data);
+                if (memories.length) {
+                  await store.applyMemoryCandidates(user.id, saved.threadId, memories);
+                }
+              } catch {
+                // Memory extraction is best effort and must never invalidate a saved answer.
+              }
+            }
             controller.enqueue(sseEvent("done", {
               requestId: payload.requestId,
               ...saved,

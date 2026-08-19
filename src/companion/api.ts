@@ -77,3 +77,58 @@ export async function streamCompanionAnswer({
   if (!response.body) throw new Error("Wendao Companion is temporarily unavailable");
   await readCompanionEvents(response.body, handlers);
 }
+
+export type CompanionMemory = {
+  id: string;
+  kind: "current_situation" | "recurring_theme" | "preference_boundary" | "practice_outcome";
+  summary: string;
+  status: "active" | "resolved" | "expired";
+  confidence: number;
+  occurred_at: string | null;
+  expires_at: string | null;
+  updated_at: string;
+};
+
+async function memoryRequest<T>(
+  apiUrl: string,
+  accessToken: string,
+  init: RequestInit,
+): Promise<T> {
+  const response = await fetch(`${apiUrl}/api/companion/memory`, {
+    ...init,
+    headers: {
+      authorization: `Bearer ${accessToken}`,
+      ...(init.body ? { "content-type": "application/json" } : {}),
+    },
+  });
+  const payload = await response.json().catch(() => null) as T & { error?: { message?: string } };
+  if (!response.ok) throw new Error(payload?.error?.message || "Memory is temporarily unavailable");
+  return payload;
+}
+
+export function loadCompanionMemories(apiUrl: string, accessToken: string) {
+  return memoryRequest<{ enabled: boolean; memories: CompanionMemory[] }>(apiUrl, accessToken, { method: "GET" });
+}
+
+export function setCompanionMemoryEnabled(apiUrl: string, accessToken: string, enabled: boolean) {
+  return memoryRequest<{ enabled: boolean }>(apiUrl, accessToken, {
+    method: "PATCH",
+    body: JSON.stringify({ action: "set_enabled", enabled }),
+  });
+}
+
+export function setCompanionMemoryStatus(
+  apiUrl: string,
+  accessToken: string,
+  memoryId: string,
+  status: CompanionMemory["status"],
+) {
+  return memoryRequest<{ changed: boolean }>(apiUrl, accessToken, {
+    method: "PATCH",
+    body: JSON.stringify({ action: "set_status", memoryId, status }),
+  });
+}
+
+export function clearCompanionMemories(apiUrl: string, accessToken: string) {
+  return memoryRequest<{ cleared: boolean }>(apiUrl, accessToken, { method: "DELETE" });
+}
