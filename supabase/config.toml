@@ -1,9 +1,11 @@
 project_id = "wendao"
 
 [auth]
-site_url = "https://yonge6.github.io/wendao-mobile/#data-admin"
+site_url = "https://wendao.wonderelian.com/"
 additional_redirect_urls = [
+  "https://wendao.wonderelian.com/",
   "https://yonge6.github.io/wendao-mobile/",
+  "com.yonge6.wendao://auth/callback",
   "http://127.0.0.1:4173/",
   "http://localhost:4173/"
 ]
