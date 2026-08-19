@@ -221,3 +221,21 @@ export function releaseApplePurchase(apiUrl: string, accessToken: string) {
     method: "DELETE",
   });
 }
+
+export function exportCompanionAccount(apiUrl: string, accessToken: string) {
+  return authorizedJson<{ exportedAt: string; data: Record<string, unknown> }>(
+    apiUrl,
+    accessToken,
+    "/api/companion/account",
+    { method: "GET" },
+  );
+}
+
+export function deleteCompanionAccount(apiUrl: string, accessToken: string) {
+  return authorizedJson<{ deleted: boolean; appleSubscriptionMayContinue: boolean }>(
+    apiUrl,
+    accessToken,
+    "/api/companion/account",
+    { method: "DELETE", body: JSON.stringify({ confirmation: "DELETE" }) },
+  );
+}

@@ -9,6 +9,7 @@ import MemoryPanel from "./MemoryPanel";
 import WeeklyReflectionPanel from "./WeeklyReflectionPanel";
 import { Capacitor } from "@capacitor/core";
 import { manageStoreKit } from "./storekit";
+import AccountPanel from "./AccountPanel";
 
 type CompanionPanelProps = {
   language: "zh" | "en";
@@ -47,7 +48,7 @@ function SignedInCompanion({
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
   const [threadId, setThreadId] = useState<string | null>(null);
   const [asking, setAsking] = useState(false);
-  const [view, setView] = useState<"conversation" | "memory" | "weekly">("conversation");
+  const [view, setView] = useState<"conversation" | "memory" | "weekly" | "account">("conversation");
   const abortRef = useRef<AbortController | null>(null);
   const isZh = language === "zh";
 
@@ -93,8 +94,19 @@ function SignedInCompanion({
   if (!state) {
     return <div className="companion-loading" role="status">{isZh ? "正在打开你的问道…" : "Opening your Wendao…"}</div>;
   }
+  if (view === "account") {
+    return (
+      <AccountPanel
+        session={session}
+        language={language}
+        entitlementSource={state.entitlement?.source ?? null}
+        onBack={() => setView("conversation")}
+        onSignOut={onSignOut}
+      />
+    );
+  }
   if (!entitlementActive(state.entitlement)) {
-    return <SubscriptionPanel language={language} session={session} onSignOut={onSignOut} onMembershipChanged={refresh} />;
+    return <SubscriptionPanel language={language} session={session} onSignOut={onSignOut} onMembershipChanged={refresh} onOpenAccount={() => setView("account")} />;
   }
 
   if (view === "memory") {
@@ -236,6 +248,7 @@ function SignedInCompanion({
           ) : null}
         <button className="companion-text-button" type="button" onClick={() => setView("weekly")}>{isZh ? "本周回看" : "Weekly reflection"}</button>
         <button className="companion-text-button" type="button" onClick={() => setView("memory")}>{isZh ? "管理自动记忆" : "Manage memory"}</button>
+        <button className="companion-text-button" type="button" onClick={() => setView("account")}>{isZh ? "数据与账号" : "Data and account"}</button>
         {asking ? <button className="companion-text-button" type="button" onClick={() => abortRef.current?.abort()}>{isZh ? "停止回答" : "Stop response"}</button> : null}
         <button className="companion-text-button" type="button" onClick={() => void onSignOut()}>{isZh ? "退出当前账号" : "Sign out"}</button>
       </div>

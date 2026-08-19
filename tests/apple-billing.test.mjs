@@ -38,7 +38,6 @@ function request(signedTransaction = "signed-transaction") {
 }
 
 test("Apple environment keeps certificates and identifiers server-only", () => {
-  const certificate = Buffer.alloc(600, 7).toString("base64");
   const result = readAppleEnvironment({
     SUPABASE_URL: "https://project.supabase.co",
     SUPABASE_ANON_KEY: "anon",
@@ -46,11 +45,9 @@ test("Apple environment keeps certificates and identifiers server-only", () => {
     PUBLIC_ORIGINS: "https://wendao.wonderelian.com,capacitor://localhost",
     APPLE_BUNDLE_ID: "com.yonge6.wendao",
     APPLE_APP_ID: "6796945428",
-    APPLE_ROOT_CA_G2_BASE64: certificate,
-    APPLE_ROOT_CA_G3_BASE64: certificate,
   });
   assert.equal(result.appleAppId, 6796945428);
-  assert.equal(result.appleRootCertificates[0].length, 600);
+  assert.ok(result.appleRootCertificates.every((certificate) => certificate.length >= 500));
 });
 
 test("normalizes verified StoreKit transactions and notification state changes", () => {

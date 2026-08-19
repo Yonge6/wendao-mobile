@@ -70,6 +70,7 @@ set search_path = ''
 as $$
 declare
   v_inserted_id bigint;
+  v_known_user_id uuid;
 begin
   if p_provider not in ('apple', 'stripe') then
     raise exception using errcode = 'P0001', message = 'invalid_billing_provider';
@@ -80,10 +81,12 @@ begin
     raise exception using errcode = 'P0001', message = 'invalid_entitlement_status';
   end if;
 
+  select id into v_known_user_id from auth.users where id = p_user_id;
+
   insert into public.wendao_billing_events (
     user_id, provider, provider_event_id, event_type, payload_hash, processed_at
   ) values (
-    p_user_id, p_provider, p_provider_event_id, p_event_type, p_payload_hash, now()
+    v_known_user_id, p_provider, p_provider_event_id, p_event_type, p_payload_hash, now()
   )
   on conflict (provider, provider_event_id) do nothing
   returning id into v_inserted_id;
@@ -93,7 +96,7 @@ begin
     return;
   end if;
 
-  if p_user_id is not null and p_status is not null then
+  if v_known_user_id is not null and p_status is not null then
     insert into public.wendao_entitlements (
       user_id,
       status,
@@ -104,7 +107,7 @@ begin
       starts_at,
       expires_at
     ) values (
-      p_user_id,
+      v_known_user_id,
       p_status,
       p_provider,
       p_product_id,
@@ -129,10 +132,10 @@ begin
       );
   end if;
 
-  if p_user_id is not null and p_event_type in (
+  if v_known_user_id is not null and p_event_type in (
     'checkout.session.completed', 'client.transaction.verified'
   ) then
-    delete from public.wendao_checkout_locks where user_id = p_user_id;
+    delete from public.wendao_checkout_locks where user_id = v_known_user_id;
   end if;
 
   return query select true;

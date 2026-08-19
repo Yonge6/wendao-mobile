@@ -18,9 +18,10 @@ type SubscriptionPanelProps = {
   session: Session;
   onSignOut: () => Promise<void>;
   onMembershipChanged: () => Promise<void>;
+  onOpenAccount: () => void;
 };
 
-export default function SubscriptionPanel({ language, session, onSignOut, onMembershipChanged }: SubscriptionPanelProps) {
+export default function SubscriptionPanel({ language, session, onSignOut, onMembershipChanged, onOpenAccount }: SubscriptionPanelProps) {
   const isZh = language === "zh";
   const native = Capacitor.isNativePlatform();
   const [busyPlan, setBusyPlan] = useState<"monthly" | "annual" | null>(null);
@@ -117,6 +118,9 @@ export default function SubscriptionPanel({ language, session, onSignOut, onMemb
       ) : null}
       {notice ? <p className="companion-plan-note" role="status">{notice}</p> : null}
       {error ? <p className="companion-error" role="alert">{error}</p> : null}
+      <button className="companion-text-button" type="button" onClick={onOpenAccount}>
+        {isZh ? "数据与账号" : "Data and account"}
+      </button>
       <button className="companion-text-button" type="button" onClick={() => void onSignOut()}>
         {isZh ? "退出当前账号" : "Sign out"}
       </button>

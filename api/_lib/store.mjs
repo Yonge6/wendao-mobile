@@ -265,6 +265,40 @@ export function createCompanionStore(environment, dependencies = {}) {
       return rpc("release_wendao_checkout", { p_user_id: userId }, signal);
     },
 
+    async getAccountExport(userId, signal) {
+      const userFilter = encodeURIComponent(`eq.${userId}`);
+      const resources = [
+        ["account", `/wendao_accounts?select=*&user_id=${userFilter}`],
+        ["profiles", `/wendao_profiles?select=*&user_id=${userFilter}`],
+        ["threads", `/wendao_threads?select=*&user_id=${userFilter}`],
+        ["messages", `/wendao_messages?select=*&user_id=${userFilter}&order=created_at.asc`],
+        ["memories", `/wendao_memories?select=*&user_id=${userFilter}&order=created_at.asc`],
+        ["weeklyReflections", `/wendao_weekly_reflections?select=*&user_id=${userFilter}&order=week_start.asc`],
+        ["entitlement", `/wendao_entitlements?select=*&user_id=${userFilter}`],
+        ["usage", `/wendao_usage_periods?select=period_start,period_end,used_questions&user_id=${userFilter}&order=period_start.asc`],
+        ["feedback", `/wendao_feedback?select=*&user_id=${userFilter}&order=created_at.asc`],
+      ];
+      const values = await Promise.all(resources.map(([, path]) => select(path, signal)));
+      return Object.fromEntries(resources.map(([name], index) => [name, values[index]]));
+    },
+
+    async deleteAuthUser(userId, signal) {
+      let response;
+      try {
+        response = await fetchImpl(`${environment.supabaseUrl}/auth/v1/admin/users/${encodeURIComponent(userId)}`, {
+          method: "DELETE",
+          headers,
+          signal: signal ?? AbortSignal.timeout(environment.requestTimeoutMs),
+        });
+      } catch {
+        throw new HttpError(503, "account_deletion_unavailable", "Account deletion is temporarily unavailable");
+      }
+      if (!response.ok) {
+        throw new HttpError(503, "account_deletion_unavailable", "Account deletion is temporarily unavailable");
+      }
+      return true;
+    },
+
     async getWeeklyReflection(userId, weekStart, signal) {
       const userFilter = encodeURIComponent(`eq.${userId}`);
       const weekFilter = encodeURIComponent(`eq.${weekStart}`);

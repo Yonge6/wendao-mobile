@@ -1,3 +1,5 @@
+import { APPLE_ROOT_CERTIFICATES } from "./apple-root-certificates.mjs";
+
 function required(environment, name) {
   const value = environment[name]?.trim();
   if (!value) throw new Error(`${name} is required`);
@@ -93,13 +95,6 @@ export function readStripeWebhookEnvironment(environment = process.env) {
   });
 }
 
-function rootCertificate(environment, name) {
-  const encoded = required(environment, name);
-  const certificate = Buffer.from(encoded, "base64");
-  if (certificate.length < 500) throw new Error(`${name} is invalid`);
-  return certificate;
-}
-
 export function readAppleEnvironment(environment = process.env) {
   const appAppleId = Number(required(environment, "APPLE_APP_ID"));
   if (!Number.isSafeInteger(appAppleId) || appAppleId < 1) {
@@ -109,9 +104,17 @@ export function readAppleEnvironment(environment = process.env) {
     ...readServiceEnvironment(environment),
     appleBundleId: required(environment, "APPLE_BUNDLE_ID"),
     appleAppId: appAppleId,
-    appleRootCertificates: [
-      rootCertificate(environment, "APPLE_ROOT_CA_G2_BASE64"),
-      rootCertificate(environment, "APPLE_ROOT_CA_G3_BASE64"),
-    ],
+    appleRootCertificates: APPLE_ROOT_CERTIFICATES,
+  });
+}
+
+export function readAccountEnvironment(environment = process.env) {
+  const stripeSecretKey = environment.STRIPE_SECRET_KEY?.trim() || null;
+  if (stripeSecretKey && !stripeSecretKey.startsWith("sk_")) {
+    throw new Error("STRIPE_SECRET_KEY is invalid");
+  }
+  return Object.freeze({
+    ...readServiceEnvironment(environment),
+    stripeSecretKey,
   });
 }

@@ -158,6 +158,9 @@ test("billing migration is idempotent, server-only, and avoids cross-provider ov
   assert.match(sql, /create table public\.wendao_checkout_locks/);
   assert.match(sql, /interval '30 minutes'/);
   assert.match(sql, /'checkout\.session\.completed', 'client\.transaction\.verified'/);
+  assert.match(sql, /select id into v_known_user_id from auth\.users where id = p_user_id/);
+  assert.match(sql, /values \( v_known_user_id, p_provider, p_provider_event_id/);
+  assert.match(sql, /if v_known_user_id is not null and p_status is not null/);
   assert.match(sql, /wendao_entitlements\.source in \('none', excluded\.source\)/);
   assert.match(sql, /revoke all on function public\.process_wendao_billing_event[^;]+from public, anon, authenticated/);
   assert.match(sql, /grant execute on function public\.process_wendao_billing_event[^;]+to service_role/);
