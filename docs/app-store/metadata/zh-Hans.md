@@ -2,8 +2,8 @@
 
 - App 名称：`三慢问道`
 - 副标题：`帛书乙本《道德经》慢读`
-- 主要类别：`图书 / Books`
-- 次要类别：`生活 / Lifestyle`
+- 主要类别：`生活 / Lifestyle`
+- 次要类别：`图书 / Books`
 - 年龄分级：`4+`
 - 定价：`免费`
 - 支持网址：`https://wendao.wonderelian.com/`

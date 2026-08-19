@@ -2,8 +2,8 @@
 
 - App name: `Wendao: Daodejing`
 - Subtitle: `A slower Daodejing reading`
-- Primary category: `Books`
-- Secondary category: `Lifestyle`
+- Primary category: `Lifestyle`
+- Secondary category: `Books`
 - Age rating: `4+`
 - Price: `Free`
 - Support URL: `https://wendao.wonderelian.com/`
