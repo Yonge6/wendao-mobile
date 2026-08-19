@@ -37,15 +37,16 @@ import {
   foundationalReading,
   type HumanDesignReadingChart,
 } from "./humanDesignReading";
-import { chapters, type Chapter, type ChapterCopyBase, type RelatedItem } from "./data/chapters";
+import { chapters, type Chapter, type RelatedItem } from "./data/chapters";
 import ShareCardPanel from "./ShareCardPanel";
 import type { ShareCardKind } from "./shareCard";
 import { initializeNativeShell, nativeImpact, runtimeSurface, syncNativeTheme } from "./native";
+import CompanionPanel from "./companion/CompanionPanel";
 
 type Language = "zh" | "en";
 type Theme = "light" | "dark";
 type ReadingSize = "small" | "medium" | "large";
-type DrawerView = "home" | "profile" | "profile-detail" | "about" | "contact" | "feedback";
+type DrawerView = "home" | "companion" | "profile" | "profile-detail" | "about" | "contact" | "feedback";
 type ChapterEntrySource = "daily" | "directory" | "chance" | "link";
 
 type LifeProfile = {
@@ -448,16 +449,6 @@ function personalizedAdvice(chapter: Chapter, chart: ChartSnapshot, language: La
   return `对${type}、${profile}人生角色的你来说，《${copy.title}》先照见的是：“${inspiration}”${typeSentence}。${strategySentence}；${authoritySentence}。你的${profile}人生角色尤其适合${profileSentence}。这是结合本章与人类图的观察镜，不替你做决定。`;
 }
 
-function questionResponse(question: string, chapter: ChapterCopyBase, chart: ChartSnapshot, language: Language) {
-  const type = hdLabel(chart.core.type, language);
-  const strategy = hdLabel(chart.core.strategy, language);
-  const authority = hdLabel(chart.core.authority, language);
-  if (language === "en") {
-    return `In “${chapter.title}”, the useful move is not to force an immediate answer to “${question}”. As a ${type}, your experiment is ${strategy}; with ${authority}, give the decision enough space to become clear. Notice which option lets the situation move without asking you to abandon yourself.`;
-  }
-  return `面对“${question}”，《${chapter.title}》给你的不是一个替你决定的答案。作为${type}，你可以先实践“${strategy}”；结合${authority}，给重要决定留出澄清的空间。观察哪一个选择既让事情重新流动，也不要求你背离真实的自己。`;
-}
-
 function chapterSearchText(chapter: (typeof chapters)[number]) {
   return [
     chapter.id,
@@ -770,6 +761,7 @@ type SideDrawerProps = {
   onVideoChannelOpen: () => void;
   showSupport: boolean;
   onSupportOpen: () => void;
+  companionQuestion: string;
 };
 
 function SideDrawer({
@@ -801,6 +793,7 @@ function SideDrawer({
   onVideoChannelOpen,
   showSupport,
   onSupportOpen,
+  companionQuestion,
 }: SideDrawerProps) {
   const isZh = language === "zh";
   const profileComplete = Boolean(chart?.chartHash);
@@ -831,6 +824,8 @@ function SideDrawer({
 
   const headerTitle = view === "home"
     ? (isZh ? "你的空间" : "Your space")
+    : view === "companion"
+      ? (isZh ? "我的问道" : "My Wendao")
     : view === "profile"
       ? (isZh ? "人生说明书" : "Life manual")
       : view === "profile-detail"
@@ -958,6 +953,14 @@ function SideDrawer({
               </section>
 
               <nav className="drawer-nav" aria-label={isZh ? "你的空间" : "Your space"}>
+                <button type="button" className="companion-nav-entry" onClick={() => onViewChange("companion")}>
+                  <span className="drawer-nav-icon"><ChatBubbleIcon /></span>
+                  <span>
+                    <strong>{isZh ? "我的问道" : "My Wendao"}</strong>
+                    <small>{isZh ? "对话、记忆与每周回看" : "Conversations, memory, and weekly reflection"}</small>
+                  </span>
+                  <ChevronRightIcon />
+                </button>
                 <div className="drawer-nav-row">
                   <span className="drawer-nav-icon">{theme === "dark" ? <MoonIcon /> : <SunIcon />}</span>
                   <span>
@@ -1073,6 +1076,10 @@ function SideDrawer({
               </section>
 
             </>
+          ) : null}
+
+          {view === "companion" ? (
+            <CompanionPanel language={language} initialQuestion={companionQuestion} />
           ) : null}
 
           {view === "profile" ? (
@@ -1683,7 +1690,6 @@ export default function Prototype() {
   const [directoryOpen, setDirectoryOpen] = useState(false);
   const [directoryQuery, setDirectoryQuery] = useState("");
   const [directoryFocusRequested, setDirectoryFocusRequested] = useState(false);
-  const [insightOpen, setInsightOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [shareChapterId, setShareChapterId] = useState(chapterId);
   const [shareInitialKind, setShareInitialKind] = useState<ShareCardKind>("verse");
@@ -1705,7 +1711,6 @@ export default function Prototype() {
   const [feedbackContact, setFeedbackContact] = useState("");
   const [feedbackState, setFeedbackState] = useState<SaveState>("idle");
   const [feedbackError, setFeedbackError] = useState("");
-  const [responseText, setResponseText] = useState("");
   const [videoChannelOpen, setVideoChannelOpen] = useState(false);
   const [supportOpen, setSupportOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(isAdminLocation);
@@ -1719,7 +1724,6 @@ export default function Prototype() {
   const orderedChapters = useMemo(() => reorderFrom(chapterId), [chapterId]);
   const isZh = language === "zh";
   const activeChapter = chapters.find((chapter) => chapter.id === chapterId) ?? chapters[0];
-  const activeCopy = activeChapter[language];
   const shareChapter = chapters.find((chapter) => chapter.id === shareChapterId) ?? activeChapter;
   const shareCopy = shareChapter[language];
   const profileReady = Boolean(chart?.chartHash);
@@ -1865,34 +1869,11 @@ export default function Prototype() {
     event.preventDefault();
     const nextQuestion = question.trim();
     if (!nextQuestion) return;
-    if (!profileReady || !chart) {
-      setProfileDraft(profile);
-      setDrawerView("profile");
-      setDrawerOpen(true);
-      setProfileError(isZh
-        ? "请先完成出生信息并生成人生说明书，三慢问道才能结合你的真实结果回应。"
-        : "Complete your birth details and life manual before asking for a personalized response.");
-      trackEvent("profile_open", { source: "composer" });
-      return;
-    }
-    const answer = questionResponse(nextQuestion, activeCopy, chart, language);
     setSubmittedQuestion(nextQuestion);
-    setResponseText(answer);
-    setInsightOpen(true);
+    setDrawerView("companion");
+    setDrawerOpen(true);
     setQuestion("");
     trackEvent("question_submit", { questionLength: nextQuestion.length });
-    void apiRequest<{ saved: boolean }>("/v1/conversations", {
-      method: "POST",
-      body: JSON.stringify({
-        clientId: clientId.current,
-        sessionId: sessionId.current,
-        chapterId,
-        locale: language,
-        question: nextQuestion,
-        answer,
-        chartHash: chart.chartHash,
-      }),
-    }).catch(() => undefined);
   };
 
   const saveProfile = async (event: FormEvent) => {
@@ -2283,7 +2264,7 @@ export default function Prototype() {
         </main>
       </div>
 
-      {!directoryOpen && !insightOpen && !drawerOpen && !shareOpen ? (
+      {!directoryOpen && !drawerOpen && !shareOpen ? (
         <form
           className={`ai-composer ${isReadingScrolled ? "is-reading" : ""}`}
           onSubmit={submitQuestion}
@@ -2291,7 +2272,7 @@ export default function Prototype() {
           <span className="composer-spark" aria-hidden="true">✦</span>
           <div className="composer-field">
             <small className="composer-expectation" id="composer-expectation">
-              {isZh ? "AI 个性化回应 · 即将接入" : "AI personalization · coming soon"}
+              {isZh ? "问道同行 · 登录后使用" : "Wendao Companion · sign in to use"}
             </small>
             <input
               value={question}
@@ -2374,48 +2355,6 @@ export default function Prototype() {
       </WebSheet>
 
       <WebSheet
-        open={insightOpen}
-        onOpenChange={setInsightOpen}
-        title={isZh ? "与你有关" : "For you"}
-        description={submittedQuestion}
-      >
-        <div className="ai-response">
-          <p className="ai-response-lead">
-            {responseText}
-          </p>
-          <div className="ai-guidance">
-            <span>{isZh ? "此刻可以问自己" : "Ask yourself now"}</span>
-            <strong>
-              {isZh
-                ? "这个决定在压力过去以后，是否仍然让我感到真实、清楚、可以承担？"
-                : "After the pressure passes, does this decision still feel true, clear, and mine to carry?"}
-            </strong>
-          </div>
-          <p>
-            {isZh
-              ? "如果你愿意，先写下两个选项各自让身体产生的感觉。我们可以从更松、更真实的那个反应继续。"
-              : "If you like, write down how each option feels in your body. We can continue with the response that feels more spacious and true."}
-          </p>
-          <aside className="ai-preview-note">
-            <strong>{isZh ? "AI 个性化回应即将接入" : "AI personalization is coming"}</strong>
-            <p>
-              {isZh
-                ? "当前为体验版回应。接入大模型后，将综合本章、你的提问与已验证的人类图信息，给出更贴近你当下处境的建议；它仍是自我观察的参考，不替你做决定。"
-                : "This is a preview response. Once the AI model is connected, it will combine this chapter, your question, and your verified Human Design information for advice closer to your present situation—still as a lens for reflection, never a verdict."}
-            </p>
-          </aside>
-          <div className="source-disclosure">
-            <span>{isZh ? "回应依据" : "Response basis"}</span>
-            <p>
-              {chart
-                ? `${isZh ? "本章原典 · 你的提问" : "This chapter · Your question"} · ${hdLabel(chart.core.type, language)} · ${chart.core.profile} · ${hdLabel(chart.core.authority, language)}`
-                : (isZh ? "本章原典 · 你的提问" : "This chapter · Your question")}
-            </p>
-          </div>
-        </div>
-      </WebSheet>
-
-      <WebSheet
         open={shareOpen}
         onOpenChange={setShareOpen}
         eyebrow={isZh ? `《道德经》今本第 ${shareChapter.id} 章` : `Daodejing · Received Chapter ${shareChapter.id}`}
@@ -2469,6 +2408,7 @@ export default function Prototype() {
         }}
         showSupport={webSupportEnabled}
         onSupportOpen={() => setSupportOpen(true)}
+        companionQuestion={submittedQuestion}
       />
       <VideoChannelModal open={videoChannelOpen} onClose={() => setVideoChannelOpen(false)} language={language} />
       {webSupportEnabled ? <SupportModal open={supportOpen} onClose={() => setSupportOpen(false)} language={language} /> : null}

@@ -637,27 +637,24 @@ test("keeps verified chapter life-manual guidance personal and separate from tod
   await expect(practice).toContainText("three slow breaths");
 });
 
-test("sets an honest expectation for future AI personalization", async ({ page }) => {
-  await page.addInitScript((storedChart) => {
-    window.localStorage.setItem("wendao-chart-snapshot", JSON.stringify(storedChart));
-  }, chartSnapshot);
-  await page.route("https://pluto-human-design-api.vercel.app/**", async (route) => {
-    await route.fulfill({ json: { data: { saved: true }, error: null } });
-  });
+test("routes AI questions to account login without requiring a life manual", async ({ page }) => {
   await page.goto("/");
 
   const question = page.getByLabel("向三慢问道提问");
-  await expect(page.getByText("AI 个性化回应 · 即将接入", { exact: true })).toBeVisible();
+  await expect(page.getByText("问道同行 · 登录后使用", { exact: true })).toBeVisible();
   await expect(question).toHaveAttribute("aria-describedby", "composer-expectation");
 
   await page.getByRole("button", { name: "切换到英文", exact: true }).click();
-  await expect(page.getByText("AI personalization · coming soon", { exact: true })).toBeVisible();
+  await expect(page.getByText("Wendao Companion · sign in to use", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Switch to Chinese", exact: true }).click();
 
   await question.fill("我现在应该继续还是停下来？");
   await page.getByRole("button", { name: "发送", exact: true }).click();
-  await expect(page.getByText("AI 个性化回应即将接入", { exact: true })).toBeVisible();
-  await expect(page.getByText(/当前为体验版回应。接入大模型后/)).toBeVisible();
+  await expect(page.getByRole("heading", { name: "我的问道", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /让每一次提问/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: "使用 Apple 登录" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "使用 Google 登录" })).toBeVisible();
+  await expect(page.getByText(/请先完成出生信息/)).toHaveCount(0);
 });
 
 test("searches all textual layers from the directory", async ({ page }) => {
