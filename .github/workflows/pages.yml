@@ -32,6 +32,10 @@ jobs:
 
       - name: Build
         run: npm run build:pages
+        env:
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+          VITE_COMPANION_API_URL: ${{ vars.VITE_COMPANION_API_URL }}
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
