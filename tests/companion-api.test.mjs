@@ -104,9 +104,11 @@ test("DeepSeek routes visible and background work to separate models", () => {
   assert.equal(visible.model, "deepseek-v4-pro");
   assert.equal(visible.stream, true);
   assert.deepEqual(visible.thinking, { type: "enabled" });
+  assert.equal(visible.max_tokens, 1800);
   assert.equal(background.model, "deepseek-v4-flash");
   assert.equal(background.stream, false);
   assert.deepEqual(background.response_format, { type: "json_object" });
+  assert.equal(background.max_tokens, 700);
 });
 
 test("DeepSeek provider applies a timeout and never embeds the key in its error", async () => {

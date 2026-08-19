@@ -114,14 +114,23 @@ export function buildCompanionMessages({
     ...(manual ? { lifeManual: manual } : {}),
   };
 
-  const safeConversation = conversation
+  const recentConversation = conversation
     .filter((message) => ["user", "assistant"].includes(message?.role))
     .filter((message) => typeof message.content === "string" && message.content.trim())
-    .slice(-12)
+    .slice(-8)
     .map((message) => ({
       role: message.role,
-      content: message.content.trim().slice(0, 12_000),
+      content: message.content.trim().slice(0, 2_000),
     }));
+  let conversationCharacters = 0;
+  const safeConversation = recentConversation
+    .reverse()
+    .filter((message) => {
+      if (conversationCharacters >= 12_000) return false;
+      conversationCharacters += message.content.length;
+      return true;
+    })
+    .reverse();
 
   return [
     {

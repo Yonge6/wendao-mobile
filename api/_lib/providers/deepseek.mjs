@@ -12,6 +12,7 @@ export function buildDeepSeekRequest(job, messages) {
       stream: true,
       thinking: { type: "enabled" },
       reasoning_effort: "medium",
+      max_tokens: 1800,
     };
   }
 
@@ -21,8 +22,9 @@ export function buildDeepSeekRequest(job, messages) {
       messages,
       stream: false,
       thinking: { type: "disabled" },
-      response_format: { type: "json_object" },
-      temperature: 0.1,
+    response_format: { type: "json_object" },
+    temperature: 0.1,
+    max_tokens: 700,
     };
   }
 
@@ -88,4 +90,3 @@ export function createDeepSeekProvider(config, dependencies = {}) {
     },
   });
 }
-

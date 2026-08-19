@@ -107,6 +107,23 @@ test("keeps only bounded user and assistant conversation context", () => {
   assert.doesNotMatch(JSON.stringify(messages), /must be removed/);
 });
 
+test("bounds prior conversation cost before sending it to the model", () => {
+  const messages = buildCompanionMessages({
+    question: "What now?",
+    locale: "en",
+    chapter: chapterContextFromCollection(chapters, 64, "en"),
+    memories: [],
+    conversation: Array.from({ length: 20 }, (_, index) => ({
+      role: index % 2 ? "assistant" : "user",
+      content: `${index}:${"x".repeat(3_000)}`,
+    })),
+  });
+  const prior = messages.slice(1, -1);
+  assert.equal(prior.length, 6);
+  assert.ok(prior.every((message) => message.content.length <= 2_000));
+  assert.ok(prior.reduce((total, message) => total + message.content.length, 0) <= 12_000);
+});
+
 test("validates question length and separates immediate safety risk", () => {
   assert.equal(validateCompanionQuestion("  我该如何开始？  "), "我该如何开始？");
   assert.throws(() => validateCompanionQuestion(" "), /question/i);
