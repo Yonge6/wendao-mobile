@@ -30,6 +30,8 @@ With Wendao, you can:
 
 All 81 chapters and the core reading interface are bundled with the app, so no account or purchase is needed for offline reading. Wendao Companion requires Apple or Google sign-in and an auto-renewable monthly or annual subscription purchased through the App Store. It has no free trial. You can inspect, pause, delete, or clear automatic memory, export your data, and delete your account in the app. AI guidance is reflective, not medical, psychological, legal, financial, or deterministic advice.
 
+Terms of Use (Apple Standard EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+
 True to yourself. Flow with life.
 
 ## Keywords

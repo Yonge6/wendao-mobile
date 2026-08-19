@@ -111,6 +111,17 @@ export default function SubscriptionPanel({ language, session, onSignOut, onMemb
             ? (isZh ? "正在打开安全结账页…" : "Opening secure checkout…")
             : (isZh ? "其他国家和地区按美元基准显示当地商店价格。" : "Other countries and regions show localized storefront prices based on USD."))}
       </p>
+      <p className="companion-plan-legal">
+        {isZh ? "继续即表示你同意" : "By continuing, you agree to the"}{" "}
+        <a href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/" target="_blank" rel="noreferrer">
+          {isZh ? "Apple 标准使用条款" : "Apple Standard EULA"}
+        </a>
+        {isZh ? "，并已阅读" : " and acknowledge the"}{" "}
+        <a href="https://wendao.wonderelian.com/privacy.html" target="_blank" rel="noreferrer">
+          {isZh ? "隐私政策" : "Privacy Policy"}
+        </a>
+        {isZh ? "。" : "."}
+      </p>
       {native ? (
         <button className="companion-text-button" type="button" disabled={restoring || busyPlan !== null} onClick={() => void restore()}>
           {restoring ? (isZh ? "正在恢复…" : "Restoring…") : (isZh ? "恢复购买" : "Restore purchases")}

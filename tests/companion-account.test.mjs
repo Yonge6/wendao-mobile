@@ -132,3 +132,9 @@ test("the shipped Companion UI exposes export and in-app account deletion", asyn
   assert.match(account, /confirmation !== "DELETE"/);
   assert.match(api, /method: "DELETE", body: JSON\.stringify\(\{ confirmation: "DELETE" \}\)/);
 });
+
+test("the subscription screen links the Apple standard EULA and privacy policy", async () => {
+  const source = await readFile(new URL("../src/companion/SubscriptionPanel.tsx", import.meta.url), "utf8");
+  assert.match(source, /apple\.com\/legal\/internet-services\/itunes\/dev\/stdeula/);
+  assert.match(source, /wendao\.wonderelian\.com\/privacy\.html/);
+});

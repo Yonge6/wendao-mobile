@@ -30,6 +30,8 @@
 
 核心 81 章及阅读界面已随 App 打包，无需登录或购买即可离线阅读。“问道同行”使用前需要通过 Apple 或 Google 登录，并通过 App Store 购买无免费试用的月付或年付自动续期订阅。用户可以查看、暂停、删除或清空自动记忆，在 App 内导出资料和删除账号。所有提示用于自我观察，不构成医疗、心理、法律、财务或命运判断。
 
+使用条款（Apple 标准 EULA）：https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+
 真实自己，流动人生。向内认识自己，向外如水而行。
 
 ## 关键词
