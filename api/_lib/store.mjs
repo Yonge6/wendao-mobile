@@ -18,8 +18,11 @@ function publicStoreError(response, payload) {
   if (message.includes("subscription_required")) {
     return new HttpError(402, "subscription_required", "Wendao Companion is required");
   }
-  if (message.includes("quota_exhausted")) {
-    return new HttpError(429, "quota_exhausted", "Monthly question allowance reached");
+  if (message.includes("rate_limited")) {
+    return new HttpError(429, "rate_limited", "Please wait a moment before asking again");
+  }
+  if (message.includes("request_in_progress")) {
+    return new HttpError(409, "request_in_progress", "Another answer is already in progress");
   }
   if (message.includes("thread_not_found")) {
     return new HttpError(404, "thread_not_found", "Conversation not found");
@@ -84,12 +87,11 @@ export function createCompanionStore(environment, dependencies = {}) {
   return Object.freeze({
     async reserveQuestion(userId, requestId, now = new Date(), signal) {
       const period = calendarMonthPeriod(now);
-      const rows = await rpc("reserve_wendao_question", {
+      const rows = await rpc("reserve_wendao_question_unlimited", {
         p_user_id: userId,
         p_request_id: requestId,
         p_period_start: period.start,
         p_period_end: period.end,
-        p_allowance: environment.monthlyQuestionAllowance,
       }, signal);
       const reservation = Array.isArray(rows) ? rows[0] : null;
       if (!reservation) {
@@ -97,7 +99,7 @@ export function createCompanionStore(environment, dependencies = {}) {
       }
       return {
         state: reservation.reservation_state,
-        remainingQuestions: Number(reservation.remaining_questions),
+        questionsThisMonth: Number(reservation.questions_this_month),
       };
     },
 

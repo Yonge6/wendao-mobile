@@ -73,7 +73,7 @@ test("uses cached auth.uid ownership policies and indexes every user_id", async 
   }
 });
 
-test("prevents duplicate billing events and invalid quota use", async () => {
+test("prevents duplicate billing events and seeds safe initial usage constraints", async () => {
   const sql = await migrationSql();
 
   assert.match(sql, /unique \(provider, provider_event_id\)/);

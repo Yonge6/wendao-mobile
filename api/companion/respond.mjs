@@ -158,7 +158,8 @@ export async function handleCompanionRequest(request, dependencies = {}) {
         requestId: payload.requestId,
         threadId: completed.threadId,
         answerMessageId: completed.answerMessageId,
-        remainingQuestions: reservation.remainingQuestions,
+        unlimited: true,
+        questionsThisMonth: reservation.questionsThisMonth,
         replayed: true,
       }, headers);
     }
@@ -197,7 +198,8 @@ export async function handleCompanionRequest(request, dependencies = {}) {
       start(controller) {
         controller.enqueue(sseEvent("meta", {
           requestId: payload.requestId,
-          remainingQuestions: reservation.remainingQuestions,
+          unlimited: true,
+          questionsThisMonth: reservation.questionsThisMonth,
         }));
         void (async () => {
           try {
@@ -236,7 +238,8 @@ export async function handleCompanionRequest(request, dependencies = {}) {
             controller.enqueue(sseEvent("done", {
               requestId: payload.requestId,
               ...saved,
-              remainingQuestions: reservation.remainingQuestions,
+              unlimited: true,
+              questionsThisMonth: reservation.questionsThisMonth,
             }));
           } catch (error) {
             await store.releaseQuestion(user.id, payload.requestId).catch(() => undefined);

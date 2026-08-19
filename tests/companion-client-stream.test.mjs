@@ -7,7 +7,7 @@ test("browser stream parser handles event boundaries split across chunks", async
   const encoder = new TextEncoder();
   const body = new ReadableStream({
     start(controller) {
-      controller.enqueue(encoder.encode('event: meta\ndata: {"remainingQuestions":59}\n'));
+      controller.enqueue(encoder.encode('event: meta\ndata: {"unlimited":true,"questionsThisMonth":61}\n'));
       controller.enqueue(encoder.encode('\nevent: delta\ndata: {"text":"慢"}\n\n'));
       controller.enqueue(encoder.encode('event: delta\ndata: {"text":"下来"}\n\nevent: done\ndata: {"threadId":"thread-1"}\n\n'));
       controller.close();
@@ -20,7 +20,7 @@ test("browser stream parser handles event boundaries split across chunks", async
     done: (data) => seen.push(["done", data]),
   });
   assert.deepEqual(seen, [
-    ["meta", { remainingQuestions: 59 }],
+    ["meta", { unlimited: true, questionsThisMonth: 61 }],
     ["delta", { text: "慢" }],
     ["delta", { text: "下来" }],
     ["done", { threadId: "thread-1" }],

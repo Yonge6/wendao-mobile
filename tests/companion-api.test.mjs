@@ -132,12 +132,12 @@ test("DeepSeek provider applies a timeout and never embeds the key in its error"
 
 test("safe error responses preserve public errors and hide internal details", async () => {
   const publicResponse = errorResponse(
-    new HttpError(429, "quota_exhausted", "Monthly allowance reached"),
+    new HttpError(429, "rate_limited", "Please wait a moment before asking again"),
     "request-1",
   );
   assert.equal(publicResponse.status, 429);
   assert.deepEqual(await publicResponse.json(), {
-    error: { code: "quota_exhausted", message: "Monthly allowance reached" },
+    error: { code: "rate_limited", message: "Please wait a moment before asking again" },
     requestId: "request-1",
   });
 

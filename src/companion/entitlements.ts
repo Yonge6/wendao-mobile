@@ -1,18 +1,10 @@
-import type {
-  CompanionAccess,
-  CompanionEntitlement,
-  CompanionUsage,
-} from "./types";
+import type { CompanionAccess, CompanionEntitlement } from "./types";
 
 type AccessInput = {
   isSignedIn: boolean;
   entitlement: CompanionEntitlement | null;
-  usage: CompanionUsage | null;
+  usage?: { usedQuestions: number } | null;
 };
-
-export function remainingQuestions(usage: CompanionUsage): number {
-  return Math.max(0, usage.questionAllowance - usage.usedQuestions);
-}
 
 function hasCurrentEntitlement(
   entitlement: CompanionEntitlement | null,
@@ -35,26 +27,15 @@ export function getCompanionAccess(
   now = new Date(),
 ): CompanionAccess {
   if (!input.isSignedIn) {
-    return { allowed: false, reason: "signed_out", remainingQuestions: null };
+    return { allowed: false, reason: "signed_out", unlimited: false };
   }
 
   if (!hasCurrentEntitlement(input.entitlement, now)) {
     return {
       allowed: false,
       reason: "subscription_required",
-      remainingQuestions: null,
+      unlimited: false,
     };
   }
-
-  const remaining = input.usage ? remainingQuestions(input.usage) : 0;
-  if (remaining === 0) {
-    return {
-      allowed: false,
-      reason: "quota_exhausted",
-      remainingQuestions: 0,
-    };
-  }
-
-  return { allowed: true, reason: "active", remainingQuestions: remaining };
+  return { allowed: true, reason: "active", unlimited: true };
 }
-

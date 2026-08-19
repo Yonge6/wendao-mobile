@@ -1,10 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import {
-  getCompanionAccess,
-  remainingQuestions,
-} from "../src/companion/entitlements.ts";
+import { getCompanionAccess } from "../src/companion/entitlements.ts";
 import {
   isMemoryRetrievable,
   normalizeMemoryCandidate,
@@ -16,7 +13,7 @@ const NOW = new Date("2026-08-19T12:00:00.000Z");
 test("requires login before checking subscription state", () => {
   assert.deepEqual(
     getCompanionAccess({ isSignedIn: false, entitlement: null, usage: null }, NOW),
-    { allowed: false, reason: "signed_out", remainingQuestions: null },
+    { allowed: false, reason: "signed_out", unlimited: false },
   );
 });
 
@@ -44,7 +41,7 @@ test("requires an active or grace-period entitlement", () => {
           status: "grace",
           expiresAt: "2026-08-20T12:00:00.000Z",
         },
-        usage: { questionAllowance: 30, usedQuestions: 8 },
+        usage: { usedQuestions: 8 },
       },
       NOW,
     ).allowed,
@@ -52,10 +49,7 @@ test("requires an active or grace-period entitlement", () => {
   );
 });
 
-test("shows and enforces the monthly question allowance", () => {
-  assert.equal(remainingQuestions({ questionAllowance: 30, usedQuestions: 8 }), 22);
-  assert.equal(remainingQuestions({ questionAllowance: 30, usedQuestions: 31 }), 0);
-
+test("active members retain access regardless of observed monthly use", () => {
   assert.deepEqual(
     getCompanionAccess(
       {
@@ -64,11 +58,11 @@ test("shows and enforces the monthly question allowance", () => {
           status: "active",
           expiresAt: "2026-09-19T12:00:00.000Z",
         },
-        usage: { questionAllowance: 30, usedQuestions: 30 },
+        usage: { usedQuestions: 10_000 },
       },
       NOW,
     ),
-    { allowed: false, reason: "quota_exhausted", remainingQuestions: 0 },
+    { allowed: true, reason: "active", unlimited: true },
   );
 });
 

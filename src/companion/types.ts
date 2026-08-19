@@ -14,20 +14,18 @@ export type CompanionEntitlement = {
 };
 
 export type CompanionUsage = {
-  questionAllowance: number;
   usedQuestions: number;
 };
 
 export type CompanionAccessReason =
   | "active"
   | "signed_out"
-  | "subscription_required"
-  | "quota_exhausted";
+  | "subscription_required";
 
 export type CompanionAccess = {
   allowed: boolean;
   reason: CompanionAccessReason;
-  remainingQuestions: number | null;
+  unlimited: boolean;
 };
 
 export type MemoryKind =
@@ -51,4 +49,3 @@ export type CompanionMemoryState = {
   status: MemoryStatus;
   expiresAt: string | null;
 };
-

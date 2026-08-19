@@ -8,7 +8,6 @@ import {
 
 const environment = {
   publicOrigins: ["https://wendao.wonderelian.com"],
-  monthlyQuestionAllowance: 60,
 };
 const userId = "11111111-1111-4111-8111-111111111111";
 const requestId = "22222222-2222-4222-8222-222222222222";
@@ -50,10 +49,10 @@ test("extracts only visible content from DeepSeek SSE", async () => {
   assert.deepEqual(deltas, ["Visible"]);
 });
 
-test("streams a grounded answer and saves it after reserving quota", async () => {
+test("streams a grounded answer and saves it after reserving usage", async () => {
   const actions = [];
   const store = {
-    reserveQuestion: async () => ({ state: "reserved", remainingQuestions: 59 }),
+    reserveQuestion: async () => ({ state: "reserved", questionsThisMonth: 61 }),
     getContext: async () => ({ memoryEnabled: true, memories: [], lifeManual: null }),
     getRecentMessages: async () => [],
     finishExchange: async (exchange) => {
@@ -84,13 +83,15 @@ test("streams a grounded answer and saves it after reserving quota", async () =>
   assert.match(stream, /event: delta/);
   assert.match(stream, /先检查交接/);
   assert.match(stream, /event: done/);
+  assert.match(stream, /"unlimited":true/);
+  assert.match(stream, /"questionsThisMonth":61/);
   assert.match(modelMessages[0].content, /慎终如始/);
   assert.equal(actions[0].answer, "先检查交接，再完成退出。");
   assert.equal(actions[1].memories[0].summary, "正在收尾一个项目");
   assert.notEqual(actions.at(-1), "released");
 });
 
-test("immediate safety help requires sign-in but does not consume quota", async () => {
+test("immediate safety help requires sign-in but does not record question use", async () => {
   let reserved = false;
   const response = await handleCompanionRequest(request("我现在想自杀，已经准备好了"), {
     environment,
@@ -108,7 +109,7 @@ test("replays a saved answer without calling the model", async () => {
     environment,
     authenticate: async () => ({ id: userId }),
     store: {
-      reserveQuestion: async () => ({ state: "succeeded", remainingQuestions: 59 }),
+      reserveQuestion: async () => ({ state: "succeeded", questionsThisMonth: 61 }),
       getCompletedExchange: async () => ({
         answer: "已保存的回答",
         threadId: "33333333-3333-4333-8333-333333333333",

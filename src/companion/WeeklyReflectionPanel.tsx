@@ -76,7 +76,7 @@ export default function WeeklyReflectionPanel({
       <header>
         <span className="drawer-kicker">{isZh ? "这一周看见了什么" : "What this week revealed"}</span>
         <h3>{isZh ? "不总结你，只陪你看见线索。" : "Not a verdict—just a way to notice the threads."}</h3>
-        <p>{isZh ? "根据最近对话生成，每周一次，不占用月度问答额度。" : "Generated once a week from recent conversations without using your monthly question allowance."}</p>
+        <p>{isZh ? "根据最近对话生成，每周一次，已包含在会员权益中。" : "Generated once a week from recent conversations and included with membership."}</p>
       </header>
       {weekStart ? <time>{isZh ? `本周开始于 ${weekStart}` : `Week of ${weekStart}`}</time> : null}
       {loading ? <p className="companion-memory-empty">{isZh ? "正在读取…" : "Loading…"}</p> : null}

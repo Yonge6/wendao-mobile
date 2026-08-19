@@ -2,7 +2,7 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Build the paid, cross-platform `问道同行 / Wendao Companion` with Apple/Google login, transparent automatic memory, DeepSeek dual-model responses, unified StoreKit/Stripe entitlements, and monthly usage limits while preserving the existing free reading experience.
+**Goal:** Build the paid, cross-platform `问道同行 / Wendao Companion` with Apple/Google login, transparent automatic memory, DeepSeek dual-model responses, unified StoreKit/Stripe entitlements, unlimited member questions with abuse safeguards, and the existing free reading experience preserved.
 
 **Architecture:** Keep the existing React/Vite code shared by GitHub Pages and the bundled Capacitor iOS app. Add Supabase Auth/Postgres for identity and user-owned data, a separately deployed Wendao API for authenticated model and payment operations, StoreKit for iOS billing, and Stripe Checkout for H5 billing. All external providers map into a single account entitlement and provider-neutral AI interface.
 
@@ -36,7 +36,7 @@
 - Modify: `src/vite-env.d.ts`
 
 **Steps:**
-1. Write failing tests for entitlement state, visible quota, memory lifecycle, and sensitive-memory rejection.
+1. Write failing tests for entitlement state, unlimited member access, memory lifecycle, and sensitive-memory rejection.
 2. Add typed environment configuration without secrets or production defaults that could leak credentials.
 3. Implement pure entitlement and memory functions.
 4. Run `node --test tests/companion-domain.test.mjs` and expect all tests to pass.
@@ -94,13 +94,13 @@
 - Modify: `src/data/chapters.ts` only if a server-safe export is required; never duplicate chapter content.
 
 **Steps:**
-1. Write failing tests for login, entitlement, quota, idempotency, chapter grounding, optional life-manual context, and high-risk prompts.
+1. Write failing tests for login, entitlement, usage observation, idempotency, chapter grounding, optional life-manual context, and high-risk prompts.
 2. Implement server-side chapter retrieval from the canonical data source.
 3. Implement memory retrieval with explicit limits and no raw account/birth/payment fields.
-4. Stream the V4-Pro response, save the successful message, decrement quota once, and enqueue V4-Flash memory extraction.
+4. Stream the V4-Pro response, save the successful message, record use once, and enqueue V4-Flash memory extraction.
 5. Implement memory list/edit/delete/pause/clear operations with ownership checks.
-6. Implement weekly reflection generation without charging visible-question quota.
-7. Verify failed provider requests do not decrement quota or create memories.
+6. Implement weekly reflection generation as an included membership benefit.
+7. Verify failed provider requests do not remain in usage observation or create memories.
 8. Commit the companion API.
 
 ### Task 6: Add Apple/Google login and session handling
@@ -137,7 +137,7 @@
 - Modify: `tests/product-flow.spec.ts`
 
 **Steps:**
-1. Add failing tests for login, paywall, conversation, visible quota, memory controls, weekly reflection, and life-manual optionality.
+1. Add failing tests for login, paywall, conversation, unlimited access, usage observation, memory controls, weekly reflection, and life-manual optionality.
 2. Add `我的问道 / My Wendao` to the existing drawer hierarchy.
 3. Implement continue conversation, today reminder, weekly reflection, and memory management surfaces.
 4. Replace the preview response with authenticated streaming output.
@@ -182,7 +182,7 @@
 6. Run `npm run ios:build:simulator` and distribution readiness checks.
 7. Commit StoreKit billing.
 
-### Task 10: Quality benchmark, quota, and pricing
+### Task 10: Quality benchmark, safeguards, and confirmed pricing
 
 **Files:**
 - Create: `tests/fixtures/companion-eval.json`
@@ -194,8 +194,8 @@
 1. Build bilingual cases covering all 81 chapters, common life domains, optional life-manual context, memory correction, and high-risk safety.
 2. Compare V4-Pro user responses and V4-Flash structured tasks for grounding, specificity, tone, safety, latency, and token cost.
 3. Calculate a normal and heavy monthly cost envelope.
-4. Propose exact monthly allowance, monthly price, and annual price for approval.
-5. Lock server-side quota and App Store/Stripe product metadata only after approval.
+4. Apply the approved prices: monthly `¥68 / US$19.99`, annual `¥698 / US$199.99`, with other storefronts localized from USD.
+5. Lock unlimited active-member questions plus concurrency, rate, and abuse safeguards in server behavior and App Store/Stripe metadata.
 6. Commit the benchmark and approved configuration.
 
 ### Task 11: Privacy, account lifecycle, and security audit
@@ -222,7 +222,7 @@
 
 **Steps:**
 1. Run `npm run check:runtime`, `npm run validate:chapters`, `npm test`, full Playwright, build, Sites tests, iOS sync, simulator build, and distribution readiness.
-2. Validate Apple/Google login, Stripe test purchase, StoreKit sandbox purchase/restore, cross-platform entitlement, quota reset, memory deletion, and account deletion.
+2. Validate Apple/Google login, Stripe test purchase, StoreKit sandbox purchase/restore, cross-platform entitlement, unlimited access with abuse safeguards, memory deletion, and account deletion.
 3. Test H5 and iOS in Chinese and English with and without a life manual.
 4. Commit only intentional files; leave every `.DS_Store` untracked.
 5. Push, wait for Pages and iOS CI, verify the production domain, upload the new iOS build, and submit the version with its first subscription group for App Review.

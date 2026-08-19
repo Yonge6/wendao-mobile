@@ -7,17 +7,9 @@ export function entitlementIsCurrent(entitlement, now = new Date()) {
   return Number.isFinite(expiry) && expiry > now.getTime();
 }
 
-export function assertCompanionAccess(entitlement, usage, now = new Date()) {
+export function assertCompanionAccess(entitlement, _usage, now = new Date()) {
   if (!entitlementIsCurrent(entitlement, now)) {
     throw new HttpError(402, "subscription_required", "Wendao Companion is required");
   }
-
-  const allowance = Number(usage?.question_allowance ?? 0);
-  const used = Number(usage?.used_questions ?? 0);
-  const remaining = Math.max(0, allowance - used);
-  if (remaining === 0) {
-    throw new HttpError(429, "quota_exhausted", "Monthly question allowance reached");
-  }
-  return { remainingQuestions: remaining };
+  return { unlimited: true };
 }
-

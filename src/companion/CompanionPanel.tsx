@@ -21,7 +21,7 @@ type ConversationMessage = {
 
 type CompanionState = {
   entitlement: { status: string; expires_at: string | null } | null;
-  usage: { question_allowance: number; used_questions: number } | null;
+  usage: { question_allowance: number | null; used_questions: number } | null;
   memoryEnabled: boolean;
 };
 
@@ -94,10 +94,6 @@ function SignedInCompanion({
     return <SubscriptionPanel language={language} onSignOut={onSignOut} />;
   }
 
-  const remaining = state.usage
-    ? Math.max(0, state.usage.question_allowance - state.usage.used_questions)
-    : null;
-
   if (view === "memory") {
     return <MemoryPanel session={session} language={language} onBack={() => setView("conversation")} />;
   }
@@ -140,15 +136,12 @@ function SignedInCompanion({
           ))),
           done: (payload) => {
             if (typeof payload.threadId === "string") setThreadId(payload.threadId);
-            if (typeof payload.remainingQuestions === "number") {
-              const nextRemaining = payload.remainingQuestions;
+            if (typeof payload.questionsThisMonth === "number") {
               setState((current) => current ? {
                 ...current,
                 usage: {
-                  question_allowance: current.usage?.question_allowance
-                    ?? nextRemaining + 1,
-                  used_questions: (current.usage?.question_allowance
-                    ?? nextRemaining + 1) - nextRemaining,
+                  question_allowance: null,
+                  used_questions: payload.questionsThisMonth as number,
                 },
               } : current);
             }
@@ -174,9 +167,9 @@ function SignedInCompanion({
       <header>
         <span className="drawer-kicker">{isZh ? "我的问道" : "My Wendao"}</span>
         <h3>{isZh ? "我们从你真正关心的地方继续。" : "Let us continue from what genuinely matters to you."}</h3>
-        <p>{remaining === null
-          ? (isZh ? "本月额度将在第一次提问时显示。" : "This month’s allowance appears with your first question.")
-          : (isZh ? `本月还可提问 ${remaining} 次` : `${remaining} questions remain this month`)}</p>
+        <p>{state.usage
+          ? (isZh ? `会员期内不限问答 · 本月已问 ${state.usage.used_questions} 次` : `Unlimited with membership · ${state.usage.used_questions} asked this month`)
+          : (isZh ? "会员期内不限问答" : "Unlimited questions with membership")}</p>
       </header>
       {initialQuestion && messages.length === 0 ? (
         <div className="companion-pending-question">
@@ -208,14 +201,13 @@ function SignedInCompanion({
           value={question}
           onChange={(event) => setQuestion(event.target.value)}
           placeholder={isZh ? "写下一个具体处境、矛盾或选择…" : "Describe one situation, tension, or choice…"}
-          disabled={asking || remaining === 0}
+          disabled={asking}
         />
-        <button type="submit" disabled={asking || !question.trim() || remaining === 0}>
+        <button type="submit" disabled={asking || !question.trim()}>
           {asking ? (isZh ? "正在回应…" : "Responding…") : (isZh ? "问这一章" : "Ask this chapter")}
         </button>
       </form>
       {error ? <p className="companion-error" role="alert">{error}</p> : null}
-      {remaining === 0 ? <p className="companion-error">{isZh ? "本月问答额度已用完。" : "This month’s question allowance has been used."}</p> : null}
       <div className="companion-home-actions">
         <button className="companion-text-button" type="button" onClick={() => setView("weekly")}>{isZh ? "本周回看" : "Weekly reflection"}</button>
         <button className="companion-text-button" type="button" onClick={() => setView("memory")}>{isZh ? "管理自动记忆" : "Manage memory"}</button>
