@@ -57,3 +57,13 @@ export function readCoreEnvironment(environment = process.env) {
   });
 }
 
+export function readCompanionEnvironment(environment = process.env) {
+  return Object.freeze({
+    ...readCoreEnvironment(environment),
+    monthlyQuestionAllowance: positiveInteger(
+      required(environment, "MONTHLY_QUESTION_ALLOWANCE"),
+      undefined,
+      "MONTHLY_QUESTION_ALLOWANCE",
+    ),
+  });
+}

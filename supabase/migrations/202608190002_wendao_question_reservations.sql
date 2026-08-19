@@ -127,7 +127,7 @@ begin
     'pending'
   );
 
-  return query select 'pending'::text, greatest(0, v_allowance - v_used - 1);
+  return query select 'reserved'::text, greatest(0, v_allowance - v_used - 1);
 end;
 $$;
 

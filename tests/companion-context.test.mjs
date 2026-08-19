@@ -87,6 +87,26 @@ test("life manual is optional and strips raw birth and account data", () => {
   assert.doesNotMatch(serialized, /1986|Wuhan|reader@example/);
 });
 
+test("keeps only bounded user and assistant conversation context", () => {
+  const messages = buildCompanionMessages({
+    question: "What now?",
+    locale: "en",
+    chapter: chapterContextFromCollection(chapters, 64, "en"),
+    memories: [],
+    conversation: [
+      { role: "tool", content: "must be removed" },
+      { role: "user", content: "I am near the end." },
+      { role: "assistant", content: "What remains unfinished?" },
+    ],
+  });
+  assert.deepEqual(messages.slice(-3), [
+    { role: "user", content: "I am near the end." },
+    { role: "assistant", content: "What remains unfinished?" },
+    { role: "user", content: "What now?" },
+  ]);
+  assert.doesNotMatch(JSON.stringify(messages), /must be removed/);
+});
+
 test("validates question length and separates immediate safety risk", () => {
   assert.equal(validateCompanionQuestion("  我该如何开始？  "), "我该如何开始？");
   assert.throws(() => validateCompanionQuestion(" "), /question/i);

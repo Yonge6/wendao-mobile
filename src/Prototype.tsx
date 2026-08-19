@@ -761,6 +761,7 @@ type SideDrawerProps = {
   onVideoChannelOpen: () => void;
   showSupport: boolean;
   onSupportOpen: () => void;
+  chapterId: number;
   companionQuestion: string;
 };
 
@@ -793,6 +794,7 @@ function SideDrawer({
   onVideoChannelOpen,
   showSupport,
   onSupportOpen,
+  chapterId,
   companionQuestion,
 }: SideDrawerProps) {
   const isZh = language === "zh";
@@ -1079,7 +1081,7 @@ function SideDrawer({
           ) : null}
 
           {view === "companion" ? (
-            <CompanionPanel language={language} initialQuestion={companionQuestion} />
+            <CompanionPanel language={language} chapterId={chapterId} initialQuestion={companionQuestion} />
           ) : null}
 
           {view === "profile" ? (
@@ -2408,6 +2410,7 @@ export default function Prototype() {
         }}
         showSupport={webSupportEnabled}
         onSupportOpen={() => setSupportOpen(true)}
+        chapterId={chapterId}
         companionQuestion={submittedQuestion}
       />
       <VideoChannelModal open={videoChannelOpen} onClose={() => setVideoChannelOpen(false)} language={language} />

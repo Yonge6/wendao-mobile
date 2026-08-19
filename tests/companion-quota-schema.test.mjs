@@ -31,6 +31,7 @@ test("reserves and releases quota transactionally", async () => {
   assert.match(sql, /function public\.reserve_wendao_question/);
   assert.match(sql, /for update/);
   assert.match(sql, /used_questions = used_questions \+ 1/);
+  assert.match(sql, /select 'reserved'::text/);
   assert.match(sql, /function public\.release_wendao_question/);
   assert.match(sql, /used_questions = greatest\(0, used_questions - 1\)/);
   assert.match(sql, /state = 'released'/);
