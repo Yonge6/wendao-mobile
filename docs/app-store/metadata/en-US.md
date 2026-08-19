@@ -12,7 +12,7 @@
 
 ## Promotional text
 
-Slow down with the original, and with yourself: all 81 chapters, a Silk B based reading, line-by-line meaning, and grounded practices for daily life.
+Slow down with the original, and with yourself: all 81 chapters, a Silk B based reading, grounded practices, and an optional AI reflection companion.
 
 ## Description
 
@@ -26,8 +26,9 @@ With Wendao, you can:
 - Turn reflection into one small, practical daily exercise;
 - Switch between day and night reading and choose a comfortable text size;
 - Optionally create a Life Manual whose foundational reading and 12 detailed themes reflect type, strategy, authority, profile, and definition.
+- With an optional paid Wendao Companion membership, ask unlimited chapter-grounded questions, carry selected memories across devices, and revisit the week through a gentle reflection.
 
-All 81 chapters and the core reading interface are bundled with the app, so no account is needed for offline reading. The optional Life Manual, questions, and feedback use network services only when you choose them. Their guidance is reflective, not medical, psychological, legal, or deterministic advice.
+All 81 chapters and the core reading interface are bundled with the app, so no account or purchase is needed for offline reading. Wendao Companion requires Apple or Google sign-in and an auto-renewable monthly or annual subscription purchased through the App Store. It has no free trial. You can inspect, pause, delete, or clear automatic memory, export your data, and delete your account in the app. AI guidance is reflective, not medical, psychological, legal, financial, or deterministic advice.
 
 True to yourself. Flow with life.
 
@@ -35,6 +36,6 @@ True to yourself. Flow with life.
 
 `Daodejing,Laozi,Tao,philosophy,reading,meditation,classics,pinyin,life,wisdom`
 
-## What's New in Version 1.0
+## What's New in Version 1.1
 
-The first App Store release: all 81 chapters offline, a Silk B based reading, line-by-line meaning, three practical insights per chapter, a differentiated Life Manual, full-text search, bilingual reading, day and night modes, and native sharing.
+Meet Wendao Companion, an optional paid reflection partner grounded in the chapter you are reading. Members can ask unlimited questions, keep transparent automatic memories, and receive a gentle weekly reflection. Version 1.1 adds Apple and Google sign-in, monthly and annual App Store subscriptions, purchase restoration, cross-device access, data export, and in-app account deletion. The complete 81-chapter reading experience remains free, offline-friendly, and available without an account.
