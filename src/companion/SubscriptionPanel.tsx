@@ -2,9 +2,8 @@ import { Capacitor } from "@capacitor/core";
 import type { Session } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
 
-import { createStripeCheckout } from "./api";
 import { companionPublicConfig } from "./client";
-import { COMPANION_PLANS } from "./plans";
+import { WENDAO_APP_STORE_URL } from "./plans";
 import {
   loadStoreKitProducts,
   purchaseStoreKit,
@@ -27,6 +26,7 @@ export default function SubscriptionPanel({ language, session, onSignOut, onMemb
   const [busyPlan, setBusyPlan] = useState<"monthly" | "annual" | null>(null);
   const [restoring, setRestoring] = useState(false);
   const [nativeProducts, setNativeProducts] = useState<StoreKitProduct[]>([]);
+  const [checkingMembership, setCheckingMembership] = useState(false);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
 
@@ -39,24 +39,19 @@ export default function SubscriptionPanel({ language, session, onSignOut, onMemb
 
   const beginCheckout = async (plan: "monthly" | "annual") => {
     const config = companionPublicConfig();
-    if (!config || busyPlan) return;
+    if (!config || busyPlan || !native) return;
     setBusyPlan(plan);
     setError("");
     try {
-      if (native) {
-        const result = await purchaseStoreKit({
-          plan,
-          userId: session.user.id,
-          apiUrl: config.apiUrl,
-          accessToken: session.access_token,
-        });
-        if (result === "purchased") await onMembershipChanged();
-        if (result === "pending") setNotice(isZh ? "购买正在等待 App Store 确认。" : "Your purchase is awaiting App Store approval.");
-        setBusyPlan(null);
-      } else {
-        const result = await createStripeCheckout(config.apiUrl, session.access_token, plan);
-        window.location.assign(result.url);
-      }
+      const result = await purchaseStoreKit({
+        plan,
+        userId: session.user.id,
+        apiUrl: config.apiUrl,
+        accessToken: session.access_token,
+      });
+      if (result === "purchased") await onMembershipChanged();
+      if (result === "pending") setNotice(isZh ? "购买正在等待 App Store 确认。" : "Your purchase is awaiting App Store approval.");
+      setBusyPlan(null);
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : (isZh ? "暂时无法打开订阅。" : "Unable to open checkout."));
       setBusyPlan(null);
@@ -84,6 +79,58 @@ export default function SubscriptionPanel({ language, session, onSignOut, onMemb
     (product) => product.id === STOREKIT_PRODUCTS[plan],
   )?.displayPrice;
 
+  const checkMembership = async () => {
+    if (checkingMembership) return;
+    setCheckingMembership(true);
+    setError("");
+    setNotice("");
+    try {
+      await onMembershipChanged();
+      setNotice(isZh
+        ? "暂未检测到有效会员。请确认 App 与网页使用同一个账号，再稍后重试。"
+        : "No active membership was found yet. Confirm that the app and web use the same account, then try again shortly.");
+    } catch (nextError) {
+      setError(nextError instanceof Error ? nextError.message : (isZh ? "暂时无法检查会员状态。" : "Unable to check membership right now."));
+    } finally {
+      setCheckingMembership(false);
+    }
+  };
+
+  if (!native) {
+    return (
+      <section className="companion-subscription companion-app-download" aria-labelledby="companion-subscription-title">
+        <span className="drawer-kicker">{isZh ? "问道同行 · iPhone App" : "Wendao Companion · iPhone app"}</span>
+        <h3 id="companion-subscription-title">{isZh ? "在 App 里开始同行" : "Begin in the Wendao app"}</h3>
+        <p>{isZh
+          ? "问道同行现已先在 iPhone App 开放。下载三慢问道，用 Apple 或 Google 登录后，即可选择月付或年付会员，开始不限次数的 AI 问答。"
+          : "Wendao Companion is currently available first in the iPhone app. Download Wendao, sign in with Apple or Google, and choose a monthly or annual membership for unlimited AI conversations."}</p>
+        <div className="companion-app-download-card">
+          <span>{isZh ? "在 App 中继续" : "Continue in the app"}</span>
+          <strong>{isZh ? "完整阅读，与这一章深入对话" : "Read fully and reflect with each chapter"}</strong>
+          <small>{isZh ? "自动记忆、每周回看与订阅均由 App 安全管理" : "Automatic memory, weekly reflection, and subscriptions are securely managed in the app"}</small>
+        </div>
+        <a className="companion-app-store-link" href={WENDAO_APP_STORE_URL} target="_blank" rel="noreferrer">
+          {isZh ? "前往 App Store 下载" : "Download on the App Store"}
+          <span aria-hidden="true">↗</span>
+        </a>
+        <p className="companion-plan-note">{isZh
+          ? "已经在 App 内订阅？请在 App 与网页使用同一个登录账号，会员权益会自动同步。"
+          : "Already subscribed in the app? Use the same sign-in on the app and web; your membership will sync automatically."}</p>
+        <button className="companion-text-button" type="button" disabled={checkingMembership} onClick={() => void checkMembership()}>
+          {checkingMembership ? (isZh ? "正在检查…" : "Checking…") : (isZh ? "我已订阅，重新检查" : "I subscribed — check again")}
+        </button>
+        {notice ? <p className="companion-plan-note" role="status">{notice}</p> : null}
+        {error ? <p className="companion-error" role="alert">{error}</p> : null}
+        <button className="companion-text-button" type="button" onClick={onOpenAccount}>
+          {isZh ? "数据与账号" : "Data and account"}
+        </button>
+        <button className="companion-text-button" type="button" onClick={() => void onSignOut()}>
+          {isZh ? "退出当前账号" : "Sign out"}
+        </button>
+      </section>
+    );
+  }
+
   return (
     <section className="companion-subscription" aria-labelledby="companion-subscription-title">
       <span className="drawer-kicker">{isZh ? "问道同行会员" : "Wendao Companion membership"}</span>
@@ -92,24 +139,16 @@ export default function SubscriptionPanel({ language, session, onSignOut, onMemb
       <div className="companion-plans" aria-label={isZh ? "订阅方案" : "Subscription plans"}>
         <button className="is-featured" type="button" disabled={busyPlan !== null || (native && !nativePrice("annual"))} onClick={() => void beginCheckout("annual")}>
           <span>{isZh ? "推荐" : "Recommended"}</span>
-          <strong>{native
-            ? `${isZh ? "年付" : "Annual"} ${nativePrice("annual") ?? "…"}`
-            : (isZh ? `年付 ¥${COMPANION_PLANS.annual.cny}` : `Annual US$${COMPANION_PLANS.annual.usd}`)}</strong>
+          <strong>{`${isZh ? "年付" : "Annual"} ${nativePrice("annual") ?? "…"}`}</strong>
           <small>{isZh ? "持续记录、自动记忆与每周回看；海外基准 US$199.99" : "Unlimited questions, memory, and weekly reflection"}</small>
         </button>
         <button type="button" disabled={busyPlan !== null || (native && !nativePrice("monthly"))} onClick={() => void beginCheckout("monthly")}>
-          <strong>{native
-            ? `${isZh ? "月付" : "Monthly"} ${nativePrice("monthly") ?? "…"}`
-            : (isZh ? `月付 ¥${COMPANION_PLANS.monthly.cny}` : `Monthly US$${COMPANION_PLANS.monthly.usd}`)}</strong>
+          <strong>{`${isZh ? "月付" : "Monthly"} ${nativePrice("monthly") ?? "…"}`}</strong>
           <small>{isZh ? "按月保持灵活；海外基准 US$19.99" : "Unlimited questions, billed monthly"}</small>
         </button>
       </div>
       <p className="companion-plan-note">
-        {native
-          ? (isZh ? "订阅将通过 App Store 安全完成。" : "Your subscription is securely handled by the App Store.")
-          : (busyPlan
-            ? (isZh ? "正在打开安全结账页…" : "Opening secure checkout…")
-            : (isZh ? "其他国家和地区按美元基准显示当地商店价格。" : "Other countries and regions show localized storefront prices based on USD."))}
+        {isZh ? "订阅将通过 App Store 安全完成。" : "Your subscription is securely handled by the App Store."}
       </p>
       <p className="companion-plan-legal">
         {isZh ? "继续即表示你同意" : "By continuing, you agree to the"}{" "}
@@ -122,11 +161,9 @@ export default function SubscriptionPanel({ language, session, onSignOut, onMemb
         </a>
         {isZh ? "。" : "."}
       </p>
-      {native ? (
-        <button className="companion-text-button" type="button" disabled={restoring || busyPlan !== null} onClick={() => void restore()}>
-          {restoring ? (isZh ? "正在恢复…" : "Restoring…") : (isZh ? "恢复购买" : "Restore purchases")}
-        </button>
-      ) : null}
+      <button className="companion-text-button" type="button" disabled={restoring || busyPlan !== null} onClick={() => void restore()}>
+        {restoring ? (isZh ? "正在恢复…" : "Restoring…") : (isZh ? "恢复购买" : "Restore purchases")}
+      </button>
       {notice ? <p className="companion-plan-note" role="status">{notice}</p> : null}
       {error ? <p className="companion-error" role="alert">{error}</p> : null}
       <button className="companion-text-button" type="button" onClick={onOpenAccount}>

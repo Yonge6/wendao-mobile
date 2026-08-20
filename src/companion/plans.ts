@@ -18,3 +18,5 @@ export const COMPANION_MEMBERSHIP = Object.freeze({
   unlimitedQuestions: true,
   localizationBase: "USD" as const,
 });
+
+export const WENDAO_APP_STORE_URL = "https://apps.apple.com/us/app/wendao-daodejing/id6796945428";

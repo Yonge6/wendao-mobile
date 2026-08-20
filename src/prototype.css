@@ -2040,6 +2040,58 @@ textarea {
   opacity: 0.68;
 }
 
+.companion-app-download-card {
+  display: grid;
+  gap: 8px;
+  padding: 18px;
+  border: 1px solid color-mix(in srgb, var(--gold) 34%, transparent);
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 92% 8%, color-mix(in srgb, var(--gold) 16%, transparent), transparent 44%),
+    var(--field-surface);
+}
+
+.companion-app-download-card > span {
+  color: var(--gold);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.companion-app-download-card strong {
+  font-family: var(--serif);
+  font-size: 19px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.companion-app-download-card small {
+  color: var(--ink-soft);
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+.companion-app-store-link {
+  display: flex;
+  min-height: 50px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 18px;
+  border: 1px solid var(--ink);
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.companion-app-store-link span {
+  color: var(--gold-light);
+  font-size: 18px;
+}
+
 .companion-home header {
   display: grid;
   gap: 10px;
