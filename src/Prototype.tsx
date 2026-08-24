@@ -850,12 +850,12 @@ function SideDrawer({
     },
     {
       id: "yixiu",
-      href: "https://yixiu.wonderelian.com/",
+      href: "https://yixiu.wonderelian.com/mountain-stream-sounds-for-focus/?utm_source=wendao&utm_medium=owned_referral&utm_campaign=focus_sounds&utm_content=works_along_the_way",
       name: isZh ? "一休冥想" : "Yixiu Meditation",
-      tagline: isZh ? "让声音带你回到当下" : "Return to the present",
+      tagline: isZh ? "听水慢读" : "Read with water",
       description: isZh
-        ? "用真实自然声、定时聆听与水之呼吸，陪你在工作、阅读、睡眠或情绪起伏时先停一停。"
-        : "Nature sounds, timed listening, and water breathing help you pause during work, reading, sleep, or emotional shifts.",
+        ? "打开真实的山间溪流，让没有音乐和人声的自然声，陪你读完眼前这一章；也可以在 iPhone 后台继续播放。"
+        : "Play a real mountain stream—no music, no talking—while you read the chapter in front of you, then continue in the background on iPhone.",
     },
     {
       id: "xiazi",
