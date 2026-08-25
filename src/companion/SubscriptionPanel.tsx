@@ -23,6 +23,7 @@ type SubscriptionPanelProps = {
 export default function SubscriptionPanel({ language, session, onSignOut, onMembershipChanged, onOpenAccount }: SubscriptionPanelProps) {
   const isZh = language === "zh";
   const native = Capacitor.isNativePlatform();
+  const [selectedPlan, setSelectedPlan] = useState<"monthly" | "annual">("annual");
   const [busyPlan, setBusyPlan] = useState<"monthly" | "annual" | null>(null);
   const [restoring, setRestoring] = useState(false);
   const [nativeProducts, setNativeProducts] = useState<StoreKitProduct[]>([]);
@@ -37,7 +38,8 @@ export default function SubscriptionPanel({ language, session, onSignOut, onMemb
       .catch(() => setError(isZh ? "暂时无法读取 App Store 订阅方案。" : "App Store plans are temporarily unavailable."));
   }, [isZh, native]);
 
-  const beginCheckout = async (plan: "monthly" | "annual") => {
+  const beginCheckout = async () => {
+    const plan = selectedPlan;
     const config = companionPublicConfig();
     if (!config || busyPlan || !native) return;
     setBusyPlan(plan);
@@ -137,16 +139,38 @@ export default function SubscriptionPanel({ language, session, onSignOut, onMemb
       <h3 id="companion-subscription-title">{isZh ? "选择一段同行的时间" : "Choose how long we travel together"}</h3>
       <p>{isZh ? "有效会员不限问答次数。没有试用期，核心阅读、搜索与分享仍可免费使用。" : "Active members can ask unlimited questions. There is no trial; core reading, search, and sharing remain free."}</p>
       <div className="companion-plans" aria-label={isZh ? "订阅方案" : "Subscription plans"}>
-        <button className="is-featured" type="button" disabled={busyPlan !== null || (native && !nativePrice("annual"))} onClick={() => void beginCheckout("annual")}>
+        <button
+          className={`is-featured ${selectedPlan === "annual" ? "is-selected" : ""}`}
+          type="button"
+          aria-pressed={selectedPlan === "annual"}
+          disabled={busyPlan !== null || (native && !nativePrice("annual"))}
+          onClick={() => setSelectedPlan("annual")}
+        >
           <span>{isZh ? "推荐" : "Recommended"}</span>
           <strong>{`${isZh ? "年付" : "Annual"} ${nativePrice("annual") ?? "…"}`}</strong>
           <small>{isZh ? "持续记录、自动记忆与每周回看；海外基准 US$199.99" : "Unlimited questions, memory, and weekly reflection"}</small>
         </button>
-        <button type="button" disabled={busyPlan !== null || (native && !nativePrice("monthly"))} onClick={() => void beginCheckout("monthly")}>
+        <button
+          className={selectedPlan === "monthly" ? "is-selected" : ""}
+          type="button"
+          aria-pressed={selectedPlan === "monthly"}
+          disabled={busyPlan !== null || (native && !nativePrice("monthly"))}
+          onClick={() => setSelectedPlan("monthly")}
+        >
           <strong>{`${isZh ? "月付" : "Monthly"} ${nativePrice("monthly") ?? "…"}`}</strong>
           <small>{isZh ? "按月保持灵活；海外基准 US$19.99" : "Unlimited questions, billed monthly"}</small>
         </button>
       </div>
+      <button
+        className="companion-checkout-button"
+        type="button"
+        disabled={busyPlan !== null || !nativePrice(selectedPlan)}
+        onClick={() => void beginCheckout()}
+      >
+        {busyPlan
+          ? (isZh ? "正在前往 App Store…" : "Opening the App Store…")
+          : (isZh ? "确认并前往支付" : "Confirm and continue to payment")}
+      </button>
       <p className="companion-plan-note">
         {isZh ? "订阅将通过 App Store 安全完成。" : "Your subscription is securely handled by the App Store."}
       </p>

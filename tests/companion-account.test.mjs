@@ -138,3 +138,11 @@ test("the subscription screen links the Apple standard EULA and privacy policy",
   assert.match(source, /apple\.com\/legal\/internet-services\/itunes\/dev\/stdeula/);
   assert.match(source, /wendao\.wonderelian\.com\/privacy\.html/);
 });
+
+test("the subscription screen selects a plan before one explicit payment confirmation", async () => {
+  const source = await readFile(new URL("../src/companion/SubscriptionPanel.tsx", import.meta.url), "utf8");
+  assert.match(source, /aria-pressed=\{selectedPlan === "annual"\}/);
+  assert.match(source, /aria-pressed=\{selectedPlan === "monthly"\}/);
+  assert.match(source, /确认并前往支付/);
+  assert.match(source, /onClick=\{\(\) => void beginCheckout\(\)\}/);
+});

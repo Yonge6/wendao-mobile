@@ -936,6 +936,9 @@ textarea {
   background: var(--composer-surface);
   box-shadow: 0 9px 25px var(--shadow-color), inset 0 1px 0 rgba(255, 255, 255, 0.16);
   backdrop-filter: blur(12px);
+  color: var(--ink);
+  cursor: pointer;
+  text-align: left;
   transition:
     bottom 180ms ease,
     opacity 220ms ease,
@@ -950,7 +953,8 @@ textarea {
 }
 
 .ai-composer.is-reading:hover,
-.ai-composer.is-reading:focus-within {
+.ai-composer.is-reading:focus-within,
+.ai-composer.is-reading:focus-visible {
   opacity: 1;
   background-color: var(--composer-surface);
   box-shadow: 0 9px 25px var(--shadow-color), inset 0 1px 0 rgba(255, 255, 255, 0.16);
@@ -980,23 +984,20 @@ textarea {
   white-space: nowrap;
 }
 
-.ai-composer input {
+.composer-placeholder {
+  display: block;
   min-width: 0;
   width: 100%;
-  border: 0;
-  outline: none;
-  background: transparent;
   color: var(--ink);
   font-family: var(--serif);
   font-size: 16px;
   letter-spacing: 0.03em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.ai-composer input::placeholder {
-  color: color-mix(in srgb, var(--ink) 55%, transparent);
-}
-
-.ai-composer > button {
+.composer-submit {
   display: grid;
   width: 37px;
   height: 37px;
@@ -1010,7 +1011,7 @@ textarea {
   padding: 0;
 }
 
-.ai-composer > button svg {
+.composer-submit svg {
   width: 16px;
   height: 16px;
   display: block;
@@ -2015,6 +2016,11 @@ textarea {
   background: color-mix(in srgb, var(--gold) 8%, var(--field-surface));
 }
 
+.companion-plans button.is-selected {
+  border-color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--ink);
+}
+
 .companion-plans button > span {
   position: absolute;
   top: 12px;
@@ -2038,6 +2044,23 @@ textarea {
 .companion-plans button:disabled {
   cursor: wait;
   opacity: 0.68;
+}
+
+.companion-checkout-button {
+  min-height: 50px;
+  padding: 0 18px;
+  border: 1px solid var(--ink);
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--paper);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.companion-checkout-button:disabled {
+  cursor: wait;
+  opacity: 0.55;
 }
 
 .companion-app-download-card {
@@ -2724,8 +2747,7 @@ textarea {
   background: var(--gold);
 }
 
-.drawer-form,
-.drawer-feedback {
+.drawer-form {
   display: flex;
   flex-direction: column;
   gap: 15px;
@@ -2739,8 +2761,7 @@ textarea {
   line-height: 1.8;
 }
 
-.drawer-form label,
-.drawer-feedback label {
+.drawer-form label {
   display: flex;
   flex-direction: column;
   gap: 7px;
@@ -2750,9 +2771,7 @@ textarea {
   letter-spacing: 0.05em;
 }
 
-.drawer-form input,
-.drawer-feedback input,
-.drawer-feedback textarea {
+.drawer-form input {
   box-sizing: border-box;
   min-width: 0;
   width: 100%;
@@ -2766,22 +2785,12 @@ textarea {
   letter-spacing: normal;
 }
 
-.drawer-form input,
-.drawer-feedback input {
+.drawer-form input {
   height: 46px;
   padding: 0 13px;
 }
 
-.drawer-feedback textarea {
-  min-height: 168px;
-  padding: 13px;
-  line-height: 1.7;
-  resize: vertical;
-}
-
-.drawer-form input:focus,
-.drawer-feedback input:focus,
-.drawer-feedback textarea:focus {
+.drawer-form input:focus {
   border-color: var(--gold);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--gold) 10%, transparent);
 }
@@ -2967,15 +2976,6 @@ textarea {
 .about-method p {
   font-size: 13px;
   line-height: 1.5;
-}
-
-.feedback-submit {
-  margin-top: 3px;
-}
-
-.feedback-submit:disabled {
-  cursor: not-allowed;
-  opacity: 0.42;
 }
 
 .form-message {

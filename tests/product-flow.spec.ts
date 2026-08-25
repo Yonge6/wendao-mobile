@@ -266,6 +266,7 @@ test("drawer presents five bilingual related works in the intended order with sa
   await page.goto("/");
   await page.getByRole("button", { name: "打开更多功能" }).click();
   await expect(page.getByRole("button", { name: "分享问道" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /留下回响/ })).toHaveCount(0);
   await expect(page.locator(".drawer-footer")).toHaveCount(0);
   const works = page.getByRole("region", { name: "沿途所作" });
   await expect(works).toBeVisible();
@@ -640,19 +641,18 @@ test("keeps verified chapter life-manual guidance personal and separate from tod
   await expect(practice).toContainText("three slow breaths");
 });
 
-test("routes AI questions to account login without requiring a life manual", async ({ page }) => {
+test("opens account login as soon as the reading composer is clicked", async ({ page }) => {
   await page.goto("/");
 
-  const question = page.getByLabel("向三慢问道提问");
+  const composer = page.getByRole("button", { name: "打开我的问道并登录", exact: true });
   await expect(page.getByText("问道同行 · 登录后使用", { exact: true })).toBeVisible();
-  await expect(question).toHaveAttribute("aria-describedby", "composer-expectation");
+  await expect(composer).toContainText("问问这一章与你的关系…");
 
   await page.getByRole("button", { name: "切换到英文", exact: true }).click();
   await expect(page.getByText("Wendao Companion · sign in to use", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Switch to Chinese", exact: true }).click();
 
-  await question.fill("我现在应该继续还是停下来？");
-  await page.getByRole("button", { name: "发送", exact: true }).click();
+  await composer.click();
   await expect(page.getByRole("heading", { name: "我的问道", exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: /让每一次提问/ })).toBeVisible();
   await expect(page.getByRole("button", { name: "使用 Apple 登录" })).toBeVisible();

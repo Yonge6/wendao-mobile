@@ -46,7 +46,7 @@ import CompanionPanel from "./companion/CompanionPanel";
 type Language = "zh" | "en";
 type Theme = "light" | "dark";
 type ReadingSize = "small" | "medium" | "large";
-type DrawerView = "home" | "companion" | "profile" | "profile-detail" | "about" | "contact" | "feedback";
+type DrawerView = "home" | "companion" | "profile" | "profile-detail" | "about" | "contact";
 type ChapterEntrySource = "daily" | "directory" | "chance" | "link";
 
 type LifeProfile = {
@@ -86,7 +86,6 @@ const THEME_STORAGE_KEY = "wendao-theme";
 const READING_SIZE_STORAGE_KEY = "wendao-reading-size-v2";
 const CLIENT_ID_KEY = "wendao-client-id";
 const ADMIN_TOKEN_KEY = "wendao-admin-token";
-const APP_VERSION = "2026.08.02";
 const emptyProfile: LifeProfile = {
   name: "",
   birthDate: "",
@@ -749,20 +748,12 @@ type SideDrawerProps = {
   profileState: SaveState;
   profileError: string;
   chart: ChartSnapshot | null;
-  feedback: string;
-  onFeedbackChange: (feedback: string) => void;
-  feedbackContact: string;
-  onFeedbackContactChange: (contact: string) => void;
-  feedbackState: SaveState;
-  feedbackError: string;
-  onFeedbackSubmit: (event: FormEvent) => void;
   onContactClick: (target: string) => void;
   onWorkClick: (target: string) => void;
   onVideoChannelOpen: () => void;
   showSupport: boolean;
   onSupportOpen: () => void;
   chapterId: number;
-  companionQuestion: string;
 };
 
 function SideDrawer({
@@ -782,20 +773,12 @@ function SideDrawer({
   profileState,
   profileError,
   chart,
-  feedback,
-  onFeedbackChange,
-  feedbackContact,
-  onFeedbackContactChange,
-  feedbackState,
-  feedbackError,
-  onFeedbackSubmit,
   onContactClick,
   onWorkClick,
   onVideoChannelOpen,
   showSupport,
   onSupportOpen,
   chapterId,
-  companionQuestion,
 }: SideDrawerProps) {
   const isZh = language === "zh";
   const profileComplete = Boolean(chart?.chartHash);
@@ -834,9 +817,7 @@ function SideDrawer({
         ? (isZh ? "详细解读" : "Detailed reading")
       : view === "about"
         ? (isZh ? "关于三慢问道" : "About Wendao")
-        : view === "contact"
-          ? (isZh ? "联系我们" : "Contact")
-        : (isZh ? "留下回响" : "Leave a note");
+        : (isZh ? "联系我们" : "Contact");
 
   const works = [
     {
@@ -1016,14 +997,6 @@ function SideDrawer({
                   </span>
                   <ChevronRightIcon />
                 </button>
-                <button type="button" onClick={() => onViewChange("feedback")}>
-                  <span className="drawer-nav-icon"><ChatBubbleIcon /></span>
-                  <span>
-                    <strong>{isZh ? "留下回响" : "Leave a note"}</strong>
-                    <small>{isZh ? "告诉我们，哪里还能做得更好" : "Tell us what could feel better"}</small>
-                  </span>
-                  <ChevronRightIcon />
-                </button>
               </nav>
 
               {showSupport ? (
@@ -1081,7 +1054,7 @@ function SideDrawer({
           ) : null}
 
           {view === "companion" ? (
-            <CompanionPanel language={language} chapterId={chapterId} initialQuestion={companionQuestion} />
+            <CompanionPanel language={language} chapterId={chapterId} />
           ) : null}
 
           {view === "profile" ? (
@@ -1359,45 +1332,6 @@ function SideDrawer({
             </section>
           ) : null}
 
-          {view === "feedback" ? (
-            <form className="drawer-feedback" onSubmit={onFeedbackSubmit}>
-              <p className="drawer-intro">
-                {isZh
-                  ? "原文、拼音、解释、设计或使用体验里，任何不准确、不顺手的地方，都欢迎告诉我们。"
-                  : "If anything in the text, Pinyin, interpretation, design, or experience feels inaccurate or awkward, tell us here."}
-              </p>
-              <label>
-                <span>{isZh ? "想说的话" : "Your note"}</span>
-                <textarea
-                  rows={7}
-                  value={feedback}
-                  onChange={(event) => onFeedbackChange(event.target.value)}
-                  placeholder={isZh ? "请写下你看到的问题，或希望增加的内容…" : "Describe the issue or what you would like to see…"}
-                />
-              </label>
-              <label>
-                <span>{isZh ? "联系方式（选填）" : "Contact (optional)"}</span>
-                <input
-                  value={feedbackContact}
-                  onChange={(event) => onFeedbackContactChange(event.target.value)}
-                  placeholder={isZh ? "邮箱、微信或其他联系方式" : "Email or another way to reach you"}
-                />
-              </label>
-              <button
-                type="submit"
-                className="drawer-primary feedback-submit"
-                disabled={!feedback.trim() || feedbackState === "saving"}
-              >
-                <ChatBubbleIcon />
-                {feedbackState === "saving"
-                  ? (isZh ? "正在提交…" : "Submitting…")
-                  : feedbackState === "saved"
-                    ? (isZh ? "已收到，谢谢你" : "Received. Thank you.")
-                    : (isZh ? "送出回响" : "Send note")}
-              </button>
-              {feedbackError ? <p className="form-message is-error">{feedbackError}</p> : null}
-            </form>
-          ) : null}
         </div>
 
       </aside>
@@ -1697,8 +1631,6 @@ export default function Prototype() {
   const [shareInitialKind, setShareInitialKind] = useState<ShareCardKind>("verse");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerView, setDrawerView] = useState<DrawerView>("home");
-  const [question, setQuestion] = useState("");
-  const [submittedQuestion, setSubmittedQuestion] = useState("");
   const [isReadingScrolled, setIsReadingScrolled] = useState(false);
   const [visibleChapterCount, setVisibleChapterCount] = useState(1);
   const [isOpeningNextChapter, setIsOpeningNextChapter] = useState(false);
@@ -1709,10 +1641,6 @@ export default function Prototype() {
   const [chart, setChart] = useState<ChartSnapshot | null>(loadChart);
   const [profileState, setProfileState] = useState<SaveState>("idle");
   const [profileError, setProfileError] = useState("");
-  const [feedback, setFeedback] = useState("");
-  const [feedbackContact, setFeedbackContact] = useState("");
-  const [feedbackState, setFeedbackState] = useState<SaveState>("idle");
-  const [feedbackError, setFeedbackError] = useState("");
   const [videoChannelOpen, setVideoChannelOpen] = useState(false);
   const [supportOpen, setSupportOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(isAdminLocation);
@@ -1867,15 +1795,10 @@ export default function Prototype() {
     scrollReadingToTop();
   };
 
-  const submitQuestion = (event: FormEvent) => {
-    event.preventDefault();
-    const nextQuestion = question.trim();
-    if (!nextQuestion) return;
-    setSubmittedQuestion(nextQuestion);
+  const openCompanion = () => {
     setDrawerView("companion");
     setDrawerOpen(true);
-    setQuestion("");
-    trackEvent("question_submit", { questionLength: nextQuestion.length });
+    trackEvent("companion_open", { source: "reading_composer" });
   };
 
   const saveProfile = async (event: FormEvent) => {
@@ -1939,34 +1862,6 @@ export default function Prototype() {
             ? "计算服务响应超时，请检查网络后重新生成。"
             : "The calculation service took too long to respond. Check your connection and try again.")
           : (message || (isZh ? "计算失败，请稍后再试。" : "Calculation failed. Please try again.")));
-    }
-  };
-
-  const submitFeedback = async (event: FormEvent) => {
-    event.preventDefault();
-    if (!feedback.trim()) return;
-    setFeedbackState("saving");
-    setFeedbackError("");
-    try {
-      await apiRequest<{ saved: boolean }>("/v1/feedback", {
-        method: "POST",
-        body: JSON.stringify({
-          clientId: clientId.current,
-          message: feedback.trim(),
-          contact: feedbackContact.trim(),
-          locale: language,
-          chapterId,
-          pagePath: window.location.pathname,
-          appVersion: APP_VERSION,
-        }),
-      });
-      setFeedback("");
-      setFeedbackContact("");
-      setFeedbackState("saved");
-      trackEvent("feedback_submit", { source: "drawer" });
-    } catch (nextError) {
-      setFeedbackState("error");
-      setFeedbackError(nextError instanceof Error ? nextError.message : "提交失败，请稍后再试。");
     }
   };
 
@@ -2267,28 +2162,25 @@ export default function Prototype() {
       </div>
 
       {!directoryOpen && !drawerOpen && !shareOpen ? (
-        <form
+        <button
+          type="button"
           className={`ai-composer ${isReadingScrolled ? "is-reading" : ""}`}
-          onSubmit={submitQuestion}
+          aria-label={isZh ? "打开我的问道并登录" : "Open My Wendao and sign in"}
+          onClick={openCompanion}
         >
           <span className="composer-spark" aria-hidden="true">✦</span>
           <div className="composer-field">
             <small className="composer-expectation" id="composer-expectation">
               {isZh ? "问道同行 · 登录后使用" : "Wendao Companion · sign in to use"}
             </small>
-            <input
-              value={question}
-              onChange={(event) => setQuestion(event.target.value)}
-              onFocus={() => trackEvent("composer_focus", { source: "reading" })}
-              placeholder={isZh ? "问问这一章与你的关系…" : "Ask how this chapter relates to you…"}
-              aria-label={isZh ? "向三慢问道提问" : "Ask Wendao"}
-              aria-describedby="composer-expectation"
-            />
+            <span className="composer-placeholder">
+              {isZh ? "问问这一章与你的关系…" : "Ask how this chapter relates to you…"}
+            </span>
           </div>
-          <button type="submit" aria-label={isZh ? "发送" : "Send"}>
+          <span className="composer-submit" aria-hidden="true">
             <ArrowRightIcon />
-          </button>
-        </form>
+          </span>
+        </button>
       ) : null}
 
       <WebSheet
@@ -2395,13 +2287,6 @@ export default function Prototype() {
         profileState={profileState}
         profileError={profileError}
         chart={chart}
-        feedback={feedback}
-        onFeedbackChange={setFeedback}
-        feedbackContact={feedbackContact}
-        onFeedbackContactChange={setFeedbackContact}
-        feedbackState={feedbackState}
-        feedbackError={feedbackError}
-        onFeedbackSubmit={submitFeedback}
         onContactClick={(target) => trackEvent("contact_click", { target })}
         onWorkClick={(target) => trackEvent("related_product_click", { target })}
         onVideoChannelOpen={() => {
@@ -2411,7 +2296,6 @@ export default function Prototype() {
         showSupport={webSupportEnabled}
         onSupportOpen={() => setSupportOpen(true)}
         chapterId={chapterId}
-        companionQuestion={submittedQuestion}
       />
       <VideoChannelModal open={videoChannelOpen} onClose={() => setVideoChannelOpen(false)} language={language} />
       {webSupportEnabled ? <SupportModal open={supportOpen} onClose={() => setSupportOpen(false)} language={language} /> : null}

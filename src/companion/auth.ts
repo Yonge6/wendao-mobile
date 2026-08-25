@@ -2,9 +2,10 @@ import { App, type URLOpenListenerEvent } from "@capacitor/app";
 import { Browser } from "@capacitor/browser";
 import { Capacitor, type PluginListenerHandle } from "@capacitor/core";
 import type { Provider } from "@supabase/supabase-js";
+import { NATIVE_AUTH_CALLBACK, readNativeAuthCallback } from "./auth-callback";
 import { companionClient } from "./client";
 
-const NATIVE_CALLBACK = "com.yonge6.wendao://auth/callback";
+const handledNativeCallbacks = new Set<string>();
 
 export type CompanionAuthProvider = Extract<Provider, "apple" | "google">;
 
@@ -19,8 +20,9 @@ export async function startCompanionSignIn(provider: CompanionAuthProvider) {
   const { data, error } = await client.auth.signInWithOAuth({
     provider,
     options: {
-      redirectTo: native ? NATIVE_CALLBACK : webCallbackUrl(),
+      redirectTo: native ? NATIVE_AUTH_CALLBACK : webCallbackUrl(),
       skipBrowserRedirect: native,
+      scopes: provider === "apple" ? "name email" : "openid email profile",
     },
   });
   if (error) throw error;
@@ -36,23 +38,34 @@ export async function signOutCompanion() {
   if (error) throw error;
 }
 
-async function exchangeNativeCode(event: URLOpenListenerEvent) {
-  if (!event.url.startsWith(NATIVE_CALLBACK)) return;
+async function exchangeNativeCode(url: string) {
+  const callback = readNativeAuthCallback(url);
+  if (!callback || handledNativeCallbacks.has(url)) return;
+  handledNativeCallbacks.add(url);
   const client = companionClient();
-  if (!client) return;
-  const code = new URL(event.url).searchParams.get("code");
-  if (!code) throw new Error("OAUTH_CODE_MISSING");
-  const { error } = await client.auth.exchangeCodeForSession(code);
-  await Browser.close().catch(() => undefined);
-  if (error) throw error;
+  if (!client) {
+    handledNativeCallbacks.delete(url);
+    throw new Error("COMPANION_NOT_CONFIGURED");
+  }
+  try {
+    const { error } = await client.auth.exchangeCodeForSession(callback.code);
+    if (error) throw error;
+  } catch (error) {
+    handledNativeCallbacks.delete(url);
+    throw error;
+  } finally {
+    await Browser.close().catch(() => undefined);
+  }
 }
 
 export async function installNativeAuthListener(
   onError: (error: unknown) => void,
 ): Promise<PluginListenerHandle | null> {
   if (!Capacitor.isNativePlatform()) return null;
-  return App.addListener("appUrlOpen", (event) => {
-    void exchangeNativeCode(event).catch(onError);
+  const listener = await App.addListener("appUrlOpen", (event: URLOpenListenerEvent) => {
+    void exchangeNativeCode(event.url).catch(onError);
   });
+  const launchUrl = await App.getLaunchUrl();
+  if (launchUrl?.url) void exchangeNativeCode(launchUrl.url).catch(onError);
+  return listener;
 }
-
