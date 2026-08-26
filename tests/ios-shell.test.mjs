@@ -8,6 +8,7 @@ const project = readFileSync(new URL("../ios/App/App.xcodeproj/project.pbxproj",
 const infoPlist = readFileSync(new URL("../ios/App/App/Info.plist", import.meta.url), "utf8");
 const privacy = readFileSync(new URL("../ios/App/App/PrivacyInfo.xcprivacy", import.meta.url), "utf8");
 const companionEnvCheck = readFileSync(new URL("../scripts/check-companion-client-env.mjs", import.meta.url), "utf8");
+const buildManifestWriter = readFileSync(new URL("../scripts/write-build-manifest.mjs", import.meta.url), "utf8");
 const iosWorkflow = readFileSync(new URL("../.github/workflows/ios-check.yml", import.meta.url), "utf8");
 
 test("iOS and H5 builds share the same client build gate", () => {
@@ -20,6 +21,9 @@ test("iOS and H5 builds share the same client build gate", () => {
   assert.match(iosWorkflow, /VITE_SUPABASE_URL: \$\{\{ vars\.VITE_SUPABASE_URL \}\}/);
   assert.match(iosWorkflow, /VITE_SUPABASE_ANON_KEY: \$\{\{ vars\.VITE_SUPABASE_ANON_KEY \}\}/);
   assert.match(iosWorkflow, /VITE_COMPANION_API_URL: \$\{\{ vars\.VITE_COMPANION_API_URL \}\}/);
+  assert.match(buildManifestWriter, /readSingleBuildSetting\("MARKETING_VERSION"\)/);
+  assert.match(buildManifestWriter, /readSingleBuildSetting\("CURRENT_PROJECT_VERSION"\)/);
+  assert.doesNotMatch(buildManifestWriter, /appVersion: "1\.0"/);
 });
 
 test("Capacitor app identity and bundled web directory are stable", () => {

@@ -5,8 +5,25 @@ import path from "node:path";
 
 const root = process.cwd();
 const chapterPath = path.join(root, "src/data/chapters.json");
+const projectPath = path.join(root, "ios/App/App.xcodeproj/project.pbxproj");
 const chapterBytes = readFileSync(chapterPath);
 const chapters = JSON.parse(chapterBytes.toString("utf8"));
+const project = readFileSync(projectPath, "utf8");
+
+function readSingleBuildSetting(name) {
+  const values = new Set([...project.matchAll(new RegExp(`${name} = ([^;]+);`, "g"))].map((match) => match[1]));
+  if (values.size !== 1) {
+    throw new Error(`Build manifest requires one consistent ${name}; found ${[...values].join(", ") || "none"}.`);
+  }
+  return [...values][0];
+}
+
+const appVersion = readSingleBuildSetting("MARKETING_VERSION");
+const buildNumber = Number.parseInt(readSingleBuildSetting("CURRENT_PROJECT_VERSION"), 10);
+
+if (!Number.isSafeInteger(buildNumber) || buildNumber < 1) {
+  throw new Error(`Build manifest requires a positive CURRENT_PROJECT_VERSION; found ${buildNumber}.`);
+}
 
 if (!Array.isArray(chapters) || chapters.length !== 81) {
   throw new Error(`Build manifest requires exactly 81 chapters; found ${chapters.length}.`);
@@ -25,8 +42,8 @@ writeFileSync(path.join(outputDir, "wendao-build.json"), `${JSON.stringify({
   schemaVersion: 1,
   appName: "三慢问道",
   bundleId: "com.yonge6.wendao",
-  appVersion: "1.0",
-  buildNumber: 2,
+  appVersion,
+  buildNumber,
   commit,
   chapterCount: chapters.length,
   chapterDataSha256: createHash("sha256").update(chapterBytes).digest("hex"),
