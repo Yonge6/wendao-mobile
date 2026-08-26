@@ -1286,7 +1286,7 @@ function SideDrawer({
                   </article>
                   <article>
                     <strong>{isZh ? "不二" : "Wholeness"}</strong>
-                    <p>{isZh ? "接纳高峰与低谷，拥抱完整而非完美。" : "Accept peaks and valleys; choose wholeness over perfection."}</p>
+                    <p>{isZh ? "不评判，没有好坏对错，接纳高峰与低谷，拥抱完整而非完美。" : "Suspend judgment—there is no simple good or bad, right or wrong. Accept peaks and valleys; choose wholeness over perfection."}</p>
                   </article>
                   <article>
                     <strong>{isZh ? "三慢" : "Go slowly"}</strong>
