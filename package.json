@@ -21,7 +21,7 @@
     "build:client": "npm run check:runtime && npm run validate:chapters && tsc && vite build --base=/ && node scripts/write-build-manifest.mjs",
     "build": "npm run build:client && node scripts/prepare-sites-build.mjs",
     "build:pages": "npm run build:client && node scripts/prepare-pages-build.mjs",
-    "ios:sync": "npm run build:client && cap sync ios && node scripts/check-ios-sync.mjs",
+    "ios:sync": "node scripts/check-companion-client-env.mjs && npm run build:client && cap sync ios && node scripts/check-ios-sync.mjs",
     "ios:build:simulator": "npm run ios:sync && xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug -sdk iphonesimulator -derivedDataPath ios/build CODE_SIGNING_ALLOWED=NO build",
     "ios:distribution:readiness": "node scripts/check-ios-distribution.mjs",
     "ios:screenshots": "node scripts/capture-app-store-screenshots.mjs",
