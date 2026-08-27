@@ -1,9 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "mkdir -p dist && printf '<!doctype html><title>Wendao Companion API</title>' > dist/index.html",
   "functions": {
     "api/**/*.mjs": {
       "maxDuration": 60
     }
   }
 }
-

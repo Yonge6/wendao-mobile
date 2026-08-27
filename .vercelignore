@@ -1,0 +1,17 @@
+ios/
+dist/
+docs/
+generated/
+node_modules/
+playwright-report/
+test-results/
+tests/
+scripts/
+public/
+supabase/
+qa-*.png
+
+src/*
+!src/data/
+src/data/*
+!src/data/chapters.json

@@ -5,3 +5,5 @@ playwright-report/
 docs/app-store/qa/
 docs/app-store/screenshots/source/
 supabase/.temp/
+.vercel
+.env*.local
