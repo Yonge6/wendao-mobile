@@ -53,7 +53,8 @@ function companionDisplayText(text: string) {
   return text
     .replace(/\*\*([^*]+)\*\*/g, "$1")
     .replace(/__([^_]+)__/g, "$1")
-    .replace(/(^|\n)#{1,6}\s+/g, "$1");
+    .replace(/(^|\n)#{1,6}\s+/g, "$1")
+    .replace(/(^|\n)\s*[*+-]\s+/g, "$1• ");
 }
 
 function SignedInCompanion({
