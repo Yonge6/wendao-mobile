@@ -170,7 +170,11 @@ function SignedInCompanion({
         question: nextQuestion,
         signal: controller.signal,
         handlers: {
-          meta: () => setPhase("answering"),
+          meta: (payload) => {
+            if (payload.phase === "preparing") setPhase("preparing");
+            else if (payload.phase === "fallback") setPhase("slow");
+            else setPhase("answering");
+          },
           delta: ({ text }) => setMessages((current) => current.map((message) => (
             message.id === assistantId
               ? { ...message, content: message.content + text, status: "streaming" }

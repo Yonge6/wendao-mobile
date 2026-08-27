@@ -202,9 +202,32 @@ export async function handleCompanionRequest(request, dependencies = {}) {
               requestId: payload.requestId,
               phase: "answering",
             }));
-            const generated = await readDeepSeekText(providerResponse.body, (text) => {
-              controller.enqueue(sseEvent("delta", { text }));
-            });
+            let primaryAnswerStarted = false;
+            let generated;
+            try {
+              generated = await readDeepSeekText(providerResponse.body, (text) => {
+                primaryAnswerStarted = true;
+                controller.enqueue(sseEvent("delta", { text }));
+              });
+            } catch (error) {
+              if (request.signal.aborted || primaryAnswerStarted || typeof provider.visibleFallback !== "function") {
+                throw error;
+              }
+              console.warn("DeepSeek visible stream stalled; using flash fallback", {
+                requestId: payload.requestId,
+              });
+              controller.enqueue(sseEvent("meta", {
+                requestId: payload.requestId,
+                phase: "fallback",
+              }));
+              const fallbackResponse = await provider.visibleFallback(messages, {
+                requestId: payload.requestId,
+                signal: request.signal,
+              });
+              generated = await readDeepSeekText(fallbackResponse.body, (text) => {
+                controller.enqueue(sseEvent("delta", { text }));
+              });
+            }
             const saved = await store.finishExchange({
               userId: user.id,
               requestId: payload.requestId,

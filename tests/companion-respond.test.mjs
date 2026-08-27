@@ -123,6 +123,43 @@ test("opens the response stream before the visible model finishes connecting", a
   }
 });
 
+test("falls back when the visible model stream stalls before sending answer text", async () => {
+  let fallbackCalled = false;
+  const response = await handleCompanionRequest(request("收尾时先做什么？"), {
+    environment,
+    authenticate: async () => ({ id: userId }),
+    store: {
+      reserveQuestion: async () => ({ state: "reserved", questionsThisMonth: 2 }),
+      getContext: async () => ({ memoryEnabled: false, memories: [], lifeManual: null }),
+      getRecentMessages: async () => [],
+      finishExchange: async () => ({
+        threadId: "33333333-3333-4333-8333-333333333333",
+        answerMessageId: "44444444-4444-4444-8444-444444444444",
+      }),
+      releaseQuestion: async () => undefined,
+    },
+    loadChapter: async () => ({ id: 64, text: ["慎终如始"], theme: "慎终如始" }),
+    provider: {
+      visible: async () => new Response(new ReadableStream({
+        start(controller) {
+          controller.error(new Error("stream stalled"));
+        },
+      })),
+      visibleFallback: async () => {
+        fallbackCalled = true;
+        return providerStream(["先用接收者视角，", "完整走一遍交接。"]);
+      },
+      background: async () => ({ data: { memories: [] } }),
+    },
+  });
+
+  const stream = await response.text();
+  assert.equal(fallbackCalled, true);
+  assert.match(stream, /"phase":"fallback"/);
+  assert.match(stream, /先用接收者视角/);
+  assert.match(stream, /event: done/);
+});
+
 test("immediate safety help requires sign-in but does not record question use", async () => {
   let reserved = false;
   const response = await handleCompanionRequest(request("我现在想自杀，已经准备好了"), {

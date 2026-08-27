@@ -98,6 +98,12 @@ export function createDeepSeekProvider(config, dependencies = {}) {
         });
       }
     },
+    async visibleFallback(messages, options) {
+      return call("visible_fallback", messages, {
+        ...options,
+        timeoutMs: Math.min(timeoutMs, FALLBACK_VISIBLE_TIMEOUT_MS),
+      });
+    },
     async background(messages, options) {
       const response = await call("background", messages, options);
       const payload = await response.json();

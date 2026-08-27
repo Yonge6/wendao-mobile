@@ -136,6 +136,23 @@ test("DeepSeek visible responses fall back to Flash when Pro is unavailable", as
   assert.deepEqual(models, ["deepseek-v4-pro", "deepseek-v4-flash"]);
 });
 
+test("DeepSeek exposes an explicit Flash fallback for a stalled visible stream", async () => {
+  let model;
+  const provider = createDeepSeekProvider(
+    { apiKey: "ds-test", timeoutMs: 45_000 },
+    {
+      fetchImpl: async (_url, init) => {
+        model = JSON.parse(init.body).model;
+        return new Response('data: {"choices":[{"delta":{"content":"先复核交接"}}]}\n\ndata: [DONE]\n\n');
+      },
+    },
+  );
+
+  const response = await provider.visibleFallback([{ role: "user", content: "我该怎么办？" }]);
+  assert.equal(response.status, 200);
+  assert.equal(model, "deepseek-v4-flash");
+});
+
 test("DeepSeek provider applies a timeout and never embeds the key in its error", async () => {
   const provider = createDeepSeekProvider(
     { apiKey: "ds-super-secret", timeoutMs: 5 },
