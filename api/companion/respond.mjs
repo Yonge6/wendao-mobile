@@ -183,16 +183,6 @@ export async function handleCompanionRequest(request, dependencies = {}) {
       highStakes: risk === "high_stakes",
     });
     const provider = dependencies.provider ?? createModelProvider(environment, dependencies);
-    let providerResponse;
-    try {
-      providerResponse = await provider.visible(messages, {
-        requestId: payload.requestId,
-        signal: request.signal,
-      });
-    } catch (error) {
-      await store.releaseQuestion(user.id, payload.requestId).catch(() => undefined);
-      throw error;
-    }
 
     const body = new ReadableStream({
       start(controller) {
@@ -200,9 +190,18 @@ export async function handleCompanionRequest(request, dependencies = {}) {
           requestId: payload.requestId,
           unlimited: true,
           questionsThisMonth: reservation.questionsThisMonth,
+          phase: "preparing",
         }));
         void (async () => {
           try {
+            const providerResponse = await provider.visible(messages, {
+              requestId: payload.requestId,
+              signal: request.signal,
+            });
+            controller.enqueue(sseEvent("meta", {
+              requestId: payload.requestId,
+              phase: "answering",
+            }));
             const generated = await readDeepSeekText(providerResponse.body, (text) => {
               controller.enqueue(sseEvent("delta", { text }));
             });

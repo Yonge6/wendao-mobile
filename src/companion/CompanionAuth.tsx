@@ -13,9 +13,11 @@ type CompanionAuthProps = {
   children: (session: Session, signOut: () => Promise<void>) => ReactNode;
 };
 
+let cachedSession: Session | null | undefined;
+
 export default function CompanionAuth({ language, children }: CompanionAuthProps) {
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [session, setSession] = useState<Session | null>(cachedSession ?? null);
+  const [loading, setLoading] = useState(cachedSession === undefined);
   const [busyProvider, setBusyProvider] = useState<CompanionAuthProvider | null>(null);
   const [error, setError] = useState("");
   const isZh = language === "zh";
@@ -28,13 +30,23 @@ export default function CompanionAuth({ language, children }: CompanionAuthProps
     }
 
     let active = true;
-    void client.auth.getSession().then(({ data }) => {
-      if (active) {
+    void client.auth.getSession()
+      .then(({ data, error: sessionError }) => {
+        if (!active) return;
+        if (sessionError) throw sessionError;
+        cachedSession = data.session;
         setSession(data.session);
         setLoading(false);
-      }
-    });
+      })
+      .catch(() => {
+        if (!active) return;
+        cachedSession = null;
+        setSession(null);
+        setLoading(false);
+        setError("AUTH_STATUS_FAILED");
+      });
     const { data: subscription } = client.auth.onAuthStateChange((_event, nextSession) => {
+      cachedSession = nextSession;
       setSession(nextSession);
       setLoading(false);
     });
@@ -101,6 +113,8 @@ export default function CompanionAuth({ language, children }: CompanionAuthProps
         <p className="form-message is-error">
           {error === "COMPANION_NOT_CONFIGURED"
             ? (isZh ? "登录服务尚未配置完成。阅读功能不受影响。" : "Sign-in is not configured yet. Reading remains fully available.")
+            : error === "AUTH_STATUS_FAILED"
+              ? (isZh ? "暂时无法确认登录状态，请检查网络后重试。" : "We could not confirm your sign-in. Check your connection and try again.")
             : (isZh ? "登录没有完成，请重试。" : "Sign-in did not complete. Please try again.")}
         </p>
       ) : null}

@@ -100,6 +100,9 @@ test("DeepSeek routes visible and background work to separate models", () => {
   const background = buildDeepSeekRequest("background", [
     { role: "user", content: "Return one JSON object." },
   ]);
+  const fallback = buildDeepSeekRequest("visible_fallback", [
+    { role: "user", content: "Give a concise answer." },
+  ]);
 
   assert.equal(visible.model, "deepseek-v4-pro");
   assert.equal(visible.stream, true);
@@ -109,6 +112,28 @@ test("DeepSeek routes visible and background work to separate models", () => {
   assert.equal(background.stream, false);
   assert.deepEqual(background.response_format, { type: "json_object" });
   assert.equal(background.max_tokens, 700);
+  assert.equal(fallback.model, "deepseek-v4-flash");
+  assert.equal(fallback.stream, true);
+  assert.deepEqual(fallback.thinking, { type: "disabled" });
+});
+
+test("DeepSeek visible responses fall back to Flash when Pro is unavailable", async () => {
+  const models = [];
+  const provider = createDeepSeekProvider(
+    { apiKey: "ds-test", timeoutMs: 45_000 },
+    {
+      fetchImpl: async (_url, init) => {
+        const body = JSON.parse(init.body);
+        models.push(body.model);
+        if (models.length === 1) return new Response("unavailable", { status: 503 });
+        return new Response('data: {"choices":[{"delta":{"content":"慢下来"}}]}\n\ndata: [DONE]\n\n');
+      },
+    },
+  );
+
+  const response = await provider.visible([{ role: "user", content: "我该怎么办？" }], { requestId: "request-1" });
+  assert.equal(response.status, 200);
+  assert.deepEqual(models, ["deepseek-v4-pro", "deepseek-v4-flash"]);
 });
 
 test("DeepSeek provider applies a timeout and never embeds the key in its error", async () => {

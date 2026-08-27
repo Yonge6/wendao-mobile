@@ -46,7 +46,7 @@ import CompanionPanel from "./companion/CompanionPanel";
 type Language = "zh" | "en";
 type Theme = "light" | "dark";
 type ReadingSize = "small" | "medium" | "large";
-type DrawerView = "home" | "companion" | "profile" | "profile-detail" | "about" | "contact";
+type DrawerView = "home" | "profile" | "profile-detail" | "about" | "contact";
 type ChapterEntrySource = "daily" | "directory" | "chance" | "link";
 
 type LifeProfile = {
@@ -731,6 +731,64 @@ function WebSheet({ open, onOpenChange, eyebrow, title, description, children, v
   );
 }
 
+type CompanionDialogProps = {
+  open: boolean;
+  onClose: () => void;
+  language: Language;
+  chapterId: number;
+  chapterTitle: string;
+};
+
+function CompanionDialog({
+  open,
+  onClose,
+  language,
+  chapterId,
+  chapterTitle,
+}: CompanionDialogProps) {
+  const isZh = language === "zh";
+
+  useEffect(() => {
+    if (!open) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [onClose, open]);
+
+  return (
+    <div className="companion-layer" hidden={!open} aria-hidden={!open}>
+      <button
+        type="button"
+        className="companion-backdrop"
+        aria-label={isZh ? "关闭我的问道" : "Close My Wendao"}
+        onClick={onClose}
+      />
+      <section
+        className="companion-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="companion-dialog-title"
+      >
+        <header className="companion-dialog-header">
+          <div>
+            <span>三慢问道 · WENDAO</span>
+            <h2 id="companion-dialog-title">{isZh ? "我的问道" : "My Wendao"}</h2>
+            <small>
+              {isZh ? `正与第 ${chapterId} 章对话 · ${chapterTitle}` : `In conversation with Chapter ${chapterId} · ${chapterTitle}`}
+            </small>
+          </div>
+          <button type="button" aria-label={isZh ? "关闭我的问道" : "Close My Wendao"} onClick={onClose}>×</button>
+        </header>
+        <div className="companion-dialog-body">
+          <CompanionPanel language={language} chapterId={chapterId} />
+        </div>
+      </section>
+    </div>
+  );
+}
+
 type SideDrawerProps = {
   open: boolean;
   onClose: () => void;
@@ -753,7 +811,7 @@ type SideDrawerProps = {
   onVideoChannelOpen: () => void;
   showSupport: boolean;
   onSupportOpen: () => void;
-  chapterId: number;
+  onCompanionOpen: () => void;
 };
 
 function SideDrawer({
@@ -778,7 +836,7 @@ function SideDrawer({
   onVideoChannelOpen,
   showSupport,
   onSupportOpen,
-  chapterId,
+  onCompanionOpen,
 }: SideDrawerProps) {
   const isZh = language === "zh";
   const profileComplete = Boolean(chart?.chartHash);
@@ -809,8 +867,6 @@ function SideDrawer({
 
   const headerTitle = view === "home"
     ? (isZh ? "你的空间" : "Your space")
-    : view === "companion"
-      ? (isZh ? "我的问道" : "My Wendao")
     : view === "profile"
       ? (isZh ? "人生说明书" : "Life manual")
       : view === "profile-detail"
@@ -936,7 +992,7 @@ function SideDrawer({
               </section>
 
               <nav className="drawer-nav" aria-label={isZh ? "你的空间" : "Your space"}>
-                <button type="button" className="companion-nav-entry" onClick={() => onViewChange("companion")}>
+                <button type="button" className="companion-nav-entry" onClick={onCompanionOpen}>
                   <span className="drawer-nav-icon"><ChatBubbleIcon /></span>
                   <span>
                     <strong>{isZh ? "我的问道" : "My Wendao"}</strong>
@@ -1051,10 +1107,6 @@ function SideDrawer({
               </section>
 
             </>
-          ) : null}
-
-          {view === "companion" ? (
-            <CompanionPanel language={language} chapterId={chapterId} />
           ) : null}
 
           {view === "profile" ? (
@@ -1631,6 +1683,7 @@ export default function Prototype() {
   const [shareInitialKind, setShareInitialKind] = useState<ShareCardKind>("verse");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerView, setDrawerView] = useState<DrawerView>("home");
+  const [companionOpen, setCompanionOpen] = useState(false);
   const [isReadingScrolled, setIsReadingScrolled] = useState(false);
   const [visibleChapterCount, setVisibleChapterCount] = useState(1);
   const [isOpeningNextChapter, setIsOpeningNextChapter] = useState(false);
@@ -1796,8 +1849,8 @@ export default function Prototype() {
   };
 
   const openCompanion = () => {
-    setDrawerView("companion");
-    setDrawerOpen(true);
+    setDrawerOpen(false);
+    setCompanionOpen(true);
     trackEvent("companion_open", { source: "reading_composer" });
   };
 
@@ -2161,7 +2214,7 @@ export default function Prototype() {
         </main>
       </div>
 
-      {!directoryOpen && !drawerOpen && !shareOpen ? (
+      {!directoryOpen && !drawerOpen && !shareOpen && !companionOpen ? (
         <button
           type="button"
           className={`ai-composer ${isReadingScrolled ? "is-reading" : ""}`}
@@ -2295,7 +2348,14 @@ export default function Prototype() {
         }}
         showSupport={webSupportEnabled}
         onSupportOpen={() => setSupportOpen(true)}
+        onCompanionOpen={openCompanion}
+      />
+      <CompanionDialog
+        open={companionOpen}
+        onClose={() => setCompanionOpen(false)}
+        language={language}
         chapterId={chapterId}
+        chapterTitle={activeChapter[language].title}
       />
       <VideoChannelModal open={videoChannelOpen} onClose={() => setVideoChannelOpen(false)} language={language} />
       {webSupportEnabled ? <SupportModal open={supportOpen} onClose={() => setSupportOpen(false)} language={language} /> : null}

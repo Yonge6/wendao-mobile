@@ -91,6 +91,38 @@ test("streams a grounded answer and saves it after reserving usage", async () =>
   assert.notEqual(actions.at(-1), "released");
 });
 
+test("opens the response stream before the visible model finishes connecting", async () => {
+  let resolveProvider;
+  const pendingProvider = new Promise((resolve) => { resolveProvider = resolve; });
+  const response = await Promise.race([
+    handleCompanionRequest(request("先做哪一步？"), {
+      environment,
+      authenticate: async () => ({ id: userId }),
+      store: {
+        reserveQuestion: async () => ({ state: "reserved", questionsThisMonth: 1 }),
+        getContext: async () => ({ memoryEnabled: false, memories: [], lifeManual: null }),
+        getRecentMessages: async () => [],
+        finishExchange: async () => ({ threadId: "33333333-3333-4333-8333-333333333333", answerMessageId: "44444444-4444-4444-8444-444444444444" }),
+        releaseQuestion: async () => undefined,
+      },
+      loadChapter: async () => ({ id: 64, text: ["慎终如始"], theme: "慎终如始" }),
+      provider: {
+        visible: async () => pendingProvider,
+        background: async () => ({ data: { memories: [] } }),
+      },
+    }),
+    new Promise((_, reject) => setTimeout(() => reject(new Error("stream did not open")), 80)),
+  ]);
+
+  const reader = response.body.getReader();
+  const first = await reader.read();
+  assert.match(new TextDecoder().decode(first.value), /"phase":"preparing"/);
+  resolveProvider(providerStream(["先完成最小的交接检查。"]));
+  while (!(await reader.read()).done) {
+    // Drain the response so the async save path completes.
+  }
+});
+
 test("immediate safety help requires sign-in but does not record question use", async () => {
   let reserved = false;
   const response = await handleCompanionRequest(request("我现在想自杀，已经准备好了"), {

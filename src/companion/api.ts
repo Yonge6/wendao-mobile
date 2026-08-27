@@ -60,6 +60,7 @@ export async function streamCompanionAnswer({
   handlers: CompanionEventHandlers;
   signal?: AbortSignal;
 }) {
+  let completed = false;
   const response = await fetch(`${apiUrl}/api/companion/respond`, {
     method: "POST",
     headers: {
@@ -75,7 +76,14 @@ export async function streamCompanionAnswer({
     throw new Error(payload?.error?.message || "Wendao Companion is temporarily unavailable");
   }
   if (!response.body) throw new Error("Wendao Companion is temporarily unavailable");
-  await readCompanionEvents(response.body, handlers);
+  await readCompanionEvents(response.body, {
+    ...handlers,
+    done: (payload) => {
+      completed = true;
+      handlers.done?.(payload);
+    },
+  });
+  if (!completed) throw new Error("Wendao Companion response was interrupted");
 }
 
 export type CompanionMemory = {

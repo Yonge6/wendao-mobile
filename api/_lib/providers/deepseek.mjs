@@ -3,6 +3,8 @@ import { HttpError } from "../http.mjs";
 const DEFAULT_BASE_URL = "https://api.deepseek.com";
 const VISIBLE_MODEL = "deepseek-v4-pro";
 const BACKGROUND_MODEL = "deepseek-v4-flash";
+const PRIMARY_VISIBLE_TIMEOUT_MS = 12_000;
+const FALLBACK_VISIBLE_TIMEOUT_MS = 24_000;
 
 export function buildDeepSeekRequest(job, messages) {
   if (job === "visible") {
@@ -13,6 +15,16 @@ export function buildDeepSeekRequest(job, messages) {
       thinking: { type: "enabled" },
       reasoning_effort: "medium",
       max_tokens: 1800,
+    };
+  }
+
+  if (job === "visible_fallback") {
+    return {
+      model: BACKGROUND_MODEL,
+      messages,
+      stream: true,
+      thinking: { type: "disabled" },
+      max_tokens: 1600,
     };
   }
 
@@ -37,7 +49,7 @@ export function createDeepSeekProvider(config, dependencies = {}) {
   const timeoutMs = config.timeoutMs ?? 45_000;
 
   async function call(job, messages, options = {}) {
-    const timeoutSignal = AbortSignal.timeout(timeoutMs);
+    const timeoutSignal = AbortSignal.timeout(options.timeoutMs ?? timeoutMs);
     const signal = options.signal
       ? AbortSignal.any([options.signal, timeoutSignal])
       : timeoutSignal;
@@ -69,7 +81,22 @@ export function createDeepSeekProvider(config, dependencies = {}) {
 
   return Object.freeze({
     async visible(messages, options) {
-      return call("visible", messages, options);
+      try {
+        return await call("visible", messages, {
+          ...options,
+          timeoutMs: Math.min(timeoutMs, PRIMARY_VISIBLE_TIMEOUT_MS),
+        });
+      } catch (error) {
+        if (options?.signal?.aborted) throw error;
+        console.warn("DeepSeek visible model unavailable; using flash fallback", {
+          requestId: options?.requestId ?? null,
+          code: error instanceof HttpError ? error.code : "unknown",
+        });
+        return call("visible_fallback", messages, {
+          ...options,
+          timeoutMs: Math.min(timeoutMs, FALLBACK_VISIBLE_TIMEOUT_MS),
+        });
+      }
     },
     async background(messages, options) {
       const response = await call("background", messages, options);

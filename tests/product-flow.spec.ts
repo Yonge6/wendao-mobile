@@ -145,7 +145,7 @@ test("opens the complete original-text poster and shares an exact chapter link",
   await page.locator(".chapter-current .chapter-share-quick").click();
   await expect(page.getByRole("heading", { name: "分享这一章" })).toBeVisible();
   await expect(page.getByRole("tab", { name: "说明书" })).toBeDisabled();
-  await expect(page.getByText(/iPhone|1080 × 2340|分享你选中的文字|图片放一个阅读瞬间/)).toHaveCount(0);
+  await expect(page.locator(".is-share-sheet").getByText(/iPhone|1080 × 2340|分享你选中的文字|图片放一个阅读瞬间/)).toHaveCount(0);
 
   const preview = page.locator(".share-card-preview img");
   await expect(preview).toBeVisible();
@@ -645,6 +645,7 @@ test("opens account login as soon as the reading composer is clicked", async ({ 
   await page.goto("/");
 
   const composer = page.getByRole("button", { name: "打开我的问道并登录", exact: true });
+  await expect(page.locator(".companion-dialog")).toBeHidden();
   await expect(page.getByText("问道同行 · 登录后使用", { exact: true })).toBeVisible();
   await expect(composer).toContainText("问问这一章与你的关系…");
 
@@ -654,6 +655,8 @@ test("opens account login as soon as the reading composer is clicked", async ({ 
 
   await composer.click();
   await expect(page.getByRole("heading", { name: "我的问道", exact: true })).toBeVisible();
+  await expect(page.locator(".companion-dialog")).toBeVisible();
+  await expect(page.locator(".side-drawer")).toHaveCount(0);
   await expect(page.getByRole("heading", { name: /让每一次提问/ })).toBeVisible();
   await expect(page.getByRole("button", { name: "使用 Apple 登录" })).toBeVisible();
   await expect(page.getByRole("button", { name: "使用 Google 登录" })).toBeVisible();
