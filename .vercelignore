@@ -10,8 +10,3 @@ scripts/
 public/
 supabase/
 qa-*.png
-
-src/*
-!src/data/
-src/data/*
-!src/data/chapters.json
