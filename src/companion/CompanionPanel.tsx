@@ -49,6 +49,13 @@ function friendlyCompanionError(error: unknown, isZh: boolean) {
     : "This response did not arrive intact. Your question is preserved and ready to retry.";
 }
 
+function companionDisplayText(text: string) {
+  return text
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/__([^_]+)__/g, "$1")
+    .replace(/(^|\n)#{1,6}\s+/g, "$1");
+}
+
 function SignedInCompanion({
   session,
   language,
@@ -270,7 +277,7 @@ function SignedInCompanion({
           {messages.map((message) => (
             <article className={`is-${message.role}`} key={message.id}>
               <span>{message.role === "user" ? (isZh ? "你" : "You") : (isZh ? "问道同行" : "Wendao")}</span>
-              <p>{message.content || (phase === "slow"
+              <p>{message.content ? companionDisplayText(message.content) : (phase === "slow"
                 ? (isZh ? "仍在认真整理，这次会多用一点时间…" : "Still working carefully—this one needs a little longer…")
                 : phase === "answering"
                   ? (isZh ? "正在组织回应…" : "Composing a response…")
