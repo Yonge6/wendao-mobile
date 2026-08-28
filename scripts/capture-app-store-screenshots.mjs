@@ -58,6 +58,45 @@ const shots = {
   ],
 };
 
+const companionCapture = {
+  zh: {
+    brand: "三慢问道 · AI WENDAO",
+    title: "我的问道",
+    context: "正与第 64 章对话 · 其安也，易持也",
+    you: "你",
+    question: "一个重要项目快完成了，我怎样既不松懈，也不过度用力？",
+    assistant: "AI 问道",
+    paragraphs: [
+      "你提到的“既不松懈，也不过度用力”——这个张力本身，就是第六十四章在说的事。",
+      "原文提醒：民之从事也，恒于其成而败之。越接近终点，人越容易滑向两个极端：要么松懈，要么用力过猛。",
+      "把“完成”的定义，从“我觉得好了”改成“别人能接住”。先做一次交接式清点，再为自己设定停止信号。",
+      "慎终如始，不是最后一刻更用力，而是从一开始就为收尾预留清醒。",
+    ],
+    copy: "复制回应",
+    share: "分享图片",
+    placeholder: "写下一个处境、矛盾或选择…",
+    status: "写下具体处境，我会先理解，再结合本章与记忆回应。",
+  },
+  en: {
+    brand: "WENDAO AI · DAODEJING",
+    title: "My Wendao",
+    context: "In conversation with Chapter 64 · When things are settled",
+    you: "You",
+    question: "A major project is nearly finished. How do I stay attentive without forcing the ending?",
+    assistant: "Wendao AI",
+    paragraphs: [
+      "The tension between staying attentive and overdoing it is exactly what Chapter 64 asks us to notice.",
+      "The text warns that people often spoil things when success is close. Near the end, we may either relax too soon or push too hard for certainty.",
+      "Change the meaning of “finished” from “I think it is done” to “someone else can receive it.” Make one handoff checklist, then choose a clear stopping signal.",
+      "Care at the end does not mean more force. It means carrying the same clarity from the beginning into the final step.",
+    ],
+    copy: "Copy",
+    share: "Share image",
+    placeholder: "Describe a situation, tension, or choice…",
+    status: "Describe one concrete situation. I will understand first, then respond with this chapter and your memories in view.",
+  },
+};
+
 async function screenshot(page, locale, filename) {
   await page.screenshot({
     path: path.join(outputRoot, locale === "zh" ? "zh-Hans" : "en-US", filename),
@@ -75,6 +114,63 @@ async function scrollSection(page, selector) {
     window.scrollTo({ top, behavior: "instant" });
   }, selector);
   await page.waitForTimeout(180);
+}
+
+async function captureCompanion(browser, locale) {
+  const context = await browser.newContext({
+    viewport,
+    deviceScaleFactor: 3,
+    isMobile: true,
+    hasTouch: true,
+    locale: locale === "zh" ? "zh-CN" : "en-US",
+    colorScheme: "light",
+  });
+  const page = await context.newPage();
+  const screenshotUrl = new URL(baseUrl);
+  screenshotUrl.searchParams.set("chapter", "64");
+  screenshotUrl.searchParams.set("lang", locale);
+  await page.goto(screenshotUrl.toString(), { waitUntil: "networkidle" });
+  const copy = companionCapture[locale];
+  await page.evaluate((content) => {
+    document.documentElement.lang = content.locale === "zh" ? "zh-CN" : "en";
+    const root = document.querySelector("#root");
+    if (!root) throw new Error("Missing app root for Companion screenshot");
+    const lines = content.paragraphs.map((paragraph, index) => {
+      const inner = index === 1
+        ? paragraph.replace(content.locale === "zh" ? "民之从事也，恒于其成而败之。" : "people often spoil things when success is close.", (match) => `<strong>${match}</strong>`)
+        : index === 2
+          ? paragraph.replace(content.locale === "zh" ? "把“完成”的定义，从“我觉得好了”改成“别人能接住”。" : "Change the meaning of “finished” from “I think it is done” to “someone else can receive it.”", (match) => `<strong>${match}</strong>`)
+          : paragraph;
+      return `${index ? '<span class="companion-message-gap"></span>' : ''}<span class="companion-message-line">${inner}</span>`;
+    }).join("");
+    root.innerHTML = `
+      <div class="companion-layer" style="--companion-viewport-height: 932px; --companion-viewport-top: 0px;">
+        <section class="companion-dialog" role="dialog" aria-modal="true">
+          <header class="companion-dialog-header">
+            <div><span>${content.brand}</span><h2>${content.title}</h2><small>${content.context}</small></div>
+            <button type="button" aria-label="Close">×</button>
+          </header>
+          <div class="companion-dialog-body">
+            <section class="companion-home">
+              <div class="companion-settings"><button type="button" aria-label="Settings">⚙</button></div>
+              <div class="companion-thread">
+                <div class="companion-conversation">
+                  <article class="is-user"><span>${content.you}</span><div class="companion-message-content"><span class="companion-message-line">${content.question}</span></div></article>
+                  <article class="is-assistant"><span>${content.assistant}</span><div class="companion-message-content">${lines}</div><div class="companion-message-actions"><button>${content.copy}</button><button>${content.share}</button></div></article>
+                </div>
+              </div>
+              <div class="companion-compose-zone">
+                <form class="companion-question-form"><div class="companion-question-control"><textarea rows="2" placeholder="${content.placeholder}"></textarea><button type="submit" disabled>↑</button></div></form>
+                <p class="companion-response-status">${content.status}</p>
+              </div>
+            </section>
+          </div>
+        </section>
+      </div>`;
+  }, { ...copy, locale });
+  await page.waitForTimeout(240);
+  await screenshot(page, locale, "01-ai-wendao.png");
+  await context.close();
 }
 
 async function captureLocale(browser, locale) {
@@ -132,7 +228,7 @@ async function captureLocale(browser, locale) {
   await page.getByRole("button", { name: locale === "zh" ? "打开更多功能" : "Open more" }).click();
   await page.getByRole("button", { name: locale === "zh" ? "查看人生说明书" : "View life manual" }).click();
   await page.getByRole("button", { name: locale === "zh" ? "查看详细解读" : "Read the detailed guide" }).click();
-  const decisionHeading = page.getByRole("heading", { name: locale === "zh" ? "做决定时，怎样才算对自己诚实" : "How your best decisions feel" });
+  const decisionHeading = page.getByRole("heading", { name: locale === "zh" ? "遇到真实选择时，具体怎么做" : "A practical way to make one real decision" });
   await decisionHeading.waitFor();
   await decisionHeading.evaluate((element) => element.scrollIntoView({ block: "start" }));
   await page.waitForTimeout(180);
@@ -148,8 +244,12 @@ await Promise.all([
 
 const browser = await chromium.launch();
 try {
-  await captureLocale(browser, "zh");
-  await captureLocale(browser, "en");
+  await Promise.all([
+    captureCompanion(browser, "zh"),
+    captureCompanion(browser, "en"),
+    captureLocale(browser, "zh"),
+    captureLocale(browser, "en"),
+  ]);
 } finally {
   await browser.close();
 }
