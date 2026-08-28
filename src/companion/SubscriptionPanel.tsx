@@ -101,11 +101,11 @@ export default function SubscriptionPanel({ language, session, onSignOut, onMemb
   if (!native) {
     return (
       <section className="companion-subscription companion-app-download" aria-labelledby="companion-subscription-title">
-        <span className="drawer-kicker">{isZh ? "问道同行 · iPhone App" : "Wendao Companion · iPhone app"}</span>
+        <span className="drawer-kicker">{isZh ? "AI 问道 · iPhone App" : "Wendao AI · iPhone app"}</span>
         <h3 id="companion-subscription-title">{isZh ? "在 App 里开始同行" : "Begin in the Wendao app"}</h3>
         <p>{isZh
-          ? "问道同行现已先在 iPhone App 开放。下载三慢问道，用 Apple 或 Google 登录后，即可选择月付或年付会员，开始不限次数的 AI 问答。"
-          : "Wendao Companion is currently available first in the iPhone app. Download Wendao, sign in with Apple or Google, and choose a monthly or annual membership for unlimited AI conversations."}</p>
+          ? "AI 问道现已先在 iPhone App 开放。下载三慢问道 AI，用 Apple 或 Google 登录后，即可选择月付或年付会员，开始不限次数的章节 AI 对话。"
+          : "Wendao AI is currently available first in the iPhone app. Download Wendao AI, sign in with Apple or Google, and choose a monthly or annual membership for unlimited chapter-grounded conversations."}</p>
         <div className="companion-app-download-card">
           <span>{isZh ? "在 App 中继续" : "Continue in the app"}</span>
           <strong>{isZh ? "完整阅读，与这一章深入对话" : "Read fully and reflect with each chapter"}</strong>
@@ -135,7 +135,7 @@ export default function SubscriptionPanel({ language, session, onSignOut, onMemb
 
   return (
     <section className="companion-subscription" aria-labelledby="companion-subscription-title">
-      <span className="drawer-kicker">{isZh ? "问道同行会员" : "Wendao Companion membership"}</span>
+      <span className="drawer-kicker">{isZh ? "AI 问道会员" : "Wendao AI membership"}</span>
       <h3 id="companion-subscription-title">{isZh ? "选择一段同行的时间" : "Choose how long we travel together"}</h3>
       <p>{isZh ? "有效会员不限问答次数。没有试用期，核心阅读、搜索与分享仍可免费使用。" : "Active members can ask unlimited questions. There is no trial; core reading, search, and sharing remain free."}</p>
       <div className="companion-plans" aria-label={isZh ? "订阅方案" : "Subscription plans"}>

@@ -43,17 +43,15 @@ const screenshotChart = {
 
 const shots = {
   zh: [
-    "01-reading.png",
-    "02-text-layers.png",
-    "03-line-by-line.png",
+    "02-reading.png",
+    "03-text-layers.png",
     "04-for-you.png",
     "05-search.png",
     "06-life-manual.png",
   ],
   en: [
-    "01-reading.png",
-    "02-text-layers.png",
-    "03-line-by-line.png",
+    "02-reading.png",
+    "03-text-layers.png",
     "04-for-you.png",
     "05-search.png",
     "06-life-manual.png",
@@ -110,17 +108,14 @@ async function captureLocale(browser, locale) {
   await scrollSection(page, ".transcription-layer");
   await screenshot(page, locale, shots[locale][1]);
 
-  await scrollSection(page, locale === "zh" ? ".line-by-line-reading" : ".explanation-section");
-  await screenshot(page, locale, shots[locale][2]);
-
   await scrollSection(page, ".related-section");
-  await screenshot(page, locale, shots[locale][3]);
+  await screenshot(page, locale, shots[locale][2]);
 
   await page.getByRole("button", { name: locale === "zh" ? "目录" : "Contents", exact: true }).click();
   const search = page.getByRole("searchbox", { name: locale === "zh" ? "搜索章节" : "Search chapters" });
   await search.fill(locale === "zh" ? "水" : "water");
   await page.waitForTimeout(180);
-  await screenshot(page, locale, shots[locale][4]);
+  await screenshot(page, locale, shots[locale][3]);
   await page.keyboard.press("Escape");
 
   await page.evaluate((chart) => {
@@ -141,7 +136,7 @@ async function captureLocale(browser, locale) {
   await decisionHeading.waitFor();
   await decisionHeading.evaluate((element) => element.scrollIntoView({ block: "start" }));
   await page.waitForTimeout(180);
-  await screenshot(page, locale, shots[locale][5]);
+  await screenshot(page, locale, shots[locale][4]);
 
   await context.close();
 }
@@ -159,4 +154,4 @@ try {
   await browser.close();
 }
 
-console.log("Captured 12 localized source screenshots at 1290 × 2796.");
+console.log("Captured 10 localized reading screenshots at 1290 × 2796; AI source screenshots are captured from an authenticated real conversation.");

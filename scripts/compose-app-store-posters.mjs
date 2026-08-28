@@ -9,27 +9,27 @@ const image2Background = path.join(finalRoot, "image2-master-background.png");
 
 const copy = {
   "zh-Hans": [
-    ["慢下来，读一章", "《道德经》"],
+    ["AI 问道", "从真实处境开始"],
+    ["完整 81 章", "免费离线阅读"],
     ["帛书乙本", "底本校读"],
-    ["逐字拼音", "逐句今译"],
     ["每章三条启发", "落到当下生活"],
-    ["完整 81 章", "离线也能读"],
+    ["目录与搜索", "随时回到原典"],
     ["人生说明书", "因你的结构而不同"],
   ],
   "en-US": [
-    ["Slow down", "with one chapter"],
-    ["A Silk B", "based reading"],
-    ["Pinyin and", "line-by-line meaning"],
-    ["Three insights", "for daily life"],
+    ["Ask what matters", "with Wendao AI"],
     ["All 81 chapters", "available offline"],
+    ["A Silk B", "based reading"],
+    ["Three insights", "for daily life"],
+    ["Search the text", "return to the source"],
     ["A Life Manual", "shaped by your design"],
   ],
 };
 
 const sourceNames = [
-  "01-reading.png",
-  "02-text-layers.png",
-  "03-line-by-line.png",
+  "01-ai-wendao.png",
+  "02-reading.png",
+  "03-text-layers.png",
   "04-for-you.png",
   "05-search.png",
   "06-life-manual.png",
@@ -84,7 +84,7 @@ try {
           </style></head>
           <body><main class="poster">
             <header class="top">
-              <div class="brand">${locale === "zh-Hans" ? "三慢问道 · WENDAO" : "WENDAO · DAODEJING"}</div>
+              <div class="brand">${locale === "zh-Hans" ? "三慢问道 AI · WENDAO" : "WENDAO AI · DAODEJING"}</div>
               <span class="count">${String(index + 1).padStart(2, "0")} / 06</span>
               <h1><span>${lineOne}</span><span>${lineTwo}</span></h1>
             </header>

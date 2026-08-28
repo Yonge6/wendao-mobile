@@ -5,9 +5,9 @@ import path from "node:path";
 const root = process.cwd();
 const locales = ["zh-Hans", "en-US"];
 const files = [
-  "01-reading.png",
-  "02-text-layers.png",
-  "03-line-by-line.png",
+  "01-ai-wendao.png",
+  "02-reading.png",
+  "03-text-layers.png",
   "04-for-you.png",
   "05-search.png",
   "06-life-manual.png",

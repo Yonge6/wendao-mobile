@@ -343,7 +343,7 @@ function SignedInCompanion({
         <div className="companion-conversation" aria-live="polite">
           {messages.map((message) => (
             <article className={`is-${message.role}`} key={message.id}>
-              <span>{message.role === "user" ? (isZh ? "你" : "You") : (isZh ? "问道同行" : "Wendao")}</span>
+              <span>{message.role === "user" ? (isZh ? "你" : "You") : (isZh ? "AI 问道" : "Wendao AI")}</span>
               <CompanionMessageContent text={message.content ? message.content : (phase === "slow"
                 ? (isZh ? "仍在认真整理，这次会多用一点时间…" : "Still working carefully—this one needs a little longer…")
                 : phase === "answering"

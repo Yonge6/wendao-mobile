@@ -11,7 +11,8 @@ test("native launch transitions quickly into a branded first-frame placeholder",
   const duration = Number(config.match(/launchShowDuration:\s*(\d+)/)?.[1]);
   assert.ok(Number.isFinite(duration) && duration <= 250, "launch splash must not impose a long fixed wait");
   assert.match(index, /class="wendao-boot"/);
-  assert.match(index, /今日一章，正在展开/);
+  assert.match(index, /把真实处境，带回这一章/);
+  assert.match(index, /章节 AI 对话 · 可控记忆/);
   assert.match(index, /prefers-reduced-motion/);
 });
 
@@ -22,4 +23,3 @@ test("secondary experiences are split out of the first reading bundle", async ()
   assert.match(prototype, /await import\("tz-lookup"\)/);
   assert.doesNotMatch(prototype, /import tzLookup from "tz-lookup"/);
 });
-

@@ -85,7 +85,7 @@ export default function CompanionAuth({ language, children }: CompanionAuthProps
 
   return (
     <section className="companion-auth" aria-labelledby="companion-auth-title">
-      <span className="drawer-kicker">{isZh ? "问道同行" : "Wendao Companion"}</span>
+      <span className="drawer-kicker">{isZh ? "AI 问道" : "Wendao AI"}</span>
       <h3 id="companion-auth-title">
         {isZh ? "让每一次提问，延续成一段理解自己的路。" : "Let each question become part of a longer path toward understanding yourself."}
       </h3>
@@ -106,8 +106,8 @@ export default function CompanionAuth({ language, children }: CompanionAuthProps
       </div>
       <p className="companion-disclosure">
         {isZh
-          ? "问道同行为付费 AI 服务，没有免费问答。AI 回答由 DeepSeek 在中国处理；开启自动记忆后，只保存与你的长期思考真正相关的摘要，你可以随时查看、修改、暂停或清除。"
-          : "Wendao Companion is a paid AI service with no free questions. DeepSeek processes AI responses in China. With automatic memory enabled, only summaries relevant to your longer journey are saved; you can review, edit, pause, or clear them at any time."}
+          ? "AI 问道是付费服务，没有免费问答。回应以当前章节、持续对话与可控记忆为依据，由 DeepSeek 在中国处理；自动记忆只保留与你的长期思考真正相关的摘要，你可以随时查看、修改、暂停或清除。"
+          : "Wendao AI is a paid service with no free questions. Responses are grounded in the current chapter, ongoing dialogue, and memory you control, and are processed by DeepSeek in China. Automatic memory keeps only summaries relevant to your longer journey; you can review, edit, pause, or clear them at any time."}
       </p>
       {error ? (
         <p className="form-message is-error">

@@ -814,7 +814,7 @@ function CompanionDialog({
       >
         <header className="companion-dialog-header">
           <div>
-            <span>三慢问道 · WENDAO</span>
+            <span>三慢问道 · AI WENDAO</span>
             <h2 id="companion-dialog-title">{isZh ? "我的问道" : "My Wendao"}</h2>
             <small>
               {isZh ? `正与第 ${chapterId} 章对话 · ${chapterTitle}` : `In conversation with Chapter ${chapterId} · ${chapterTitle}`}
@@ -1047,8 +1047,8 @@ function SideDrawer({
                 <button type="button" className="companion-nav-entry" onClick={onCompanionOpen}>
                   <span className="drawer-nav-icon"><ChatBubbleIcon /></span>
                   <span>
-                    <strong>{isZh ? "我的问道" : "My Wendao"}</strong>
-                    <small>{isZh ? "对话、记忆与每周回看" : "Conversations, memory, and weekly reflection"}</small>
+                    <strong>{isZh ? "AI 问道" : "Wendao AI"}</strong>
+                    <small>{isZh ? "以本章、持续对话与可控记忆回应" : "Grounded in the chapter, dialogue, and memory you control"}</small>
                   </span>
                   <ChevronRightIcon />
                 </button>
@@ -1093,7 +1093,7 @@ function SideDrawer({
                   <span className="drawer-nav-icon"><InfoCircledIcon /></span>
                   <span>
                     <strong>{isZh ? "关于三慢问道" : "About Wendao"}</strong>
-                    <small>{isZh ? "我们怎样慢读原典，也慢慢认识自己" : "Why we read the classic slowly—and ourselves with it"}</small>
+                    <small>{isZh ? "完整 81 章，与有上下文的 AI 慢慢问" : "All 81 chapters, with AI grounded in your context"}</small>
                   </span>
                   <ChevronRightIcon />
                 </button>
@@ -1337,7 +1337,12 @@ function SideDrawer({
           {view === "about" ? (
             <section className="drawer-prose">
               <span className="drawer-kicker">{isZh ? "真实自己，流动人生" : "True to yourself. Flow with life."}</span>
-              <h3>{isZh ? "经典不是答案库，而是一面活的镜子。" : "A classic is not an answer bank. It is a living mirror."}</h3>
+              <h3>{isZh ? "读经典，也与一位有上下文的 AI 慢慢问。" : "Read the classic, then reflect with AI that knows the context."}</h3>
+              <p>
+                {isZh
+                  ? "三慢问道把完整 81 章阅读与 AI 问道放在同一条路径里。你可以把正在面对的处境、矛盾或选择带回本章；回应会结合原文、今译、本章主旨、持续对话与由你掌握的记忆，帮助你看清线索、辨认边界、落下一步，但不替你决定。"
+                  : "Wendao brings all 81 chapters and chapter-grounded AI reflection into one path. Bring a real situation, tension, or choice back to the chapter you are reading. The response draws on the original, line-by-line meaning, chapter theme, ongoing dialogue, and memory you control—helping you see patterns, boundaries, and a next step without deciding for you."}
+              </p>
               <p>
                 {isZh
                   ? "《三慢问道》以马王堆汉墓帛书乙本为主要底本。由于帛书存在残缺、漫漶与文字异体，本站采用“乙本转写 → 校读恢复 → 现代解读”的三层结构。残缺处参考帛书甲本及王弼本等传世版本，并明确标注，不将后世文本倒灌为帛书原文。"
@@ -2313,7 +2318,7 @@ export default function Prototype() {
           <span className="composer-spark" aria-hidden="true">✦</span>
           <div className="composer-field">
             <small className="composer-expectation" id="composer-expectation">
-              {isZh ? "问道同行 · 登录后使用" : "Wendao Companion · sign in to use"}
+              {isZh ? "AI 问道 · 登录后使用" : "Wendao AI · sign in to use"}
             </small>
             <span className="composer-placeholder">
               {isZh ? "写下一个处境、矛盾或选择…" : "Describe a situation, tension, or choice…"}

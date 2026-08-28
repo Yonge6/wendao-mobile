@@ -6,9 +6,8 @@ const chapters = JSON.parse(readFileSync(new URL("../src/data/chapters.json", im
 const chapter8 = chapters.find((chapter) => chapter.id === 8)!;
 const chapter64 = chapters.find((chapter) => chapter.id === 64)!;
 const chapter8Insights = chapter8.zh.related.find((item) => item.title === "对我们的启发")!;
-const chapter8ShareInsights = chapter8Insights.points!
-  .map((point, index) => `${String(index + 1).padStart(2, "0")}  ${point}`)
-  .join("\n");
+const chapter8NumberedInsights = chapter8Insights.points!
+  .map((point, index) => `${String(index + 1).padStart(2, "0")}  ${point}`);
 
 const chartSnapshot = {
   schemaVersion: "1.0",
@@ -201,7 +200,7 @@ test("switches all four complete posters and keeps life-manual details anonymous
     await expect(page.getByRole("button", { name: "分享链接" })).toHaveAttribute("data-share-link", new RegExp(`chapter=8&section=${section}&lang=zh`));
     if (section === "inspiration") {
       const inspirationLabel = await page.locator(".share-card-preview").getAttribute("aria-label");
-      expect(inspirationLabel).toContain(chapter8ShareInsights);
+      chapter8NumberedInsights.forEach((insight) => expect(inspirationLabel).toContain(insight));
       expect(inspirationLabel).toContain(chapter8.zh.reconstructedVerse.at(-1));
       expect(inspirationLabel).toContain(chapter8.zh.pinyin.at(-1)?.join(" "));
     }
@@ -210,7 +209,7 @@ test("switches all four complete posters and keeps life-manual details anonymous
   const manualCardLabel = await page.locator(".share-card-preview").getAttribute("aria-label");
   expect(manualCardLabel).toContain("生产者");
   expect(manualCardLabel).toContain("对我们的启发");
-  expect(manualCardLabel).toContain(chapter8ShareInsights);
+  chapter8NumberedInsights.forEach((insight) => expect(manualCardLabel).toContain(insight));
   expect(manualCardLabel).not.toContain("不应出现在分享卡上的姓名");
   expect(manualCardLabel).not.toContain("1990-01-01");
   expect(manualCardLabel).not.toContain("武汉市");
@@ -697,11 +696,11 @@ test("opens account login as soon as the reading composer is clicked", async ({ 
 
   const composer = page.getByRole("button", { name: "打开我的问道并登录", exact: true });
   await expect(page.locator(".companion-dialog")).toBeHidden();
-  await expect(page.getByText("问道同行 · 登录后使用", { exact: true })).toBeVisible();
+  await expect(page.getByText("AI 问道 · 登录后使用", { exact: true })).toBeVisible();
   await expect(composer).toContainText("写下一个处境、矛盾或选择…");
 
   await page.getByRole("button", { name: "切换到英文", exact: true }).click();
-  await expect(page.getByText("Wendao Companion · sign in to use", { exact: true })).toBeVisible();
+  await expect(page.getByText("Wendao AI · sign in to use", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Open My Wendao and sign in", exact: true })).toContainText("Describe a situation, tension, or choice…");
   await page.getByRole("button", { name: "Switch to Chinese", exact: true }).click();
 

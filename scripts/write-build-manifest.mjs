@@ -40,7 +40,7 @@ const outputDir = path.join(root, "dist/client");
 mkdirSync(outputDir, { recursive: true });
 writeFileSync(path.join(outputDir, "wendao-build.json"), `${JSON.stringify({
   schemaVersion: 1,
-  appName: "三慢问道",
+  appName: "三慢问道 AI",
   bundleId: "com.yonge6.wendao",
   appVersion,
   buildNumber,

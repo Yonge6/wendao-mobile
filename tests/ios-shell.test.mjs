@@ -6,6 +6,8 @@ const packageJson = JSON.parse(readFileSync(new URL("../package.json", import.me
 const capacitorConfig = readFileSync(new URL("../capacitor.config.ts", import.meta.url), "utf8");
 const project = readFileSync(new URL("../ios/App/App.xcodeproj/project.pbxproj", import.meta.url), "utf8");
 const infoPlist = readFileSync(new URL("../ios/App/App/Info.plist", import.meta.url), "utf8");
+const englishInfoPlist = readFileSync(new URL("../ios/App/App/en.lproj/InfoPlist.strings", import.meta.url), "utf8");
+const chineseInfoPlist = readFileSync(new URL("../ios/App/App/zh-Hans.lproj/InfoPlist.strings", import.meta.url), "utf8");
 const privacy = readFileSync(new URL("../ios/App/App/PrivacyInfo.xcprivacy", import.meta.url), "utf8");
 const companionEnvCheck = readFileSync(new URL("../scripts/check-companion-client-env.mjs", import.meta.url), "utf8");
 const buildManifestWriter = readFileSync(new URL("../scripts/write-build-manifest.mjs", import.meta.url), "utf8");
@@ -34,9 +36,11 @@ test("Capacitor app identity and bundled web directory are stable", () => {
   assert.match(project, /PRODUCT_BUNDLE_IDENTIFIER = com\.yonge6\.wendao;/);
   assert.match(project, /DEVELOPMENT_TEAM = L855ZVM679;/);
   assert.match(project, /TARGETED_DEVICE_FAMILY = 1;/);
-  assert.match(project, /CURRENT_PROJECT_VERSION = 5;/);
-  assert.match(project, /MARKETING_VERSION = 1\.2;/);
+  assert.match(project, /CURRENT_PROJECT_VERSION = 6;/);
+  assert.match(project, /MARKETING_VERSION = 1\.3;/);
   assert.match(infoPlist, /<key>ITSAppUsesNonExemptEncryption<\/key>\s*<false\/>/);
+  assert.match(englishInfoPlist, /"CFBundleDisplayName" = "Wendao AI";/);
+  assert.match(chineseInfoPlist, /"CFBundleDisplayName" = "三慢问道 AI";/);
 });
 
 test("privacy manifest is bundled and explicitly disables tracking", () => {
