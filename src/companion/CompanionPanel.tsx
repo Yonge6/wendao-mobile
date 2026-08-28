@@ -15,7 +15,7 @@ type CompanionPanelProps = {
   language: "zh" | "en";
   chapterId: number;
   initialQuestion?: string;
-  onShareAnswer?: (payload: { question: string; answer: string }) => void;
+  onShareAnswer?: (answer: string) => void;
 };
 
 type ConversationMessage = {
@@ -264,7 +264,6 @@ function SignedInCompanion({
   };
 
   const lastAssistantId = [...messages].reverse().find((message) => message.role === "assistant")?.id;
-  const lastUserQuestion = [...messages].reverse().find((message) => message.role === "user")?.content ?? "";
 
   const manageMembership = async () => {
     const config = companionPublicConfig();
@@ -328,7 +327,7 @@ function SignedInCompanion({
                   </button>
                   <button
                     type="button"
-                    onClick={() => onShareAnswer?.({ question: lastUserQuestion, answer: message.content })}
+                    onClick={() => onShareAnswer?.(message.content)}
                   >
                     {isZh ? "分享图片" : "Share image"}
                   </button>

@@ -23,7 +23,7 @@ type ShareCardPanelProps = {
   manualText?: string;
   profileReady: boolean;
   initialKind?: ShareCardKind;
-  companionShare?: { question: string; answer: string } | null;
+  companionShare?: { answer: string } | null;
   onAction?: (action: string, kind: ShareCardKind) => void;
 };
 
@@ -44,7 +44,7 @@ export default function ShareCardPanel({
   const previewScrollRef = useRef<HTMLDivElement>(null);
   const content = useMemo(
     () => companionShare
-      ? buildCompanionShareCardContent(chapter, language, companionShare.question, companionShare.answer)
+      ? buildCompanionShareCardContent(chapter, language, companionShare.answer)
       : buildShareCardContent(chapter, language, kind, manualText),
     [chapter, companionShare, kind, language, manualText],
   );

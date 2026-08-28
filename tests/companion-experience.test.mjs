@@ -30,10 +30,14 @@ test("conversation image sharing reuses the chapter poster and canonical QR flow
     readFile(new URL("../src/shareCard.ts", import.meta.url), "utf8"),
   ]);
 
-  assert.match(panel, /onShareAnswer\?\.\(\{ question: lastUserQuestion, answer: message\.content \}\)/);
+  assert.match(panel, /onShareAnswer\?\.\(message\.content\)/);
   assert.match(prototype, /title=\{companionShare/);
   assert.match(sharePanel, /buildCompanionShareCardContent/);
   assert.match(shareCard, /shareChapterUrl\(chapter\.id, "inspiration", language\)/);
+  assert.match(shareCard, /const hasSecondary = Boolean\(content\.secondary\.trim\(\)\)/);
+  assert.match(shareCard, /secondaryLabel: ""/);
+  assert.match(shareCard, /chapterTitle: ""/);
+  assert.match(shareCard, /content\.chapterTitle\.trim\(\) \? 490 : 320/);
   assert.match(shareCard, /QRCode\.toCanvas/);
 });
 

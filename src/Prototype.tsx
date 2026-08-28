@@ -740,7 +740,7 @@ type CompanionDialogProps = {
   language: Language;
   chapterId: number;
   chapterTitle: string;
-  onShareAnswer: (payload: { question: string; answer: string }) => void;
+  onShareAnswer: (answer: string) => void;
 };
 
 function CompanionDialog({
@@ -1696,7 +1696,7 @@ export default function Prototype() {
   const [shareOpen, setShareOpen] = useState(false);
   const [shareChapterId, setShareChapterId] = useState(chapterId);
   const [shareInitialKind, setShareInitialKind] = useState<ShareCardKind>("verse");
-  const [companionShare, setCompanionShare] = useState<{ question: string; answer: string } | null>(null);
+  const [companionShare, setCompanionShare] = useState<{ answer: string } | null>(null);
   const [shareReturnsToCompanion, setShareReturnsToCompanion] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerView, setDrawerView] = useState<DrawerView>("home");
@@ -1968,8 +1968,8 @@ export default function Prototype() {
     setShareOpen(true);
   };
 
-  const openCompanionShare = (payload: { question: string; answer: string }) => {
-    setCompanionShare(payload);
+  const openCompanionShare = (answer: string) => {
+    setCompanionShare({ answer });
     setShareReturnsToCompanion(true);
     setShareChapterId(chapterId);
     setCompanionOpen(false);
