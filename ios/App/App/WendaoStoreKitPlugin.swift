@@ -1,4 +1,5 @@
 import Capacitor
+import Photos
 import StoreKit
 import UIKit
 
@@ -13,6 +14,7 @@ public class WendaoStoreKitPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "finish", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "manage", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "review", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "saveImageToPhotos", returnType: CAPPluginReturnPromise),
     ]
 
     private let productIdentifiers = [
@@ -145,6 +147,31 @@ public class WendaoStoreKitPlugin: CAPPlugin, CAPBridgedPlugin {
                     call.resolve()
                 } else {
                     call.reject("App Store review page could not be opened", "REVIEW_OPEN_FAILED")
+                }
+            }
+        }
+    }
+
+    @objc func saveImageToPhotos(_ call: CAPPluginCall) {
+        guard let base64 = call.getString("data"),
+              let imageData = Data(base64Encoded: base64),
+              let image = UIImage(data: imageData) else {
+            call.reject("Image data is invalid", "INVALID_IMAGE_DATA")
+            return
+        }
+
+        PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
+            guard status == .authorized || status == .limited else {
+                call.reject("Photos access was not granted", "PHOTOS_PERMISSION_DENIED")
+                return
+            }
+            PHPhotoLibrary.shared().performChanges({
+                PHAssetChangeRequest.creationRequestForAsset(from: image)
+            }) { saved, error in
+                if saved {
+                    call.resolve(["saved": true])
+                } else {
+                    call.reject(error?.localizedDescription ?? "Image could not be saved", "PHOTO_SAVE_FAILED")
                 }
             }
         }

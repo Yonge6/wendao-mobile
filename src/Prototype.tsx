@@ -757,6 +757,10 @@ function CompanionDialog({
 }: CompanionDialogProps) {
   const isZh = language === "zh";
   const [hasOpened, setHasOpened] = useState(open);
+  const [viewportBounds, setViewportBounds] = useState(() => ({
+    height: typeof window === "undefined" ? 0 : window.visualViewport?.height ?? window.innerHeight,
+    top: typeof window === "undefined" ? 0 : window.visualViewport?.offsetTop ?? 0,
+  }));
 
   useEffect(() => {
     if (!open) return;
@@ -768,8 +772,34 @@ function CompanionDialog({
     return () => document.removeEventListener("keydown", closeOnEscape);
   }, [onClose, open]);
 
+  useEffect(() => {
+    if (!open) return;
+    const viewport = window.visualViewport;
+    const updateBounds = () => setViewportBounds({
+      height: viewport?.height ?? window.innerHeight,
+      top: viewport?.offsetTop ?? 0,
+    });
+    updateBounds();
+    viewport?.addEventListener("resize", updateBounds);
+    viewport?.addEventListener("scroll", updateBounds);
+    window.addEventListener("resize", updateBounds);
+    return () => {
+      viewport?.removeEventListener("resize", updateBounds);
+      viewport?.removeEventListener("scroll", updateBounds);
+      window.removeEventListener("resize", updateBounds);
+    };
+  }, [open]);
+
   return (
-    <div className="companion-layer" hidden={!open} aria-hidden={!open}>
+    <div
+      className="companion-layer"
+      hidden={!open}
+      aria-hidden={!open}
+      style={{
+        "--companion-viewport-height": `${viewportBounds.height}px`,
+        "--companion-viewport-top": `${viewportBounds.top}px`,
+      } as CSSProperties}
+    >
       <button
         type="button"
         className="companion-backdrop"

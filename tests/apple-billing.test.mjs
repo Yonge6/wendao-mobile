@@ -165,6 +165,9 @@ test("native StoreKit bridge purchases with appAccountToken and defers finish", 
   assert.match(swift, /Transaction\.currentEntitlements/);
   assert.match(swift, /Transaction\.unfinished/);
   assert.match(swift, /CAPPluginMethod\(name: "review"/);
+  assert.match(swift, /CAPPluginMethod\(name: "saveImageToPhotos"/);
+  assert.match(swift, /PHPhotoLibrary\.requestAuthorization\(for: \.addOnly\)/);
+  assert.match(swift, /PHAssetChangeRequest\.creationRequestForAsset/);
   assert.match(swift, /action=write-review/);
   assert.match(client, /await verifyAppleTransaction[\s\S]+await plugin\.finish/);
   assert.match(client, /export async function reviewStoreKit/);

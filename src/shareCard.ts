@@ -82,7 +82,7 @@ function inspirationItem(chapter: Chapter, language: ShareLanguage) {
 
 function relatedItemText(item: ReturnType<typeof inspirationItem>) {
   return item.points?.length
-    ? item.points.map((point, index) => `${String(index + 1).padStart(2, "0")}  ${point}`).join("\n")
+    ? item.points.map((point, index) => `${String(index + 1).padStart(2, "0")}  ${point}`).join("\n\n")
     : item.body;
 }
 

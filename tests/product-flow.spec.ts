@@ -168,6 +168,19 @@ test("opens the complete original-text poster and shares an exact chapter link",
   expect(payload.title).toMatch(/^三慢问道 · 第\d+章$/);
 });
 
+test("asks for a final save action before downloading a share image", async ({ page }) => {
+  await page.goto("/?chapter=8&lang=zh");
+  await page.locator(".chapter-current .chapter-share-quick").click();
+  await expect(page.locator(".share-card-preview img")).toBeVisible();
+
+  await page.getByRole("button", { name: "保存图片", exact: true }).click();
+  await expect(page.getByText("确认保存这张图片？", { exact: true })).toBeVisible();
+  const download = page.waitForEvent("download");
+  await page.getByRole("button", { name: "下载图片", exact: true }).click();
+  await download;
+  await expect(page.getByText("图片已下载", { exact: true })).toBeVisible();
+});
+
 test("switches all four complete posters and keeps life-manual details anonymous", async ({ page }) => {
   await page.addInitScript((storedChart) => {
     window.localStorage.setItem("wendao-chart-snapshot", JSON.stringify(storedChart));
@@ -210,6 +223,7 @@ test("wraps numbered Chinese insights instead of clipping each point to one line
 
   const preview = page.getByRole("img", { name: "启发分享卡预览", exact: true });
   await expect(preview).toBeVisible();
+  await expect(page.locator(".share-card-preview")).toHaveAttribute("aria-label", /01[\s\S]+\n\n02[\s\S]+\n\n03/);
   const naturalHeight = await preview.evaluate((image: HTMLImageElement) => image.naturalHeight);
   expect(naturalHeight).toBeGreaterThan(3000);
 });
@@ -712,14 +726,17 @@ test("keeps the Companion dialog inside an iPhone viewport", async ({ page }) =>
       documentOverflow: document.documentElement.scrollWidth - window.innerWidth,
       left: bounds.left,
       right: bounds.right,
+      bottom: bounds.bottom,
       width: bounds.width,
       viewportWidth: window.innerWidth,
+      viewportHeight: window.visualViewport?.height ?? window.innerHeight,
     };
   });
 
   expect(geometry.documentOverflow).toBeLessThanOrEqual(0);
   expect(geometry.left).toBeGreaterThanOrEqual(0);
   expect(geometry.right).toBeLessThanOrEqual(geometry.viewportWidth);
+  expect(geometry.bottom).toBeLessThanOrEqual(geometry.viewportHeight);
   expect(geometry.width).toBeLessThanOrEqual(geometry.viewportWidth);
 });
 

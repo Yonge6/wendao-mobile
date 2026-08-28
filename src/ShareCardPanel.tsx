@@ -6,7 +6,7 @@ import {
   Link2Icon,
 } from "@radix-ui/react-icons";
 import type { Chapter } from "./data/chapters";
-import { saveCardImage, shareCardImage, shareLink } from "./native";
+import { runtimeSurface, saveCardImage, shareCardImage, shareLink } from "./native";
 import {
   buildCompanionShareCardContent,
   buildShareCardContent,
@@ -41,6 +41,8 @@ export default function ShareCardPanel({
   const [imageUrl, setImageUrl] = useState("");
   const [rendering, setRendering] = useState(true);
   const [feedback, setFeedback] = useState("");
+  const [saveConfirming, setSaveConfirming] = useState(false);
+  const [saving, setSaving] = useState(false);
   const previewScrollRef = useRef<HTMLDivElement>(null);
   const content = useMemo(
     () => companionShare
@@ -81,6 +83,7 @@ export default function ShareCardPanel({
 
   useEffect(() => {
     previewScrollRef.current?.scrollTo({ top: 0 });
+    setSaveConfirming(false);
   }, [chapter.id, kind, language]);
 
   const selectKind = (nextKind: ShareCardKind) => {
@@ -111,19 +114,29 @@ export default function ShareCardPanel({
 
   const saveImage = async () => {
     if (!imageUrl) return;
-    const outcome = await saveCardImage(
-      imageUrl,
-      content.filename,
-      isZh ? "保存三慢问道分享卡" : "Save Wendao share card",
-    );
-    if (outcome !== "cancelled") {
-      setFeedback(outcome === "downloaded"
-        ? (isZh ? "图片已保存" : "Image saved")
-        : outcome === "shared"
-          ? (isZh ? "请在系统面板选择“存储图像”" : "Choose Save Image in the system sheet")
-          : (isZh ? "暂时无法保存" : "Saving is unavailable"));
+    setSaving(true);
+    try {
+      const outcome = await saveCardImage(
+        imageUrl,
+        content.filename,
+        isZh ? "保存三慢问道分享卡" : "Save Wendao share card",
+      );
+      if (outcome !== "cancelled") {
+        setFeedback(outcome === "saved"
+          ? (isZh ? "已经保存到相册" : "Saved to Photos")
+          : outcome === "downloaded"
+            ? (isZh ? "图片已下载" : "Image downloaded")
+            : outcome === "shared"
+              ? (isZh ? "请在系统面板选择“存储图像”" : "Choose Save Image in the system sheet")
+              : (isZh ? "保存失败，请检查相册权限后重试" : "Could not save. Check Photos access and try again."));
+      }
+      onAction?.(`save_${outcome}`, kind);
+      if (outcome === "saved" || outcome === "downloaded" || outcome === "shared") {
+        setSaveConfirming(false);
+      }
+    } finally {
+      setSaving(false);
     }
-    onAction?.(`save_${outcome}`, kind);
   };
 
   const copyText = async () => {
@@ -214,7 +227,14 @@ export default function ShareCardPanel({
             {isZh ? "分享图片" : "Share image"}
           </button>
           <div className="share-action-grid">
-            <button type="button" onClick={() => void saveImage()} disabled={!imageUrl || rendering}>
+            <button
+              type="button"
+              onClick={() => {
+                setFeedback("");
+                setSaveConfirming(true);
+              }}
+              disabled={!imageUrl || rendering}
+            >
               <DownloadIcon />
               {isZh ? "保存图片" : "Save image"}
             </button>
@@ -227,6 +247,23 @@ export default function ShareCardPanel({
               {isZh ? "分享链接" : "Share link"}
             </button>
           </div>
+          {saveConfirming ? (
+            <div className="share-save-confirmation" role="group" aria-label={isZh ? "确认保存图片" : "Confirm image save"}>
+              <p>{isZh ? "确认保存这张图片？" : "Save this image now?"}</p>
+              <div>
+                <button type="button" onClick={() => setSaveConfirming(false)} disabled={saving}>
+                  {isZh ? "取消" : "Cancel"}
+                </button>
+                <button type="button" className="is-confirm" onClick={() => void saveImage()} disabled={saving}>
+                  {saving
+                    ? (isZh ? "正在保存…" : "Saving…")
+                    : runtimeSurface() === "ios"
+                      ? (isZh ? "保存到相册" : "Save to Photos")
+                      : (isZh ? "下载图片" : "Download image")}
+                </button>
+              </div>
+            </div>
+          ) : null}
           {feedback ? <p className="share-action-feedback" aria-live="polite">{feedback}</p> : null}
         </div>
       </div>
