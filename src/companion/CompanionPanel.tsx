@@ -353,13 +353,6 @@ function SignedInCompanion({
       )}
       </div>
       <div className="companion-compose-zone">
-        <p className="companion-response-status" role="status">
-          {asking
-            ? (phase === "slow"
-              ? (isZh ? "这次思考较深，正在换一条更稳定的路径。" : "This is taking longer; switching to a more reliable path.")
-            : (isZh ? "正在结合本章与你的处境回应" : "Responding with this chapter and your situation in view"))
-            : (isZh ? "写下具体处境，我会先理解，再结合本章与记忆回应。" : "Describe one concrete situation. I will understand first, then respond with this chapter and your memories in view.")}
-        </p>
         <form className="companion-question-form" onSubmit={ask}>
           <label htmlFor="companion-question">{isZh ? "此刻，你真正想问什么？" : "What do you genuinely want to ask now?"}</label>
           <div className="companion-question-control">
@@ -381,6 +374,13 @@ function SignedInCompanion({
             <button type="submit" disabled={asking || !question.trim()} aria-label={isZh ? "发送问题" : "Send question"}>↑</button>
           </div>
         </form>
+        <p className="companion-response-status" role="status">
+          {asking
+            ? (phase === "slow"
+              ? (isZh ? "这次思考较深，正在换一条更稳定的路径。" : "This is taking longer; switching to a more reliable path.")
+            : (isZh ? "正在结合本章与你的处境回应" : "Responding with this chapter and your situation in view"))
+            : (isZh ? "写下具体处境，我会先理解，再结合本章与记忆回应。" : "Describe one concrete situation. I will understand first, then respond with this chapter and your memories in view.")}
+        </p>
         <div className="companion-home-actions">
         {(!Capacitor.isNativePlatform() && state.entitlement?.source === "stripe")
           || (Capacitor.getPlatform() === "ios" && state.entitlement?.source === "apple") ? (

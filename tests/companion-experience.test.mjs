@@ -14,6 +14,7 @@ test("conversation renders emphasis as typography and keeps the reading area dom
   assert.doesNotMatch(panel, /本月 \$\{state\.usage\.used_questions\}/);
   assert.doesNotMatch(panel, /wendao_usage_periods/);
   assert.doesNotMatch(panel, /Enter 发送 · Shift\+Enter 换行/);
+  assert.match(panel, /<\/form>\s*<p className="companion-response-status"/);
   assert.match(panel, /复制回应/);
   assert.match(panel, /分享图片/);
   assert.doesNotMatch(panel, /继续追问/);
