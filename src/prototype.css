@@ -1884,8 +1884,15 @@ textarea {
   z-index: 125;
   inset: 0;
   display: grid;
+  box-sizing: border-box;
+  width: 100vw;
+  max-width: 100%;
+  height: 100dvh;
+  max-height: 100%;
   place-items: center;
+  overflow: hidden;
   padding: 18px;
+  overscroll-behavior: none;
 }
 
 .companion-layer[hidden] {
@@ -1904,9 +1911,13 @@ textarea {
 .companion-dialog {
   position: relative;
   display: grid;
+  box-sizing: border-box;
   grid-template-rows: auto minmax(0, 1fr);
   width: min(1040px, calc(100vw - 32px));
+  min-width: 0;
+  max-width: 100%;
   height: min(1040px, calc(100dvh - 32px));
+  max-height: 100%;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--gold) 32%, transparent);
   border-radius: 26px;
@@ -1974,6 +1985,7 @@ textarea {
 }
 
 .companion-dialog-body {
+  min-width: 0;
   min-height: 0;
   overflow: hidden;
   padding: 14px 20px calc(env(safe-area-inset-bottom, 0px) + 7px);
@@ -2226,6 +2238,7 @@ textarea {
 .companion-home-heading {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
+  min-width: 0;
   align-items: center;
   gap: 8px 16px;
   padding-bottom: 9px;
@@ -2255,6 +2268,7 @@ textarea {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
   gap: 9px;
+  min-width: 0;
   height: 100%;
   min-height: 0;
 }
@@ -2549,6 +2563,7 @@ textarea {
 .companion-question-control {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 46px;
+  min-width: 0;
   align-items: end;
   gap: 8px;
   padding: 7px;
@@ -2558,7 +2573,10 @@ textarea {
 }
 
 .companion-question-form textarea {
+  box-sizing: border-box;
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
   min-height: 52px;
   max-height: 132px;
   padding: 9px 10px;
@@ -4128,6 +4146,12 @@ textarea {
 
 @media (max-width: 720px) {
   .companion-layer {
+    width: 100vw;
+    width: 100dvw;
+    max-width: 100dvw;
+    height: 100vh;
+    height: 100dvh;
+    max-height: 100dvh;
     place-items: stretch;
     padding: 0;
   }
@@ -4137,8 +4161,12 @@ textarea {
   }
 
   .companion-dialog {
-    width: 100%;
+    width: 100vw;
+    width: 100dvw;
+    max-width: 100dvw;
+    height: 100vh;
     height: 100dvh;
+    max-height: 100dvh;
     border: 0;
     border-radius: 0;
     box-shadow: none;
@@ -4153,6 +4181,11 @@ textarea {
 
   .companion-dialog-body {
     padding: 10px 14px calc(env(safe-area-inset-bottom, 0px) + 6px);
+  }
+
+  .companion-question-form textarea,
+  .companion-delete-confirmation input {
+    font-size: 16px;
   }
 
   .companion-home-heading {

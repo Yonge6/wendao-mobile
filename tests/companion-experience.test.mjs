@@ -19,6 +19,10 @@ test("conversation renders emphasis as typography and keeps the reading area dom
   assert.match(panel, /分享图片/);
   assert.doesNotMatch(panel, /继续追问/);
   assert.match(css, /width:\s*min\(1040px, calc\(100vw - 32px\)\)/);
+  assert.match(
+    css,
+    /@media \(max-width: 720px\) \{[\s\S]*?\.companion-question-form textarea,[\s\S]*?\.companion-delete-confirmation input\s*\{[\s\S]*?font-size:\s*16px/,
+  );
   assert.match(css, /\.companion-message-content strong/);
   assert.match(css, /\.companion-home-actions:empty\s*\{[\s\S]*?display:\s*none/);
 });

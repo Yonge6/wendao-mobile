@@ -663,6 +663,28 @@ test("opens account login as soon as the reading composer is clicked", async ({ 
   await expect(page.getByText(/请先完成出生信息/)).toHaveCount(0);
 });
 
+test("keeps the Companion dialog inside an iPhone viewport", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/?chapter=64&lang=zh");
+  await page.getByRole("button", { name: "打开我的问道并登录", exact: true }).click();
+
+  const geometry = await page.locator(".companion-dialog").evaluate((element) => {
+    const bounds = element.getBoundingClientRect();
+    return {
+      documentOverflow: document.documentElement.scrollWidth - window.innerWidth,
+      left: bounds.left,
+      right: bounds.right,
+      width: bounds.width,
+      viewportWidth: window.innerWidth,
+    };
+  });
+
+  expect(geometry.documentOverflow).toBeLessThanOrEqual(0);
+  expect(geometry.left).toBeGreaterThanOrEqual(0);
+  expect(geometry.right).toBeLessThanOrEqual(geometry.viewportWidth);
+  expect(geometry.width).toBeLessThanOrEqual(geometry.viewportWidth);
+});
+
 test("searches all textual layers from the directory", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "目录", exact: true }).click();
