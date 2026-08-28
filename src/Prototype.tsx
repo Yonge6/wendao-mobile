@@ -740,6 +740,7 @@ type CompanionDialogProps = {
   language: Language;
   chapterId: number;
   chapterTitle: string;
+  onShareAnswer: (payload: { question: string; answer: string }) => void;
 };
 
 function CompanionDialog({
@@ -748,6 +749,7 @@ function CompanionDialog({
   language,
   chapterId,
   chapterTitle,
+  onShareAnswer,
 }: CompanionDialogProps) {
   const isZh = language === "zh";
   const [hasOpened, setHasOpened] = useState(open);
@@ -793,7 +795,7 @@ function CompanionDialog({
                 {isZh ? "正在展开你的问道…" : "Opening your Wendao…"}
               </div>
             )}>
-              <CompanionPanel language={language} chapterId={chapterId} />
+              <CompanionPanel language={language} chapterId={chapterId} onShareAnswer={onShareAnswer} />
             </Suspense>
           ) : null}
         </div>
@@ -1694,6 +1696,8 @@ export default function Prototype() {
   const [shareOpen, setShareOpen] = useState(false);
   const [shareChapterId, setShareChapterId] = useState(chapterId);
   const [shareInitialKind, setShareInitialKind] = useState<ShareCardKind>("verse");
+  const [companionShare, setCompanionShare] = useState<{ question: string; answer: string } | null>(null);
+  const [shareReturnsToCompanion, setShareReturnsToCompanion] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerView, setDrawerView] = useState<DrawerView>("home");
   const [companionOpen, setCompanionOpen] = useState(false);
@@ -1957,9 +1961,20 @@ export default function Prototype() {
   };
 
   const openShare = (kind: ShareCardKind, targetChapterId: number) => {
+    setCompanionShare(null);
+    setShareReturnsToCompanion(false);
     setShareChapterId(targetChapterId);
     setShareInitialKind(kind);
     setShareOpen(true);
+  };
+
+  const openCompanionShare = (payload: { question: string; answer: string }) => {
+    setCompanionShare(payload);
+    setShareReturnsToCompanion(true);
+    setShareChapterId(chapterId);
+    setCompanionOpen(false);
+    setShareOpen(true);
+    trackEvent("companion_answer_share", { source: "conversation" });
   };
 
   return (
@@ -2316,9 +2331,18 @@ export default function Prototype() {
 
       <WebSheet
         open={shareOpen}
-        onOpenChange={setShareOpen}
+        onOpenChange={(nextOpen) => {
+          setShareOpen(nextOpen);
+          if (!nextOpen && shareReturnsToCompanion) {
+            setShareReturnsToCompanion(false);
+            setCompanionShare(null);
+            setCompanionOpen(true);
+          }
+        }}
         eyebrow={isZh ? `《道德经》今本第 ${shareChapter.id} 章` : `Daodejing · Received Chapter ${shareChapter.id}`}
-        title={isZh ? "分享这一章" : "Share this chapter"}
+        title={companionShare
+          ? (isZh ? "分享这段回应" : "Share this response")
+          : (isZh ? "分享这一章" : "Share this chapter")}
         variant="share"
       >
         {shareOpen ? (
@@ -2329,6 +2353,7 @@ export default function Prototype() {
               manualText={chart ? personalizedAdvice(shareChapter, chart, language) : undefined}
               profileReady={profileReady}
               initialKind={shareInitialKind}
+              companionShare={companionShare}
             />
           </Suspense>
         ) : null}
@@ -2373,6 +2398,7 @@ export default function Prototype() {
         language={language}
         chapterId={chapterId}
         chapterTitle={activeChapter[language].title}
+        onShareAnswer={openCompanionShare}
       />
       <VideoChannelModal open={videoChannelOpen} onClose={() => setVideoChannelOpen(false)} language={language} />
       {webSupportEnabled ? <SupportModal open={supportOpen} onClose={() => setSupportOpen(false)} language={language} /> : null}

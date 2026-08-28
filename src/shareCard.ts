@@ -150,6 +150,47 @@ export function buildShareCardContent(
   };
 }
 
+function cleanCompanionShareText(text: string) {
+  return text
+    .replace(/(^|\n)#{1,6}\s+/g, "$1")
+    .replace(/(^|\n)\s*[*+-]\s+/g, "$1• ")
+    .replace(/\*\*|__/g, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+export function buildCompanionShareCardContent(
+  chapter: Chapter,
+  language: ShareLanguage,
+  question: string,
+  answer: string,
+): ShareCardContent {
+  const isZh = language === "zh";
+  const cleanQuestion = cleanCompanionShareText(question);
+  const cleanAnswer = cleanCompanionShareText(answer);
+  const chapterLabel = isZh ? `《道德经》今本第 ${chapter.id} 章` : `Daodejing · Received Chapter ${chapter.id}`;
+  const url = shareChapterUrl(chapter.id, "inspiration", language);
+  const label = isZh ? "问道回应" : "Wendao response";
+  const shareText = isZh
+    ? `${cleanQuestion ? `你问：${cleanQuestion}\n\n` : ""}${cleanAnswer}\n\n${chapterLabel}｜${label}\n三慢问道\n${url}`
+    : `${cleanQuestion ? `You asked: ${cleanQuestion}\n\n` : ""}${cleanAnswer}\n\n${chapterLabel} · ${label}\nWendao\n${url}`;
+
+  return {
+    kind: "inspiration",
+    language,
+    chapterId: chapter.id,
+    label,
+    chapterLabel,
+    chapterTitle: chapter[language].title,
+    primary: cleanAnswer,
+    secondaryLabel: isZh ? "你问" : "Your question",
+    secondary: cleanQuestion || (isZh ? "从此刻真正关心的地方开始。" : "Begin with what genuinely matters now."),
+    url,
+    shareText,
+    filename: `wendao-chapter-${String(chapter.id).padStart(2, "0")}-response.png`,
+  };
+}
+
 function wrapLine(context: CanvasRenderingContext2D, text: string, maxWidth: number) {
   const hasCjk = /[\u3400-\u9fff\uf900-\ufaff]/.test(text);
   const isSpaced = /\s/.test(text);

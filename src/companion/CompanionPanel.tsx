@@ -15,6 +15,7 @@ type CompanionPanelProps = {
   language: "zh" | "en";
   chapterId: number;
   initialQuestion?: string;
+  onShareAnswer?: (payload: { question: string; answer: string }) => void;
 };
 
 type ConversationMessage = {
@@ -27,7 +28,6 @@ type ConversationMessage = {
 
 type CompanionState = {
   entitlement: { status: string; source: string; expires_at: string | null } | null;
-  usage: { question_allowance: number | null; used_questions: number } | null;
   memoryEnabled: boolean;
 };
 
@@ -84,6 +84,7 @@ function SignedInCompanion({
   language,
   chapterId,
   initialQuestion,
+  onShareAnswer,
   onSignOut,
 }: CompanionPanelProps & { session: Session; onSignOut: () => Promise<void> }) {
   const [state, setState] = useState<CompanionState | null>(null);
@@ -127,19 +128,17 @@ function SignedInCompanion({
     const client = companionClient();
     if (!client) return;
     setAccessError("");
-    const [entitlementResult, usageResult, accountResult] = await Promise.all([
+    const [entitlementResult, accountResult] = await Promise.all([
       client.from("wendao_entitlements").select("status,source,expires_at").eq("user_id", session.user.id).maybeSingle(),
-      client.from("wendao_usage_periods").select("question_allowance,used_questions").eq("user_id", session.user.id).order("period_start", { ascending: false }).limit(1).maybeSingle(),
       client.from("wendao_accounts").select("memory_enabled").eq("user_id", session.user.id).maybeSingle(),
     ]);
-    const firstError = entitlementResult.error || usageResult.error || accountResult.error;
+    const firstError = entitlementResult.error || accountResult.error;
     if (firstError) {
       setAccessError(firstError.message);
       return;
     }
     setState({
       entitlement: entitlementResult.data,
-      usage: usageResult.data,
       memoryEnabled: accountResult.data?.memory_enabled ?? true,
     });
   }, [session.user.id]);
@@ -224,15 +223,6 @@ function SignedInCompanion({
               message.id === assistantId ? { ...message, status: undefined } : message
             )));
             if (typeof payload.threadId === "string") setThreadId(payload.threadId);
-            if (typeof payload.questionsThisMonth === "number") {
-              setState((current) => current ? {
-                ...current,
-                usage: {
-                  question_allowance: null,
-                  used_questions: payload.questionsThisMonth as number,
-                },
-              } : current);
-            }
           },
           error: ({ message }) => {
             throw new Error(message || (isZh ? "回答暂时中断，请稍后再试。" : "The answer was interrupted. Please try again."));
@@ -274,6 +264,7 @@ function SignedInCompanion({
   };
 
   const lastAssistantId = [...messages].reverse().find((message) => message.role === "assistant")?.id;
+  const lastUserQuestion = [...messages].reverse().find((message) => message.role === "user")?.content ?? "";
 
   const manageMembership = async () => {
     const config = companionPublicConfig();
@@ -300,9 +291,6 @@ function SignedInCompanion({
             <span>{isZh ? "会员有效" : "Membership active"}</span>
             <span>{state.memoryEnabled ? (isZh ? "自动记忆" : "Memory on") : (isZh ? "记忆已暂停" : "Memory paused")}</span>
           </div>
-          <p>{state.usage
-            ? (isZh ? `本月 ${state.usage.used_questions} 次 · 不限问答` : `${state.usage.used_questions} this month · unlimited`)
-            : (isZh ? "会员期内不限问答" : "Unlimited with membership")}</p>
         </div>
         <nav className="companion-tools" aria-label={isZh ? "问道工具" : "Wendao tools"}>
           <button type="button" onClick={() => setView("weekly")}>{isZh ? "本周回看" : "Weekly"}</button>
@@ -338,7 +326,12 @@ function SignedInCompanion({
                   <button type="button" onClick={() => void copyAnswer(message)}>
                     {copiedMessageId === message.id ? (isZh ? "已复制" : "Copied") : (isZh ? "复制回应" : "Copy")}
                   </button>
-                  <button type="button" onClick={() => questionRef.current?.focus()}>{isZh ? "继续追问" : "Follow up"}</button>
+                  <button
+                    type="button"
+                    onClick={() => onShareAnswer?.({ question: lastUserQuestion, answer: message.content })}
+                  >
+                    {isZh ? "分享图片" : "Share image"}
+                  </button>
                 </div>
               ) : null}
             </article>
@@ -365,8 +358,8 @@ function SignedInCompanion({
           {asking
             ? (phase === "slow"
               ? (isZh ? "这次思考较深，正在换一条更稳定的路径。" : "This is taking longer; switching to a more reliable path.")
-              : (isZh ? "正在结合本章与你的处境回应" : "Responding with this chapter and your situation in view"))
-            : (isZh ? "写下一个具体处境，我会先理解，再回应。" : "Describe one concrete situation. I will understand before responding.")}
+            : (isZh ? "正在结合本章与你的处境回应" : "Responding with this chapter and your situation in view"))
+            : (isZh ? "写下具体处境，我会先理解，再结合本章与记忆回应。" : "Describe one concrete situation. I will understand first, then respond with this chapter and your memories in view.")}
         </p>
         <form className="companion-question-form" onSubmit={ask}>
           <label htmlFor="companion-question">{isZh ? "此刻，你真正想问什么？" : "What do you genuinely want to ask now?"}</label>
@@ -389,9 +382,6 @@ function SignedInCompanion({
             <button type="submit" disabled={asking || !question.trim()} aria-label={isZh ? "发送问题" : "Send question"}>↑</button>
           </div>
         </form>
-        <small className="companion-compose-note">
-          {isZh ? "Enter 发送 · Shift+Enter 换行 · 回答结合本章与已保存的记忆。" : "Enter to send · Shift+Enter for a new line · grounded in this chapter and saved memories."}
-        </small>
         <div className="companion-home-actions">
         {(!Capacitor.isNativePlatform() && state.entitlement?.source === "stripe")
           || (Capacitor.getPlatform() === "ios" && state.entitlement?.source === "apple") ? (
@@ -405,7 +395,7 @@ function SignedInCompanion({
   );
 }
 
-export default function CompanionPanel({ language, chapterId, initialQuestion }: CompanionPanelProps) {
+export default function CompanionPanel({ language, chapterId, initialQuestion, onShareAnswer }: CompanionPanelProps) {
   return (
     <CompanionAuth language={language}>
       {(session, signOut) => (
@@ -414,6 +404,7 @@ export default function CompanionPanel({ language, chapterId, initialQuestion }:
           language={language}
           chapterId={chapterId}
           initialQuestion={initialQuestion}
+          onShareAnswer={onShareAnswer}
           onSignOut={signOut}
         />
       )}

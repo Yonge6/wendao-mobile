@@ -10,10 +10,31 @@ test("conversation renders emphasis as typography and keeps the reading area dom
 
   assert.match(panel, /<strong key=/);
   assert.match(panel, /part\.replace\(\/\\\*\\\*\/g, ""\)/);
-  assert.match(panel, /Enter 发送 · Shift\+Enter 换行/);
+  assert.match(panel, /event\.key !== "Enter" \|\| event\.shiftKey/);
+  assert.doesNotMatch(panel, /本月 \$\{state\.usage\.used_questions\}/);
+  assert.doesNotMatch(panel, /wendao_usage_periods/);
+  assert.doesNotMatch(panel, /Enter 发送 · Shift\+Enter 换行/);
   assert.match(panel, /复制回应/);
+  assert.match(panel, /分享图片/);
+  assert.doesNotMatch(panel, /继续追问/);
   assert.match(css, /width:\s*min\(1040px, calc\(100vw - 32px\)\)/);
   assert.match(css, /\.companion-message-content strong/);
+  assert.match(css, /\.companion-home-actions:empty\s*\{[\s\S]*?display:\s*none/);
+});
+
+test("conversation image sharing reuses the chapter poster and canonical QR flow", async () => {
+  const [panel, prototype, sharePanel, shareCard] = await Promise.all([
+    readFile(new URL("../src/companion/CompanionPanel.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/Prototype.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/ShareCardPanel.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/shareCard.ts", import.meta.url), "utf8"),
+  ]);
+
+  assert.match(panel, /onShareAnswer\?\.\(\{ question: lastUserQuestion, answer: message\.content \}\)/);
+  assert.match(prototype, /title=\{companionShare/);
+  assert.match(sharePanel, /buildCompanionShareCardContent/);
+  assert.match(shareCard, /shareChapterUrl\(chapter\.id, "inspiration", language\)/);
+  assert.match(shareCard, /QRCode\.toCanvas/);
 });
 
 test("weekly reflection explains actionable failure reasons", async () => {
@@ -28,4 +49,3 @@ test("weekly reflection explains actionable failure reasons", async () => {
   assert.match(endpoint, /provider\.visibleFallback/);
   assert.match(endpoint, /weekly_ai_unavailable/);
 });
-

@@ -8,6 +8,7 @@ import {
 import type { Chapter } from "./data/chapters";
 import { saveCardImage, shareCardImage, shareLink } from "./native";
 import {
+  buildCompanionShareCardContent,
   buildShareCardContent,
   renderShareCardDataUrl,
   SHARE_CARD_KINDS,
@@ -22,6 +23,7 @@ type ShareCardPanelProps = {
   manualText?: string;
   profileReady: boolean;
   initialKind?: ShareCardKind;
+  companionShare?: { question: string; answer: string } | null;
   onAction?: (action: string, kind: ShareCardKind) => void;
 };
 
@@ -31,6 +33,7 @@ export default function ShareCardPanel({
   manualText,
   profileReady,
   initialKind = "verse",
+  companionShare,
   onAction,
 }: ShareCardPanelProps) {
   const isZh = language === "zh";
@@ -40,8 +43,10 @@ export default function ShareCardPanel({
   const [feedback, setFeedback] = useState("");
   const previewScrollRef = useRef<HTMLDivElement>(null);
   const content = useMemo(
-    () => buildShareCardContent(chapter, language, kind, manualText),
-    [chapter, kind, language, manualText],
+    () => companionShare
+      ? buildCompanionShareCardContent(chapter, language, companionShare.question, companionShare.answer)
+      : buildShareCardContent(chapter, language, kind, manualText),
+    [chapter, companionShare, kind, language, manualText],
   );
   const pinyinDescription = useMemo(() => (
     [...(content.primaryPinyin ?? []), ...(content.secondaryPinyin ?? [])]
@@ -150,7 +155,7 @@ export default function ShareCardPanel({
 
   return (
     <div className="share-card-panel">
-      <div className="share-kind-tabs" role="tablist" aria-label={isZh ? "分享卡类型" : "Share card type"}>
+      {!companionShare ? <div className="share-kind-tabs" role="tablist" aria-label={isZh ? "分享卡类型" : "Share card type"}>
         {SHARE_CARD_KINDS.map((option) => {
           const disabled = option === "manual" && !profileReady;
           return (
@@ -168,9 +173,9 @@ export default function ShareCardPanel({
             </button>
           );
         })}
-      </div>
+      </div> : null}
 
-      {!profileReady ? (
+      {!companionShare && !profileReady ? (
         <p className="share-manual-note">
           {isZh ? "生成真实人生说明书后，可分享匿名说明书卡。" : "Create a verified life manual to share an anonymous manual card."}
         </p>

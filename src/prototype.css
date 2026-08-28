@@ -1976,7 +1976,7 @@ textarea {
 .companion-dialog-body {
   min-height: 0;
   overflow: hidden;
-  padding: 14px 20px calc(env(safe-area-inset-bottom, 0px) + 14px);
+  padding: 14px 20px calc(env(safe-area-inset-bottom, 0px) + 7px);
 }
 
 .companion-loading,
@@ -2512,8 +2512,8 @@ textarea {
 
 .companion-compose-zone {
   display: grid;
-  gap: 7px;
-  padding-top: 12px;
+  gap: 5px;
+  padding-top: 9px;
   border-top: 1px solid color-mix(in srgb, var(--gold) 16%, transparent);
 }
 
@@ -2598,17 +2598,15 @@ textarea {
   font: 12px/1.7 var(--sans);
 }
 
-.companion-compose-note {
-  color: var(--ink-soft);
-  font: 9px/1.6 var(--sans);
-}
-
 .companion-home-actions {
   display: flex;
-  min-height: 24px;
   align-items: center;
   justify-content: flex-end;
   gap: 14px;
+}
+
+.companion-home-actions:empty {
+  display: none;
 }
 
 .companion-home-actions .companion-error {
@@ -4154,7 +4152,7 @@ textarea {
   }
 
   .companion-dialog-body {
-    padding: 10px 14px calc(env(safe-area-inset-bottom, 0px) + 10px);
+    padding: 10px 14px calc(env(safe-area-inset-bottom, 0px) + 6px);
   }
 
   .companion-home-heading {
