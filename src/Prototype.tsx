@@ -1,5 +1,7 @@
 import {
   FormEvent,
+  lazy,
+  Suspense,
   type ClipboardEvent as ReactClipboardEvent,
   type CSSProperties,
   type Dispatch,
@@ -10,7 +12,6 @@ import {
   useRef,
   useState,
 } from "react";
-import tzLookup from "tz-lookup";
 import {
   ArrowLeftIcon,
   ArrowRightIcon,
@@ -38,10 +39,11 @@ import {
   type HumanDesignReadingChart,
 } from "./humanDesignReading";
 import { chapters, type Chapter, type RelatedItem } from "./data/chapters";
-import ShareCardPanel from "./ShareCardPanel";
 import type { ShareCardKind } from "./shareCard";
 import { initializeNativeShell, nativeImpact, runtimeSurface, syncNativeTheme } from "./native";
-import CompanionPanel from "./companion/CompanionPanel";
+
+const ShareCardPanel = lazy(() => import("./ShareCardPanel"));
+const CompanionPanel = lazy(() => import("./companion/CompanionPanel"));
 
 type Language = "zh" | "en";
 type Theme = "light" | "dark";
@@ -221,7 +223,7 @@ function arcgisCandidatesToFeatures(data: {
   })).filter((feature) => feature.geometry.coordinates.length === 2);
 }
 
-function timezoneFromFeature(feature: PlaceFeature) {
+async function timezoneFromFeature(feature: PlaceFeature) {
   const coordinates = feature.geometry?.coordinates;
   if (!coordinates || coordinates.length < 2) return null;
   const [longitude, latitude] = coordinates;
@@ -234,6 +236,7 @@ function timezoneFromFeature(feature: PlaceFeature) {
   if (countryCode === "TW") return "Asia/Taipei";
 
   try {
+    const { default: tzLookup } = await import("tz-lookup");
     return tzLookup(latitude, longitude);
   } catch {
     return null;
@@ -274,7 +277,7 @@ async function resolveBirthplaceTimezone(query: string) {
       try {
         const features = await search(query, controller.signal);
         for (const feature of features) {
-          const timezone = timezoneFromFeature(feature);
+          const timezone = await timezoneFromFeature(feature);
           if (timezone) return timezone;
         }
       } catch (error) {
@@ -747,9 +750,11 @@ function CompanionDialog({
   chapterTitle,
 }: CompanionDialogProps) {
   const isZh = language === "zh";
+  const [hasOpened, setHasOpened] = useState(open);
 
   useEffect(() => {
     if (!open) return;
+    setHasOpened(true);
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
     };
@@ -782,7 +787,15 @@ function CompanionDialog({
           <button type="button" aria-label={isZh ? "关闭我的问道" : "Close My Wendao"} onClick={onClose}>×</button>
         </header>
         <div className="companion-dialog-body">
-          <CompanionPanel language={language} chapterId={chapterId} />
+          {hasOpened ? (
+            <Suspense fallback={(
+              <div className="companion-loading" role="status">
+                {isZh ? "正在展开你的问道…" : "Opening your Wendao…"}
+              </div>
+            )}>
+              <CompanionPanel language={language} chapterId={chapterId} />
+            </Suspense>
+          ) : null}
         </div>
       </section>
     </div>
@@ -2308,13 +2321,17 @@ export default function Prototype() {
         title={isZh ? "分享这一章" : "Share this chapter"}
         variant="share"
       >
-        <ShareCardPanel
-          chapter={shareChapter}
-          language={language}
-          manualText={chart ? personalizedAdvice(shareChapter, chart, language) : undefined}
-          profileReady={profileReady}
-          initialKind={shareInitialKind}
-        />
+        {shareOpen ? (
+          <Suspense fallback={<p className="share-loading">{isZh ? "正在准备完整海报…" : "Preparing the complete poster…"}</p>}>
+            <ShareCardPanel
+              chapter={shareChapter}
+              language={language}
+              manualText={chart ? personalizedAdvice(shareChapter, chart, language) : undefined}
+              profileReady={profileReady}
+              initialKind={shareInitialKind}
+            />
+          </Suspense>
+        ) : null}
       </WebSheet>
 
       <SideDrawer

@@ -93,9 +93,27 @@ export async function handleWeeklyReflectionRequest(request, dependencies = {}) 
         controller.enqueue(event("meta", { weekStart: week.start, charged: false }));
         void (async () => {
           try {
-            const generated = await readDeepSeekText(providerResponse.body, (text) => {
-              controller.enqueue(event("delta", { text }));
-            });
+            let primaryAnswerStarted = false;
+            let generated;
+            try {
+              generated = await readDeepSeekText(providerResponse.body, (text) => {
+                primaryAnswerStarted = true;
+                controller.enqueue(event("delta", { text }));
+              });
+            } catch (error) {
+              if (request.signal.aborted || primaryAnswerStarted || typeof provider.visibleFallback !== "function") {
+                throw error;
+              }
+              console.warn("DeepSeek weekly stream stalled; using flash fallback", { requestId: id });
+              controller.enqueue(event("meta", { weekStart: week.start, phase: "fallback", charged: false }));
+              const fallbackResponse = await provider.visibleFallback(messages, {
+                requestId: id,
+                signal: request.signal,
+              });
+              generated = await readDeepSeekText(fallbackResponse.body, (text) => {
+                controller.enqueue(event("delta", { text }));
+              });
+            }
             const reflectionId = await store.saveWeeklyReflection(
               user.id,
               week.start,
@@ -104,10 +122,16 @@ export async function handleWeeklyReflectionRequest(request, dependencies = {}) 
               chapterIds,
             );
             controller.enqueue(event("done", { weekStart: week.start, reflectionId, charged: false }));
-          } catch {
+          } catch (error) {
+            console.warn("Weekly reflection generation failed", {
+              requestId: id,
+              code: error instanceof HttpError ? error.code : "unknown",
+            });
             controller.enqueue(event("error", {
-              code: "weekly_reflection_unavailable",
-              message: locale === "zh" ? "本周回看暂时无法生成。" : "This week's reflection is temporarily unavailable.",
+              code: "weekly_ai_unavailable",
+              message: locale === "zh"
+                ? "AI 服务刚才没有完成生成；你的对话、记忆和会员状态都没有丢失。"
+                : "The AI service did not finish this reflection. Your conversations, memories, and membership are safe.",
             }));
           } finally {
             controller.close();

@@ -9,6 +9,18 @@ type CompanionEventHandlers = {
   [Kind in keyof CompanionEventMap]?: (data: CompanionEventMap[Kind]) => void;
 };
 
+export class CompanionApiError extends Error {
+  code: string;
+  status: number;
+
+  constructor(code: string, message: string, status = 0) {
+    super(message);
+    this.name = "CompanionApiError";
+    this.code = code;
+    this.status = status;
+  }
+}
+
 export async function readCompanionEvents(
   body: ReadableStream<Uint8Array>,
   handlers: CompanionEventHandlers,
@@ -110,8 +122,14 @@ async function authorizedJson<T>(
       ...(init.body ? { "content-type": "application/json" } : {}),
     },
   });
-  const payload = await response.json().catch(() => null) as T & { error?: { message?: string } };
-  if (!response.ok) throw new Error(payload?.error?.message || "Memory is temporarily unavailable");
+  const payload = await response.json().catch(() => null) as T & { error?: { code?: string; message?: string } };
+  if (!response.ok) {
+    throw new CompanionApiError(
+      payload?.error?.code || "request_failed",
+      payload?.error?.message || "The requested information is temporarily unavailable",
+      response.status,
+    );
+  }
   return payload;
 }
 
@@ -171,14 +189,19 @@ export async function generateWeeklyReflection({
   locale: "zh" | "en";
   handlers: CompanionEventHandlers;
 }) {
+  let completed = false;
   const response = await fetch(`${apiUrl}/api/companion/weekly-reflection`, {
     method: "POST",
     headers: { authorization: `Bearer ${accessToken}`, "content-type": "application/json" },
     body: JSON.stringify({ locale }),
   });
   if (!response.ok) {
-    const payload = await response.json().catch(() => null) as { error?: { message?: string } } | null;
-    throw new Error(payload?.error?.message || "Weekly reflection is temporarily unavailable");
+    const payload = await response.json().catch(() => null) as { error?: { code?: string; message?: string } } | null;
+    throw new CompanionApiError(
+      payload?.error?.code || "weekly_request_failed",
+      payload?.error?.message || "Weekly reflection is temporarily unavailable",
+      response.status,
+    );
   }
   const contentType = response.headers.get("content-type") ?? "";
   if (contentType.includes("application/json")) {
@@ -187,8 +210,17 @@ export async function generateWeeklyReflection({
     handlers.done?.({ replayed: true });
     return;
   }
-  if (!response.body) throw new Error("Weekly reflection is temporarily unavailable");
-  await readCompanionEvents(response.body, handlers);
+  if (!response.body) throw new CompanionApiError("weekly_stream_missing", "Weekly reflection is temporarily unavailable");
+  await readCompanionEvents(response.body, {
+    ...handlers,
+    done: (payload) => {
+      completed = true;
+      handlers.done?.(payload);
+    },
+  });
+  if (!completed) {
+    throw new CompanionApiError("weekly_stream_interrupted", "Weekly reflection stopped before it was complete");
+  }
 }
 
 export function createStripeCheckout(

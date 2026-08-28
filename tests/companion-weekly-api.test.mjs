@@ -61,6 +61,61 @@ test("generates and stores a weekly reflection without question quota", async ()
   assert.equal(actions[0][3], "Notice the urge to rush. Pause before one handoff.");
 });
 
+test("falls back when the weekly visible stream ends before any answer", async () => {
+  const actions = [];
+  const store = {
+    getWeeklyReflection: async () => null,
+    getEntitlement: async () => ({ status: "active", expires_at: "2026-09-01T00:00:00Z" }),
+    getWeeklySource: async () => ({
+      messages: [{ role: "user", content: "I keep postponing the last handoff", chapter_id: 64 }],
+      memories: [],
+    }),
+    saveWeeklyReflection: async (...args) => { actions.push(args); return "weekly-fallback"; },
+  };
+  const response = await handleWeeklyReflectionRequest(request("POST", { locale: "en" }), {
+    environment,
+    authenticate,
+    calendarWeek: week,
+    store,
+    loadChapter: async () => ({ id: 64, text: ["Attend to the end as to the beginning."] }),
+    provider: {
+      visible: async () => new Response("data: [DONE]\n\n"),
+      visibleFallback: async () => providerStream("Name the final handoff and make its owner explicit."),
+    },
+  });
+  assert.equal(response.status, 200);
+  const stream = await response.text();
+  assert.match(stream, /\"phase\":\"fallback\"/);
+  assert.match(stream, /Name the final handoff/);
+  assert.equal(actions[0][2], "en");
+});
+
+test("returns a specific code when both weekly model paths fail", async () => {
+  const store = {
+    getWeeklyReflection: async () => null,
+    getEntitlement: async () => ({ status: "active", expires_at: "2026-09-01T00:00:00Z" }),
+    getWeeklySource: async () => ({
+      messages: [{ role: "user", content: "A real weekly question", chapter_id: 64 }],
+      memories: [],
+    }),
+  };
+  const response = await handleWeeklyReflectionRequest(request("POST", { locale: "zh" }), {
+    environment,
+    authenticate,
+    calendarWeek: week,
+    store,
+    loadChapter: async () => ({ id: 64, text: ["慎终如始。"] }),
+    provider: {
+      visible: async () => new Response("data: [DONE]\n\n"),
+      visibleFallback: async () => new Response("data: [DONE]\n\n"),
+    },
+  });
+  assert.equal(response.status, 200);
+  const stream = await response.text();
+  assert.match(stream, /\"code\":\"weekly_ai_unavailable\"/);
+  assert.match(stream, /对话、记忆和会员状态都没有丢失/);
+});
+
 test("weekly generation requires membership but never reserves question quota", async () => {
   let reserved = false;
   const response = await handleWeeklyReflectionRequest(request("POST", { locale: "zh" }), {

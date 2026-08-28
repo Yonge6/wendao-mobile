@@ -1,4 +1,4 @@
-import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
+import { FormEvent, type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import CompanionAuth from "./CompanionAuth";
 import SubscriptionPanel from "./SubscriptionPanel";
@@ -51,10 +51,32 @@ function friendlyCompanionError(error: unknown, isZh: boolean) {
 
 function companionDisplayText(text: string) {
   return text
-    .replace(/\*\*([^*]+)\*\*/g, "$1")
-    .replace(/__([^_]+)__/g, "$1")
     .replace(/(^|\n)#{1,6}\s+/g, "$1")
     .replace(/(^|\n)\s*[*+-]\s+/g, "$1• ");
+}
+
+function emphasizedLine(line: string, lineIndex: number): ReactNode {
+  const parts = line.split(/(\*\*[^*\n]+\*\*|__[^_\n]+__)/g);
+  return parts.map((part, partIndex) => {
+    const markdownBold = part.match(/^\*\*([\s\S]+)\*\*$/) ?? part.match(/^__([\s\S]+)__$/);
+    if (markdownBold) {
+      return <strong key={`${lineIndex}-${partIndex}`}>{markdownBold[1]}</strong>;
+    }
+    return part.replace(/\*\*/g, "").replace(/__/g, "");
+  });
+}
+
+function CompanionMessageContent({ text }: { text: string }) {
+  const lines = companionDisplayText(text).replace(/\n{3,}/g, "\n\n").split("\n");
+  return (
+    <div className="companion-message-content">
+      {lines.map((line, index) => line ? (
+        <span className="companion-message-line" key={`${index}-${line.slice(0, 12)}`}>
+          {emphasizedLine(line, index)}
+        </span>
+      ) : <span className="companion-message-gap" aria-hidden="true" key={`gap-${index}`} />)}
+    </div>
+  );
 }
 
 function SignedInCompanion({
@@ -71,10 +93,12 @@ function SignedInCompanion({
   const [threadId, setThreadId] = useState<string | null>(null);
   const [asking, setAsking] = useState(false);
   const [phase, setPhase] = useState<"idle" | "preparing" | "answering" | "slow">("idle");
+  const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
   const [view, setView] = useState<"conversation" | "memory" | "weekly" | "account">("conversation");
   const abortRef = useRef<AbortController | null>(null);
   const slowTimerRef = useRef<number | null>(null);
   const conversationRef = useRef<HTMLDivElement>(null);
+  const questionRef = useRef<HTMLTextAreaElement>(null);
   const isZh = language === "zh";
 
   useEffect(() => {
@@ -91,6 +115,13 @@ function SignedInCompanion({
     if (!conversation) return;
     conversation.scrollTo({ top: conversation.scrollHeight, behavior: asking ? "smooth" : "auto" });
   }, [asking, messages]);
+
+  useEffect(() => {
+    const input = questionRef.current;
+    if (!input) return;
+    input.style.height = "auto";
+    input.style.height = `${Math.min(input.scrollHeight, 132)}px`;
+  }, [question]);
 
   const refresh = useCallback(async () => {
     const client = companionClient();
@@ -232,6 +263,18 @@ function SignedInCompanion({
     void askQuestion(question);
   };
 
+  const copyAnswer = async (message: ConversationMessage) => {
+    try {
+      await navigator.clipboard.writeText(companionDisplayText(message.content).replace(/\*\*|__/g, ""));
+      setCopiedMessageId(message.id);
+      window.setTimeout(() => setCopiedMessageId((current) => current === message.id ? null : current), 1600);
+    } catch {
+      setCopiedMessageId(null);
+    }
+  };
+
+  const lastAssistantId = [...messages].reverse().find((message) => message.role === "assistant")?.id;
+
   const manageMembership = async () => {
     const config = companionPublicConfig();
     if (!config) return;
@@ -251,42 +294,52 @@ function SignedInCompanion({
 
   return (
     <section className="companion-home">
-      <header className="companion-home-heading">
-        <div className="companion-status-row">
-          <span>{isZh ? "会员有效" : "Membership active"}</span>
-          <span>{state.memoryEnabled ? (isZh ? "自动记忆已开启" : "Automatic memory on") : (isZh ? "自动记忆已暂停" : "Automatic memory paused")}</span>
+      <header className={`companion-home-heading ${messages.length ? "is-compact" : ""}`}>
+        <div className="companion-session-summary">
+          <div className="companion-status-row">
+            <span>{isZh ? "会员有效" : "Membership active"}</span>
+            <span>{state.memoryEnabled ? (isZh ? "自动记忆" : "Memory on") : (isZh ? "记忆已暂停" : "Memory paused")}</span>
+          </div>
+          <p>{state.usage
+            ? (isZh ? `本月 ${state.usage.used_questions} 次 · 不限问答` : `${state.usage.used_questions} this month · unlimited`)
+            : (isZh ? "会员期内不限问答" : "Unlimited with membership")}</p>
         </div>
-        <h3>{isZh ? "从你真正关心的地方，慢慢问。" : "Begin with what genuinely matters to you."}</h3>
-        <p>{state.usage
-          ? (isZh ? `本月已对话 ${state.usage.used_questions} 次 · 会员期内不限问答` : `${state.usage.used_questions} conversations this month · unlimited with membership`)
-          : (isZh ? "会员期内不限问答" : "Unlimited questions with membership")}</p>
+        <nav className="companion-tools" aria-label={isZh ? "问道工具" : "Wendao tools"}>
+          <button type="button" onClick={() => setView("weekly")}>{isZh ? "本周回看" : "Weekly"}</button>
+          <button type="button" onClick={() => setView("memory")}>{isZh ? "记忆" : "Memory"}</button>
+          <button type="button" onClick={() => setView("account")}>{isZh ? "账号" : "Account"}</button>
+        </nav>
+        {messages.length === 0 ? <h3>{isZh ? "从真正关心的地方，慢慢问。" : "Begin with what genuinely matters."}</h3> : null}
       </header>
-      <nav className="companion-tools" aria-label={isZh ? "问道工具" : "Wendao tools"}>
-        <button type="button" onClick={() => setView("weekly")}>{isZh ? "本周回看" : "Weekly"}</button>
-        <button type="button" onClick={() => setView("memory")}>{isZh ? "记忆" : "Memory"}</button>
-        <button type="button" onClick={() => setView("account")}>{isZh ? "账号" : "Account"}</button>
-      </nav>
-      {initialQuestion && messages.length === 0 ? (
-        <div className="companion-pending-question">
-          <span>{isZh ? "你刚才想问" : "You wanted to ask"}</span>
-          <p>{initialQuestion}</p>
-        </div>
-      ) : null}
       <div className="companion-thread" ref={conversationRef}>
+        {initialQuestion && messages.length === 0 ? (
+          <div className="companion-pending-question">
+            <span>{isZh ? "你刚才想问" : "You wanted to ask"}</span>
+            <p>{initialQuestion}</p>
+          </div>
+        ) : null}
         {messages.length ? (
         <div className="companion-conversation" aria-live="polite">
           {messages.map((message) => (
             <article className={`is-${message.role}`} key={message.id}>
               <span>{message.role === "user" ? (isZh ? "你" : "You") : (isZh ? "问道同行" : "Wendao")}</span>
-              <p>{message.content ? companionDisplayText(message.content) : (phase === "slow"
+              <CompanionMessageContent text={message.content ? message.content : (phase === "slow"
                 ? (isZh ? "仍在认真整理，这次会多用一点时间…" : "Still working carefully—this one needs a little longer…")
                 : phase === "answering"
                   ? (isZh ? "正在组织回应…" : "Composing a response…")
-                  : (isZh ? "正在读这一章…" : "Reading this chapter…"))}</p>
+                  : (isZh ? "正在读这一章…" : "Reading this chapter…"))} />
               {message.status === "error" && message.retryQuestion ? (
                 <button type="button" onClick={() => void askQuestion(message.retryQuestion!)} disabled={asking}>
                   {isZh ? "重新回答" : "Try again"}
                 </button>
+              ) : null}
+              {message.role === "assistant" && message.id === lastAssistantId && message.content && !message.status ? (
+                <div className="companion-message-actions">
+                  <button type="button" onClick={() => void copyAnswer(message)}>
+                    {copiedMessageId === message.id ? (isZh ? "已复制" : "Copied") : (isZh ? "复制回应" : "Copy")}
+                  </button>
+                  <button type="button" onClick={() => questionRef.current?.focus()}>{isZh ? "继续追问" : "Follow up"}</button>
+                </div>
               ) : null}
             </article>
           ))}
@@ -319,11 +372,17 @@ function SignedInCompanion({
           <label htmlFor="companion-question">{isZh ? "此刻，你真正想问什么？" : "What do you genuinely want to ask now?"}</label>
           <div className="companion-question-control">
             <textarea
+              ref={questionRef}
               id="companion-question"
               maxLength={2000}
               rows={2}
               value={question}
               onChange={(event) => setQuestion(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key !== "Enter" || event.shiftKey || event.nativeEvent.isComposing) return;
+                event.preventDefault();
+                void askQuestion(question);
+              }}
               placeholder={isZh ? "写下一个处境、矛盾或选择…" : "Describe a situation, tension, or choice…"}
               disabled={asking}
             />
@@ -331,7 +390,7 @@ function SignedInCompanion({
           </div>
         </form>
         <small className="companion-compose-note">
-          {isZh ? "回答会结合本章与已保存的记忆；自动记忆可随时关闭。" : "Responses use this chapter and saved memories; automatic memory can be turned off anytime."}
+          {isZh ? "Enter 发送 · Shift+Enter 换行 · 回答结合本章与已保存的记忆。" : "Enter to send · Shift+Enter for a new line · grounded in this chapter and saved memories."}
         </small>
         <div className="companion-home-actions">
         {(!Capacitor.isNativePlatform() && state.entitlement?.source === "stripe")

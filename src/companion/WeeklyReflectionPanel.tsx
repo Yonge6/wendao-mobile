@@ -1,11 +1,47 @@
 import { useCallback, useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import {
+  CompanionApiError,
   generateWeeklyReflection,
   loadWeeklyReflection,
   type WeeklyReflection,
 } from "./api";
 import { companionPublicConfig } from "./client";
+
+function weeklyErrorMessage(error: unknown, isZh: boolean, action: "load" | "generate") {
+  const code = error instanceof CompanionApiError ? error.code : "";
+  const status = error instanceof CompanionApiError ? error.status : 0;
+  const message = error instanceof Error ? error.message : "";
+
+  if (code === "weekly_source_empty") {
+    return isZh
+      ? "本周还没有足够的有效对话。先完成一次与你真实处境有关的问答，再回来生成。"
+      : "There is not enough conversation from this week yet. Complete one grounded exchange, then return here.";
+  }
+  if (code === "subscription_required" || status === 402) {
+    return isZh
+      ? "当前账号没有可用的会员权益。恢复订阅后，本周回看会继续保留在同一账号中。"
+      : "This account does not currently have an active membership. Restore it to continue weekly reflection.";
+  }
+  if (status === 401 || status === 403 || /auth|session|token/i.test(code)) {
+    return isZh
+      ? "登录状态已经失效。请在“账号”中重新登录，再生成本周回看。"
+      : "Your sign-in has expired. Sign in again from Account, then create the weekly reflection.";
+  }
+  if (/weekly_ai|ai_unavailable|ai_invalid|stream/i.test(code)) {
+    return isZh
+      ? "AI 服务刚才没有完成生成；你的对话、记忆和会员状态都没有丢失。请稍后直接重试。"
+      : "The AI service did not finish this reflection. Your conversations, memories, and membership are safe; try again shortly.";
+  }
+  if (error instanceof TypeError || /network|fetch/i.test(message)) {
+    return isZh
+      ? "当前网络没有连接到问道服务。检查网络后重试，已保存的对话不会受影响。"
+      : "Wendao could not be reached on this network. Check the connection and try again; saved conversations are unaffected.";
+  }
+  return action === "load"
+    ? (isZh ? "暂时无法读取本周回看。服务没有返回有效结果，请稍后重试。" : "The service did not return a valid weekly reflection. Try again shortly.")
+    : (isZh ? "本周回看没有完成。服务没有返回完整内容，请稍后重试。" : "The weekly reflection did not finish. The service returned incomplete content; try again shortly.");
+}
 
 export default function WeeklyReflectionPanel({
   session,
@@ -33,8 +69,8 @@ export default function WeeklyReflectionPanel({
       const result = await loadWeeklyReflection(config.apiUrl, session.access_token);
       setWeekStart(result.weekStart);
       setReflection(result.reflection);
-    } catch {
-      setError(isZh ? "暂时无法读取本周回看。" : "This week's reflection is temporarily unavailable.");
+    } catch (nextError) {
+      setError(weeklyErrorMessage(nextError, isZh, "load"));
     } finally {
       setLoading(false);
     }
@@ -57,12 +93,14 @@ export default function WeeklyReflectionPanel({
             if (typeof payload.weekStart === "string") setWeekStart(payload.weekStart);
           },
           delta: ({ text }) => setDraft((current) => current + text),
-          error: ({ message }) => { throw new Error(message); },
+          error: ({ code, message }) => {
+            throw new CompanionApiError(code || "weekly_ai_unavailable", message || "Weekly reflection unavailable");
+          },
         },
       });
       await load();
     } catch (nextError) {
-      setError(nextError instanceof Error ? nextError.message : (isZh ? "本周回看暂时无法生成。" : "This week's reflection could not be generated."));
+      setError(weeklyErrorMessage(nextError, isZh, "generate"));
     } finally {
       setGenerating(false);
     }
