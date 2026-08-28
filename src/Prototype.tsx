@@ -19,6 +19,7 @@ import {
   ChatBubbleIcon,
   CheckIcon,
   ChevronRightIcon,
+  DownloadIcon,
   EnvelopeClosedIcon,
   HamburgerMenuIcon,
   InfoCircledIcon,
@@ -27,6 +28,7 @@ import {
   MoonIcon,
   PersonIcon,
   Share1Icon,
+  StarIcon,
   SunIcon,
 } from "@radix-ui/react-icons";
 import "@fontsource/noto-sans-sc/400.css";
@@ -41,6 +43,8 @@ import {
 import { chapters, type Chapter, type RelatedItem } from "./data/chapters";
 import type { ShareCardKind } from "./shareCard";
 import { initializeNativeShell, nativeImpact, runtimeSurface, syncNativeTheme } from "./native";
+import { WENDAO_APP_STORE_REVIEW_URL, WENDAO_APP_STORE_URL } from "./companion/plans";
+import { reviewStoreKit } from "./companion/storekit";
 
 const ShareCardPanel = lazy(() => import("./ShareCardPanel"));
 const CompanionPanel = lazy(() => import("./companion/CompanionPanel"));
@@ -827,6 +831,7 @@ type SideDrawerProps = {
   showSupport: boolean;
   onSupportOpen: () => void;
   onCompanionOpen: () => void;
+  onAppStoreAction: (action: "download" | "rate") => void;
 };
 
 function SideDrawer({
@@ -852,8 +857,10 @@ function SideDrawer({
   showSupport,
   onSupportOpen,
   onCompanionOpen,
+  onAppStoreAction,
 }: SideDrawerProps) {
   const isZh = language === "zh";
+  const surface = runtimeSurface();
   const profileComplete = Boolean(chart?.chartHash);
   const [profileEditing, setProfileEditing] = useState(false);
   const drawerScrollRef = useRef<HTMLDivElement>(null);
@@ -1068,6 +1075,30 @@ function SideDrawer({
                   </span>
                   <ChevronRightIcon />
                 </button>
+                {surface === "ios" ? (
+                  <button type="button" onClick={() => onAppStoreAction("rate")}>
+                    <span className="drawer-nav-icon"><StarIcon /></span>
+                    <span>
+                      <strong>{isZh ? "给 App 评分" : "Rate Wendao"}</strong>
+                      <small>{isZh ? "你的评价，让三慢问道继续变好" : "Your review helps Wendao keep growing"}</small>
+                    </span>
+                    <ChevronRightIcon />
+                  </button>
+                ) : surface === "web" ? (
+                  <a
+                    href={WENDAO_APP_STORE_URL}
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={() => onAppStoreAction("download")}
+                  >
+                    <span className="drawer-nav-icon"><DownloadIcon /></span>
+                    <span>
+                      <strong>{isZh ? "下载 App" : "Download the App"}</strong>
+                      <small>{isZh ? "离线阅读，在 iPhone 上继续慢慢问" : "Read offline and continue on iPhone"}</small>
+                    </span>
+                    <ChevronRightIcon />
+                  </a>
+                ) : null}
               </nav>
 
               {showSupport ? (
@@ -2255,7 +2286,7 @@ export default function Prototype() {
               {isZh ? "问道同行 · 登录后使用" : "Wendao Companion · sign in to use"}
             </small>
             <span className="composer-placeholder">
-              {isZh ? "问问这一章与你的关系…" : "Ask how this chapter relates to you…"}
+              {isZh ? "写下一个处境、矛盾或选择…" : "Describe a situation, tension, or choice…"}
             </span>
           </div>
           <span className="composer-submit" aria-hidden="true">
@@ -2391,6 +2422,12 @@ export default function Prototype() {
         showSupport={webSupportEnabled}
         onSupportOpen={() => setSupportOpen(true)}
         onCompanionOpen={openCompanion}
+        onAppStoreAction={(action) => {
+          trackEvent("app_store_action", { action, source: runtimeSurface() });
+          if (action === "rate") {
+            void reviewStoreKit().catch(() => window.location.assign(WENDAO_APP_STORE_REVIEW_URL));
+          }
+        }}
       />
       <CompanionDialog
         open={companionOpen}

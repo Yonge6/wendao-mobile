@@ -20,3 +20,4 @@ export const COMPANION_MEMBERSHIP = Object.freeze({
 });
 
 export const WENDAO_APP_STORE_URL = "https://apps.apple.com/us/app/wendao-daodejing/id6796945428";
+export const WENDAO_APP_STORE_REVIEW_URL = `${WENDAO_APP_STORE_URL}?action=write-review`;

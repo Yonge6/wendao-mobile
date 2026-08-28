@@ -449,6 +449,43 @@ test("keeps the external payment entry out of the native iOS surface", async ({ 
   await expect(page.getByRole("dialog", { name: "随喜相助" })).toHaveCount(0);
 });
 
+test("offers an App Store download on H5 and a rating action in the iOS app", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "打开更多功能" }).click();
+  const webDrawer = page.getByRole("dialog", { name: "你的空间" });
+  await expect(webDrawer.getByRole("link", { name: /下载 App/ })).toHaveAttribute(
+    "href",
+    "https://apps.apple.com/us/app/wendao-daodejing/id6796945428",
+  );
+  await expect(webDrawer.getByRole("button", { name: /给 App 评分/ })).toHaveCount(0);
+
+  await page.close();
+});
+
+test("shows only the rating action in the native iOS drawer", async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.assign(window, {
+      CapacitorCustomPlatform: { name: "ios" },
+      Capacitor: {
+        Plugins: {},
+        PluginHeaders: [{
+          name: "StatusBar",
+          methods: [
+            { name: "setStyle", rtype: "promise" },
+            { name: "setOverlaysWebView", rtype: "promise" },
+          ],
+        }],
+        nativePromise: () => Promise.resolve(),
+      },
+    });
+  });
+  await page.goto("/");
+  await page.getByRole("button", { name: "打开更多功能" }).click();
+  const drawer = page.getByRole("dialog", { name: "你的空间" });
+  await expect(drawer.getByRole("button", { name: /给 App 评分/ })).toBeVisible();
+  await expect(drawer.getByRole("link", { name: /下载 App/ })).toHaveCount(0);
+});
+
 test("About separates the textual lineage from claims of direct descent", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "打开更多功能" }).click();
@@ -647,10 +684,11 @@ test("opens account login as soon as the reading composer is clicked", async ({ 
   const composer = page.getByRole("button", { name: "打开我的问道并登录", exact: true });
   await expect(page.locator(".companion-dialog")).toBeHidden();
   await expect(page.getByText("问道同行 · 登录后使用", { exact: true })).toBeVisible();
-  await expect(composer).toContainText("问问这一章与你的关系…");
+  await expect(composer).toContainText("写下一个处境、矛盾或选择…");
 
   await page.getByRole("button", { name: "切换到英文", exact: true }).click();
   await expect(page.getByText("Wendao Companion · sign in to use", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Open My Wendao and sign in", exact: true })).toContainText("Describe a situation, tension, or choice…");
   await page.getByRole("button", { name: "Switch to Chinese", exact: true }).click();
 
   await composer.click();

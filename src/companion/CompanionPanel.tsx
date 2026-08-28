@@ -1,4 +1,5 @@
 import { FormEvent, type ReactNode, useCallback, useEffect, useRef, useState } from "react";
+import { GearIcon } from "@radix-ui/react-icons";
 import type { Session } from "@supabase/supabase-js";
 import CompanionAuth from "./CompanionAuth";
 import SubscriptionPanel from "./SubscriptionPanel";
@@ -28,7 +29,6 @@ type ConversationMessage = {
 
 type CompanionState = {
   entitlement: { status: string; source: string; expires_at: string | null } | null;
-  memoryEnabled: boolean;
 };
 
 function entitlementActive(entitlement: CompanionState["entitlement"]) {
@@ -96,10 +96,12 @@ function SignedInCompanion({
   const [phase, setPhase] = useState<"idle" | "preparing" | "answering" | "slow">("idle");
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
   const [view, setView] = useState<"conversation" | "memory" | "weekly" | "account">("conversation");
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const slowTimerRef = useRef<number | null>(null);
   const conversationRef = useRef<HTMLDivElement>(null);
   const questionRef = useRef<HTMLTextAreaElement>(null);
+  const settingsRef = useRef<HTMLDivElement>(null);
   const isZh = language === "zh";
 
   useEffect(() => {
@@ -110,6 +112,15 @@ function SignedInCompanion({
     abortRef.current?.abort();
     if (slowTimerRef.current !== null) window.clearTimeout(slowTimerRef.current);
   }, []);
+
+  useEffect(() => {
+    if (!settingsOpen) return;
+    const closeSettings = (event: PointerEvent) => {
+      if (!settingsRef.current?.contains(event.target as Node)) setSettingsOpen(false);
+    };
+    document.addEventListener("pointerdown", closeSettings);
+    return () => document.removeEventListener("pointerdown", closeSettings);
+  }, [settingsOpen]);
 
   useEffect(() => {
     const conversation = conversationRef.current;
@@ -128,18 +139,17 @@ function SignedInCompanion({
     const client = companionClient();
     if (!client) return;
     setAccessError("");
-    const [entitlementResult, accountResult] = await Promise.all([
-      client.from("wendao_entitlements").select("status,source,expires_at").eq("user_id", session.user.id).maybeSingle(),
-      client.from("wendao_accounts").select("memory_enabled").eq("user_id", session.user.id).maybeSingle(),
-    ]);
-    const firstError = entitlementResult.error || accountResult.error;
-    if (firstError) {
-      setAccessError(firstError.message);
+    const entitlementResult = await client
+      .from("wendao_entitlements")
+      .select("status,source,expires_at")
+      .eq("user_id", session.user.id)
+      .maybeSingle();
+    if (entitlementResult.error) {
+      setAccessError(entitlementResult.error.message);
       return;
     }
     setState({
       entitlement: entitlementResult.data,
-      memoryEnabled: accountResult.data?.memory_enabled ?? true,
     });
   }, [session.user.id]);
 
@@ -284,20 +294,44 @@ function SignedInCompanion({
 
   return (
     <section className="companion-home">
-      <header className={`companion-home-heading ${messages.length ? "is-compact" : ""}`}>
-        <div className="companion-session-summary">
-          <div className="companion-status-row">
-            <span>{isZh ? "会员有效" : "Membership active"}</span>
-            <span>{state.memoryEnabled ? (isZh ? "自动记忆" : "Memory on") : (isZh ? "记忆已暂停" : "Memory paused")}</span>
+      <div className="companion-settings" ref={settingsRef}>
+        <button
+          type="button"
+          aria-label={isZh ? "打开问道设置" : "Open Wendao settings"}
+          aria-expanded={settingsOpen}
+          aria-haspopup="menu"
+          onClick={() => setSettingsOpen((current) => !current)}
+        >
+          <GearIcon />
+        </button>
+        {settingsOpen ? (
+          <div className="companion-settings-menu" role="menu" aria-label={isZh ? "问道设置" : "Wendao settings"}>
+            {([
+              ["weekly", isZh ? "本周回看" : "Weekly reflection", isZh ? "看见最近留下的线索" : "Notice the threads from this week"],
+              ["memory", isZh ? "记忆" : "Memory", isZh ? "查看与管理自动记忆" : "Review and manage automatic memory"],
+              ["account", isZh ? "账号" : "Account", isZh ? "会员、数据与退出登录" : "Membership, data, and sign out"],
+            ] as const).map(([nextView, title, description]) => (
+              <button
+                type="button"
+                role="menuitem"
+                key={nextView}
+                onClick={() => {
+                  setSettingsOpen(false);
+                  setView(nextView);
+                }}
+              >
+                <strong>{title}</strong>
+                <small>{description}</small>
+              </button>
+            ))}
           </div>
-        </div>
-        <nav className="companion-tools" aria-label={isZh ? "问道工具" : "Wendao tools"}>
-          <button type="button" onClick={() => setView("weekly")}>{isZh ? "本周回看" : "Weekly"}</button>
-          <button type="button" onClick={() => setView("memory")}>{isZh ? "记忆" : "Memory"}</button>
-          <button type="button" onClick={() => setView("account")}>{isZh ? "账号" : "Account"}</button>
-        </nav>
-        {messages.length === 0 ? <h3>{isZh ? "从真正关心的地方，慢慢问。" : "Begin with what genuinely matters."}</h3> : null}
-      </header>
+        ) : null}
+      </div>
+      {messages.length === 0 ? (
+        <header className="companion-home-heading">
+          <h3>{isZh ? "从真正关心的地方，慢慢问。" : "Begin with what genuinely matters."}</h3>
+        </header>
+      ) : null}
       <div className="companion-thread" ref={conversationRef}>
         {initialQuestion && messages.length === 0 ? (
           <div className="companion-pending-question">

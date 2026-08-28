@@ -164,6 +164,9 @@ test("native StoreKit bridge purchases with appAccountToken and defers finish", 
   assert.match(swift, /purchase\(options: \[\.appAccountToken\(token\)\]\)/);
   assert.match(swift, /Transaction\.currentEntitlements/);
   assert.match(swift, /Transaction\.unfinished/);
+  assert.match(swift, /CAPPluginMethod\(name: "review"/);
+  assert.match(swift, /action=write-review/);
   assert.match(client, /await verifyAppleTransaction[\s\S]+await plugin\.finish/);
+  assert.match(client, /export async function reviewStoreKit/);
   assert.match(project, /WendaoStoreKitPlugin\.swift in Sources/);
 });

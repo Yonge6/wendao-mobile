@@ -24,7 +24,16 @@ test("conversation renders emphasis as typography and keeps the reading area dom
     /@media \(max-width: 720px\) \{[\s\S]*?\.companion-question-form textarea,[\s\S]*?\.companion-delete-confirmation input\s*\{[\s\S]*?font-size:\s*16px/,
   );
   assert.match(css, /\.companion-message-content strong/);
+  assert.match(css, /\.companion-message-actions\s*\{[^}]*justify-content:\s*flex-end/s);
+  assert.match(css, /\.companion-response-status\s*\{[^}]*text-align:\s*center/s);
   assert.match(css, /\.companion-home-actions:empty\s*\{[\s\S]*?display:\s*none/);
+  assert.doesNotMatch(css, /\.companion-compose-zone\s*\{[^}]*border-top:/s);
+  assert.doesNotMatch(panel, /companion-status-row/);
+  assert.doesNotMatch(panel, /会员有效/);
+  assert.match(panel, /aria-label=\{isZh \? "打开问道设置"/);
+  assert.match(panel, /role="menu"/);
+  assert.doesNotMatch(panel, /className="companion-tools"/);
+  assert.match(css, /\.companion-settings\s*\{[^}]*right:\s*64px/s);
 });
 
 test("conversation image sharing reuses the chapter poster and canonical QR flow", async () => {

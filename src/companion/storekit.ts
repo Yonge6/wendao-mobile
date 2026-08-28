@@ -24,6 +24,7 @@ type StoreKitPlugin = {
   restore(): Promise<{ transactions: Array<{ transactionId: string; signedTransaction: string }> }>;
   finish(input: { transactionId: string }): Promise<{ finished: boolean }>;
   manage(): Promise<void>;
+  review(): Promise<void>;
 };
 
 const nativeStoreKit = registerPlugin<StoreKitPlugin>("WendaoStoreKit");
@@ -97,4 +98,9 @@ export async function restoreStoreKit({
 export async function manageStoreKit(plugin: StoreKitPlugin = nativeStoreKit) {
   requireNative();
   await plugin.manage();
+}
+
+export async function reviewStoreKit(plugin: StoreKitPlugin = nativeStoreKit) {
+  requireNative();
+  await plugin.review();
 }

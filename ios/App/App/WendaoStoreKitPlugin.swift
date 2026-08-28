@@ -12,6 +12,7 @@ public class WendaoStoreKitPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "restore", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "finish", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "manage", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "review", returnType: CAPPluginReturnPromise),
     ]
 
     private let productIdentifiers = [
@@ -129,6 +130,22 @@ public class WendaoStoreKitPlugin: CAPPlugin, CAPBridgedPlugin {
                 call.resolve()
             } catch {
                 call.reject("Subscriptions could not be opened", "MANAGE_SUBSCRIPTION_FAILED")
+            }
+        }
+    }
+
+    @objc func review(_ call: CAPPluginCall) {
+        Task { @MainActor in
+            guard let url = URL(string: "itms-apps://itunes.apple.com/app/id6796945428?action=write-review") else {
+                call.reject("App Store review page is unavailable", "REVIEW_URL_UNAVAILABLE")
+                return
+            }
+            UIApplication.shared.open(url, options: [:]) { opened in
+                if opened {
+                    call.resolve()
+                } else {
+                    call.reject("App Store review page could not be opened", "REVIEW_OPEN_FAILED")
+                }
             }
         }
     }
