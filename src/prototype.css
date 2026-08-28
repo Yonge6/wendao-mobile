@@ -2260,7 +2260,7 @@ textarea {
 .companion-settings {
   position: absolute;
   z-index: 4;
-  top: calc(env(safe-area-inset-top, 0px) + 12px);
+  top: calc(env(safe-area-inset-top, 0px) + 15px);
   right: 64px;
 }
 
@@ -4198,7 +4198,7 @@ textarea {
   }
 
   .companion-settings {
-    top: calc(env(safe-area-inset-top, 0px) + 9px);
+    top: calc(env(safe-area-inset-top, 0px) + 12px);
     right: 62px;
   }
 

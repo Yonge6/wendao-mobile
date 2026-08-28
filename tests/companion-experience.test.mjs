@@ -34,6 +34,7 @@ test("conversation renders emphasis as typography and keeps the reading area dom
   assert.match(panel, /role="menu"/);
   assert.doesNotMatch(panel, /className="companion-tools"/);
   assert.match(css, /\.companion-settings\s*\{[^}]*right:\s*64px/s);
+  assert.match(css, /\.companion-settings\s*\{[^}]*top:\s*calc\(env\(safe-area-inset-top, 0px\) \+ 15px\)/s);
 });
 
 test("conversation image sharing reuses the chapter poster and canonical QR flow", async () => {
