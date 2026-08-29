@@ -10,7 +10,7 @@ const image2Background = path.join(finalRoot, "image2-master-background.png");
 const copy = {
   "zh-Hans": [
     ["AI 问道", "从真实处境开始"],
-    ["完整 81 章", "免费离线阅读"],
+    ["今日一章", "再自选 10 章免费"],
     ["帛书乙本", "底本校读"],
     ["每章三条启发", "落到当下生活"],
     ["目录与搜索", "随时回到原典"],
@@ -18,7 +18,7 @@ const copy = {
   ],
   "en-US": [
     ["Ask what matters", "with Wendao AI"],
-    ["All 81 chapters", "available offline"],
+    ["Today’s chapter", "+ 10 you choose free"],
     ["A Silk B", "based reading"],
     ["Three insights", "for daily life"],
     ["Search the text", "return to the source"],

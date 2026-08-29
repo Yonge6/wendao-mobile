@@ -9,6 +9,26 @@ const chapter8Insights = chapter8.zh.related.find((item) => item.title === "对�
 const chapter8NumberedInsights = chapter8Insights.points!
   .map((point, index) => `${String(index + 1).padStart(2, "0")}  ${point}`);
 
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    window.localStorage.setItem("wendao-free-chapters-v1", JSON.stringify([1, 8, 21, 64]));
+  });
+});
+
+test("keeps a locked chapter free only after the reader confirms the choice", async ({ page }) => {
+  await page.goto("/?chapter=2&lang=zh");
+
+  const gate = page.getByTestId("reading-access-gate");
+  await expect(gate).toBeVisible();
+  await expect(gate.getByRole("button", { name: /免费保留这一章/ })).toContainText("还可选择 6 章");
+  await expect(gate.getByRole("link", { name: /前往 App Store 下载/ })).toHaveAttribute("href", /apps\.apple\.com/);
+  await expect(page.locator("article.chapter")).toHaveCount(0);
+
+  await gate.getByRole("button", { name: /免费保留这一章/ }).click();
+  await expect(page.locator("article.chapter-current")).toHaveCount(1);
+  await expect.poll(async () => page.evaluate(() => JSON.parse(window.localStorage.getItem("wendao-free-chapters-v1") ?? "[]"))).toContain(2);
+});
+
 const chartSnapshot = {
   schemaVersion: "1.0",
   engineVersion: "1.0.0",
@@ -74,14 +94,20 @@ test("refreshes progressive reading after language and text-size changes", async
   await page.route("https://pluto-human-design-api.vercel.app/**", async (route) => {
     await route.fulfill({ json: { data: { saved: true }, error: null } });
   });
-  await page.goto("/");
-
+  await page.goto("/?chapter=8&lang=zh");
   const reading = page.getByTestId("mobile-scroll");
   await expect(page.getByText("本章已读完", { exact: true })).toHaveCount(1);
   await reading.evaluate((element) => {
     element.scrollTop = element.scrollHeight;
   });
   await expect(page.getByText("下一章正在展开", { exact: true })).toBeVisible();
+  await expect.poll(async () => (
+    await page.locator("article.chapter").count() === 2
+      || await page.getByTestId("reading-access-gate").isVisible()
+  )).toBe(true);
+  if (await page.getByTestId("reading-access-gate").isVisible()) {
+    await page.getByTestId("reading-access-gate").getByRole("button", { name: /免费保留这一章/ }).click();
+  }
   await expect(page.locator("article.chapter")).toHaveCount(2);
   await expect(page.getByText("下一章已展开", { exact: true })).toBeVisible();
 
@@ -543,17 +569,30 @@ test("covers all 81 chapters through contents, chance, and progressive reading",
   expect(ids).toEqual(Array.from({ length: 81 }, (_, index) => index + 1));
 
   await page.locator('.directory-item[data-chapter-id="80"]').click();
+  await page.getByTestId("reading-access-gate").getByRole("button", { name: /免费保留这一章/ }).click();
   await expect(page.locator("article.chapter")).toHaveCount(1);
   await expect(page.locator("article.chapter")).toHaveAttribute("data-chapter-id", "80");
   await expect(dailyRecommendation).toHaveCount(0);
 
   await page.getByRole("button", { name: "偶遇一章", exact: true }).click();
+  if (await page.getByTestId("reading-access-gate").isVisible()) {
+    await page.getByTestId("reading-access-gate").getByRole("button", { name: /免费保留这一章/ }).click();
+  }
   await expect(page.locator("article.chapter")).toHaveCount(1);
   await expect(page.locator('article.chapter[data-chapter-id="80"]')).toHaveCount(0);
   await expect(dailyRecommendation).toHaveCount(0);
 
+  await page.goto("/?chapter=8&lang=zh");
   const reading = page.getByTestId("mobile-scroll");
   await reading.evaluate((element) => { element.scrollTop = element.scrollHeight; });
+  await expect(page.getByText("下一章正在展开", { exact: true })).toBeVisible();
+  await expect.poll(async () => (
+    await page.locator("article.chapter").count() === 2
+      || await page.getByTestId("reading-access-gate").isVisible()
+  )).toBe(true);
+  if (await page.getByTestId("reading-access-gate").isVisible()) {
+    await page.getByTestId("reading-access-gate").getByRole("button", { name: /免费保留这一章/ }).click();
+  }
   await expect(page.locator("article.chapter")).toHaveCount(2);
 });
 
@@ -612,6 +651,13 @@ test("representative supplied chapters expose accessible reading text, copy clea
     for (const id of [1, 16, 38, 41, 67, 81]) {
       await page.getByRole("button", { name: "目录", exact: true }).click();
       await page.locator(`.directory-item[data-chapter-id="${id}"]`).click();
+      await expect.poll(async () => (
+        await page.locator(`.chapter-current[data-chapter-id="${id}"]`).isVisible()
+          || await page.getByTestId("reading-access-gate").isVisible()
+      )).toBe(true);
+      if (await page.getByTestId("reading-access-gate").isVisible()) {
+        await page.getByTestId("reading-access-gate").getByRole("button", { name: /免费保留这一章/ }).click();
+      }
       const chapter = page.locator(`.chapter-current[data-chapter-id="${id}"]`);
       await expect(chapter.getByRole("heading", { name: "对我们的启发", exact: true })).toBeVisible();
       const lineLabels = await chapter.locator(".verse-line").evaluateAll((lines) => lines.map((line) => line.getAttribute("aria-label")));

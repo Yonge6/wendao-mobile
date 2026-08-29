@@ -193,6 +193,7 @@ test("renders distinct latter-half guidance in the real life-manual drawer", asy
   async function openDetailedReading(targetPage: typeof page, snapshot: ReturnType<typeof storedSnapshot>) {
     await targetPage.addInitScript((storedChart) => {
       window.localStorage.setItem("wendao-chart-snapshot", JSON.stringify(storedChart));
+      window.localStorage.setItem("wendao-free-chapters-v1", JSON.stringify([64]));
     }, snapshot);
     await targetPage.goto("/?chapter=64&lang=zh");
     await targetPage.getByRole("button", { name: "打开更多功能" }).click();

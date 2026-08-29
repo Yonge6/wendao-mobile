@@ -45,6 +45,15 @@ import type { ShareCardKind } from "./shareCard";
 import { initializeNativeShell, nativeImpact, runtimeSurface, syncNativeTheme } from "./native";
 import { WENDAO_APP_STORE_REVIEW_URL, WENDAO_APP_STORE_URL } from "./companion/plans";
 import { reviewStoreKit } from "./companion/storekit";
+import { loadStoreKitEntitlements } from "./companion/storekit";
+import {
+  chapterIsReadable,
+  FREE_CHAPTER_LIMIT,
+  freeChapterSlotsRemaining,
+  keepFreeChapter,
+  loadFreeChapterIds,
+  READING_ACCESS_CHANGED_EVENT,
+} from "./readingAccess";
 
 const ShareCardPanel = lazy(() => import("./ShareCardPanel"));
 const CompanionPanel = lazy(() => import("./companion/CompanionPanel"));
@@ -835,6 +844,59 @@ function CompanionDialog({
         </div>
       </section>
     </div>
+  );
+}
+
+function ReadingAccessGate({
+  chapter,
+  language,
+  remaining,
+  onKeepFree,
+  onOpenMembership,
+}: {
+  chapter: Chapter;
+  language: Language;
+  remaining: number;
+  onKeepFree: () => void;
+  onOpenMembership: () => void;
+}) {
+  const isZh = language === "zh";
+  const native = runtimeSurface() === "ios";
+  return (
+    <article className="reading-access-gate" data-testid="reading-access-gate" data-chapter-id={chapter.id}>
+      <span className="reading-access-icon" aria-hidden="true"><LockClosedIcon /></span>
+      <p className="reading-access-kicker">{isZh ? `今本第 ${chapter.id} 章` : `Received chapter ${chapter.id}`}</p>
+      <h1>{chapter[language].title}</h1>
+      <p className="reading-access-intro">{isZh
+        ? "今日一章始终免费；你还可以把 10 章留给自己，永久阅读。"
+        : "Today’s chapter is always free. You can also keep 10 chapters of your choice forever."}</p>
+      {remaining > 0 ? (
+        <button className="reading-access-free" type="button" onClick={onKeepFree}>
+          <strong>{isZh ? "免费保留这一章" : "Keep this chapter free"}</strong>
+          <small>{isZh ? `还可选择 ${remaining} 章；确认后永久保留` : `${remaining} free choices remain; this choice is permanent`}</small>
+        </button>
+      ) : (
+        <p className="reading-access-used">{isZh ? "10 个免费章节已经选完。" : "You have chosen all 10 free chapters."}</p>
+      )}
+      <div className="reading-access-options">
+        <button type="button" onClick={onOpenMembership}>
+          <strong>{isZh ? "订阅问道同行" : "Subscribe to Wendao Companion"}</strong>
+          <small>{isZh ? "解锁 81 章，并使用不限次数 AI 问道" : "Unlock all 81 chapters and unlimited Wendao AI"}</small>
+        </button>
+        <button type="button" onClick={onOpenMembership}>
+          <strong>{isZh ? "永久解锁全部章节" : "Unlock every chapter forever"}</strong>
+          <small>{isZh ? "一次买断，不含 AI；价格以 App Store 显示为准" : "One-time purchase without AI; see the localized App Store price"}</small>
+        </button>
+      </div>
+      {!native ? (
+        <a className="reading-access-app-link" href={WENDAO_APP_STORE_URL} target="_blank" rel="noreferrer">
+          {isZh ? "前往 App Store 下载" : "Download on the App Store"}<span aria-hidden="true">↗</span>
+        </a>
+      ) : null}
+      <small className="reading-access-footnote">{isZh
+        ? "订阅和买断均由 App Store 安全处理，可恢复购买。"
+        : "Subscriptions and the lifetime unlock are securely handled by the App Store and can be restored."}</small>
+    </article>
   );
 }
 
@@ -1780,6 +1842,9 @@ export default function Prototype() {
   const [videoChannelOpen, setVideoChannelOpen] = useState(false);
   const [supportOpen, setSupportOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(isAdminLocation);
+  const [freeChapterIds, setFreeChapterIds] = useState(loadFreeChapterIds);
+  const [hasFullReadingAccess, setHasFullReadingAccess] = useState(false);
+  const [readingAccessReady, setReadingAccessReady] = useState(runtimeSurface() !== "ios");
   const clientId = useRef(stableId(CLIENT_ID_KEY));
   const sessionId = useRef(window.crypto.randomUUID());
   const appOpenTracked = useRef(false);
@@ -1788,6 +1853,7 @@ export default function Prototype() {
   const chapterOpeningTimerRef = useRef<number | null>(null);
   const initialSectionHandledRef = useRef(false);
   const orderedChapters = useMemo(() => reorderFrom(chapterId), [chapterId]);
+  const todayChapterId = dailyChapterId(recommendationDate);
   const isZh = language === "zh";
   const activeChapter = chapters.find((chapter) => chapter.id === chapterId) ?? chapters[0];
   const shareChapter = chapters.find((chapter) => chapter.id === shareChapterId) ?? activeChapter;
@@ -1800,6 +1866,16 @@ export default function Prototype() {
       : chapters,
     [normalizedDirectoryQuery],
   );
+  const canReadChapter = (id: number) => chapterIsReadable({
+    chapterId: id,
+    dailyChapterId: todayChapterId,
+    freeChapterIds,
+    hasFullAccess: hasFullReadingAccess,
+  });
+  const visibleCandidates = orderedChapters.slice(0, visibleChapterCount);
+  const firstLockedIndex = visibleCandidates.findIndex((chapter) => !canReadChapter(chapter.id));
+  const displayedChapters = firstLockedIndex < 0 ? visibleCandidates : visibleCandidates.slice(0, firstLockedIndex);
+  const lockedChapter = firstLockedIndex < 0 ? null : visibleCandidates[firstLockedIndex];
 
   const trackEvent = (eventName: string, metadata: Record<string, string | number> = {}, eventChapter = chapterId) => {
     const googleTag = (window as typeof window & { gtag?: (...args: unknown[]) => void }).gtag;
@@ -1832,6 +1908,28 @@ export default function Prototype() {
 
   useEffect(() => {
     void initializeNativeShell(theme);
+  }, []);
+
+  useEffect(() => {
+    if (runtimeSurface() !== "ios") return;
+    let active = true;
+    const refresh = async () => {
+      try {
+        const entitlements = await loadStoreKitEntitlements();
+        if (active) setHasFullReadingAccess(entitlements.length > 0);
+      } catch {
+        if (active) setHasFullReadingAccess(false);
+      } finally {
+        if (active) setReadingAccessReady(true);
+      }
+    };
+    void refresh();
+    const handleChange = () => void refresh();
+    window.addEventListener(READING_ACCESS_CHANGED_EVENT, handleChange);
+    return () => {
+      active = false;
+      window.removeEventListener(READING_ACCESS_CHANGED_EVENT, handleChange);
+    };
   }, []);
 
   useEffect(() => {
@@ -1917,6 +2015,13 @@ export default function Prototype() {
     setDirectoryFocusRequested(false);
     trackEvent("chapter_view", { source: "directory" }, id);
     scrollReadingToTop();
+  };
+
+  const keepCurrentChapterFree = (id: number) => {
+    const next = keepFreeChapter(id);
+    setFreeChapterIds(next);
+    nativeImpact("medium");
+    trackEvent("free_chapter_kept", { remaining: freeChapterSlotsRemaining(next) }, id);
   };
 
   const meetAChapter = () => {
@@ -2104,7 +2209,9 @@ export default function Prototype() {
             {isZh ? "真实自己，流动人生" : "True to yourself. Flow with life."}
           </p>
 
-          {orderedChapters.slice(0, visibleChapterCount).map((chapter, chapterIndex) => {
+          {!readingAccessReady && !canReadChapter(chapterId) ? (
+            <div className="reading-access-loading" role="status">{isZh ? "正在确认阅读权益…" : "Checking reading access…"}</div>
+          ) : displayedChapters.map((chapter, chapterIndex) => {
             const copy = chapter[language];
             const verse = isZh ? chapter.zh.reconstructedVerse : chapter.en.verse;
             const pinyin = isZh ? chapter.zh.pinyin : undefined;
@@ -2281,7 +2388,17 @@ export default function Prototype() {
             );
           })}
 
-          {visibleChapterCount < orderedChapters.length ? (
+          {readingAccessReady && lockedChapter ? (
+            <ReadingAccessGate
+              chapter={lockedChapter}
+              language={language}
+              remaining={freeChapterSlotsRemaining(freeChapterIds)}
+              onKeepFree={() => keepCurrentChapterFree(lockedChapter.id)}
+              onOpenMembership={openCompanion}
+            />
+          ) : null}
+
+          {!lockedChapter && visibleChapterCount < orderedChapters.length ? (
             <>
               <div className="chapter-load-trigger" role="status">
                 <small>{isZh ? "本章已读完" : "End of this chapter"}</small>
@@ -2370,10 +2487,11 @@ export default function Prototype() {
         <div className="directory-list">
           {directoryChapters.map((chapter) => {
             const copy = chapter[language];
+            const readable = canReadChapter(chapter.id);
             return (
               <button
                 type="button"
-                className={chapter.id === chapterId ? "directory-item is-current" : "directory-item"}
+                className={`${chapter.id === chapterId ? "directory-item is-current" : "directory-item"} ${readable ? "" : "is-locked"}`.trim()}
                 key={chapter.id}
                 data-chapter-id={chapter.id}
                 onClick={() => selectChapter(chapter.id)}
@@ -2383,7 +2501,9 @@ export default function Prototype() {
                   <strong>{copy.title}</strong>
                   <small>{isZh ? `今本第 ${chapter.id} 章` : `Received chapter ${chapter.id}`}</small>
                 </span>
-                <span className="directory-arrow" aria-hidden="true">→</span>
+                {readable
+                  ? <span className="directory-arrow" aria-hidden="true">→</span>
+                  : <LockClosedIcon className="directory-lock" aria-label={isZh ? "未解锁" : "Locked"} />}
               </button>
             );
           })}

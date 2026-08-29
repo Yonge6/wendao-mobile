@@ -24,12 +24,14 @@ test("App Store names and subtitles lead with Wendao AI within Apple limits", ()
   assert.ok(chineseSubtitle.length <= 30);
 });
 
-test("metadata presents AI as the major update without hiding free offline reading", () => {
+test("metadata presents AI as the major update and discloses the reading limits", () => {
   assert.match(english, /Not generic chat/);
-  assert.match(english, /All 81 chapters remain free and offline/);
+  assert.match(english, /Today’s chapter and 10 chapters you choose are free/);
+  assert.match(english, /Unlock All Chapters Forever/);
   assert.match(english, /biggest update yet/);
   assert.match(chinese, /不是通用聊天/);
-  assert.match(chinese, /完整 81 章仍可免费离线阅读/);
+  assert.match(chinese, /今日一章与自选 10 章免费/);
+  assert.match(chinese, /永久解锁全部章节/);
   assert.match(chinese, /迄今最大的更新/);
   assert.match(index, /三慢问道 AI · 以《道德经》回应真实处境/);
 });

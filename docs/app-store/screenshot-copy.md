@@ -5,7 +5,7 @@
 | 序号 | 简体中文标题 | English title | 真实界面重点 |
 | --- | --- | --- | --- |
 | 01 | AI 问道，从真实处境开始 | Ask what matters with Wendao AI | 已登录会员的真实章节对话；问题、章节依据、回应与输入框 |
-| 02 | 完整 81 章，免费离线阅读 | All 81 chapters, available offline | 第八章原文、拼音与离线阅读结构 |
+| 02 | 今日一章 + 自选 10 章免费 | Today + 10 chapters you choose | 真实锁定章节页，展示免费保留、订阅和永久解锁入口 |
 | 03 | 帛书乙本底本校读 | A Silk B based reading | 乙本转写、校读正文与版本说明 |
 | 04 | 每章三条启发，落到当下生活 | Three insights for daily life | 与你有关、三条详细启发 |
 | 05 | 目录与搜索，随时回到原典 | Search the text, return to the source | 目录与全文搜索 |

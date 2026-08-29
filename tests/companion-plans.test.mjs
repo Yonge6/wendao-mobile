@@ -16,6 +16,12 @@ test("locks the approved monthly and annual prices", () => {
     usd: 199.99,
     interval: "year",
   });
+  assert.deepEqual(COMPANION_PLANS.lifetime, {
+    id: "wendao_reading_lifetime",
+    cny: 198,
+    usd: 39.99,
+    interval: "lifetime",
+  });
 });
 
 test("membership has no trial and unlimited questions", () => {

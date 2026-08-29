@@ -795,6 +795,133 @@ textarea {
   transition: border-color 300ms ease, box-shadow 300ms ease, background-color 300ms ease;
 }
 
+.reading-access-loading {
+  display: grid;
+  min-height: 52vh;
+  place-items: center;
+  color: var(--ink-soft);
+  font: 12px/1.7 var(--sans);
+}
+
+.reading-access-gate {
+  width: min(100%, 620px);
+  min-height: calc(100dvh - 190px);
+  margin: 34px auto 60px;
+  padding: clamp(28px, 6vw, 54px);
+  border: 1px solid color-mix(in srgb, var(--gold) 34%, transparent);
+  border-radius: 26px;
+  background:
+    radial-gradient(circle at 90% 6%, color-mix(in srgb, var(--gold) 13%, transparent), transparent 38%),
+    color-mix(in srgb, var(--paper) 82%, transparent);
+  box-shadow: 0 24px 70px color-mix(in srgb, var(--shadow-color) 48%, transparent);
+  color: var(--ink);
+  text-align: center;
+}
+
+.reading-access-icon {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  margin: 0 auto 18px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--gold) 48%, transparent);
+  border-radius: 50%;
+  color: var(--gold);
+}
+
+.reading-access-icon svg { width: 18px; height: 18px; }
+
+.reading-access-kicker {
+  margin: 0 0 8px;
+  color: var(--gold);
+  font: 10px/1.4 var(--sans);
+  letter-spacing: .12em;
+}
+
+.reading-access-gate h1 {
+  margin: 0;
+  font-size: clamp(28px, 7vw, 46px);
+  font-weight: 500;
+  letter-spacing: .06em;
+}
+
+.reading-access-intro {
+  max-width: 440px;
+  margin: 16px auto 24px;
+  color: var(--ink-soft);
+  font: 13px/1.85 var(--sans);
+}
+
+.reading-access-free,
+.reading-access-options button {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: 5px;
+  padding: 15px 18px;
+  border-radius: 16px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.reading-access-free {
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.reading-access-free strong,
+.reading-access-options strong { font: 600 14px/1.45 var(--sans); }
+.reading-access-free small { color: color-mix(in srgb, var(--paper) 75%, transparent); }
+.reading-access-free small,
+.reading-access-options small { font: 10px/1.55 var(--sans); }
+
+.reading-access-used {
+  margin: 0;
+  padding: 12px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--gold) 8%, transparent);
+  color: var(--gold);
+  font: 12px/1.6 var(--sans);
+}
+
+.reading-access-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.reading-access-options button {
+  min-height: 108px;
+  border: 1px solid color-mix(in srgb, var(--gold) 32%, transparent);
+  background: var(--field-surface);
+  color: var(--ink);
+}
+
+.reading-access-options small { color: var(--ink-soft); }
+
+.reading-access-app-link {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 12px;
+  padding: 0 18px;
+  border: 1px solid color-mix(in srgb, var(--gold) 38%, transparent);
+  border-radius: 999px;
+  color: var(--ink);
+  font: 600 12px/1 var(--sans);
+  text-decoration: none;
+}
+
+.reading-access-footnote {
+  display: block;
+  margin-top: 16px;
+  color: var(--ink-soft);
+  font: 9px/1.6 var(--sans);
+}
+
 .chapter-load-trigger::before,
 .chapter-load-trigger::after {
   position: absolute;
@@ -1586,6 +1713,17 @@ textarea {
   font-family: var(--sans);
 }
 
+.directory-lock {
+  width: 13px;
+  height: 13px;
+  color: var(--gold);
+  opacity: .72;
+}
+
+.directory-item.is-locked .directory-copy {
+  opacity: .72;
+}
+
 .ai-response {
   padding-bottom: 30px;
 }
@@ -2174,6 +2312,11 @@ textarea {
 .companion-plans button.is-featured {
   border-color: color-mix(in srgb, var(--gold) 58%, transparent);
   background: color-mix(in srgb, var(--gold) 8%, var(--field-surface));
+}
+
+.companion-plans button.is-lifetime {
+  grid-column: 1 / -1;
+  min-height: 102px;
 }
 
 .companion-plans button.is-selected {
@@ -4305,6 +4448,15 @@ textarea {
     padding-left: 19px;
     padding-right: 19px;
   }
+
+  .reading-access-gate {
+    min-height: calc(100dvh - 150px);
+    margin-top: 18px;
+    padding: 28px 20px;
+    border-radius: 22px;
+  }
+
+  .reading-access-options { grid-template-columns: 1fr; }
 
   .section-layout {
     grid-template-columns: 50px minmax(0, 1fr);

@@ -9,6 +9,7 @@ public class WendaoStoreKitPlugin: CAPPlugin, CAPBridgedPlugin {
     public let jsName = "WendaoStoreKit"
     public let pluginMethods: [CAPPluginMethod] = [
         CAPPluginMethod(name: "products", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "entitlements", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "purchase", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "restore", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "finish", returnType: CAPPluginReturnPromise),
@@ -20,6 +21,7 @@ public class WendaoStoreKitPlugin: CAPPlugin, CAPBridgedPlugin {
     private let productIdentifiers = [
         "com.yonge6.wendao.companion.monthly",
         "com.yonge6.wendao.companion.annual",
+        "com.yonge6.wendao.reading.lifetime",
     ]
 
     @objc func products(_ call: CAPPluginCall) {
@@ -38,6 +40,22 @@ public class WendaoStoreKitPlugin: CAPPlugin, CAPBridgedPlugin {
             } catch {
                 call.reject("App Store products are temporarily unavailable", "STORE_PRODUCTS_UNAVAILABLE")
             }
+        }
+    }
+
+    @objc func entitlements(_ call: CAPPluginCall) {
+        Task {
+            var values: [[String: String]] = []
+            for await result in Transaction.currentEntitlements {
+                guard case .verified(let transaction) = result,
+                      productIdentifiers.contains(transaction.productID) else { continue }
+                var value = ["productId": transaction.productID]
+                if let expirationDate = transaction.expirationDate {
+                    value["expiresAt"] = ISO8601DateFormatter().string(from: expirationDate)
+                }
+                values.append(value)
+            }
+            call.resolve(["entitlements": values])
         }
     }
 
@@ -91,6 +109,7 @@ public class WendaoStoreKitPlugin: CAPPlugin, CAPBridgedPlugin {
                           productIdentifiers.contains(transaction.productID) else { continue }
                     transactions.append([
                         "transactionId": String(transaction.id),
+                        "productId": transaction.productID,
                         "signedTransaction": result.jwsRepresentation,
                     ])
                 }

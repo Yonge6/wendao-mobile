@@ -184,22 +184,34 @@ async function captureLocale(browser, locale) {
   });
   const page = await context.newPage();
   await page.addInitScript(() => {
+    Object.assign(window, {
+      CapacitorCustomPlatform: { name: "ios" },
+      Capacitor: {
+        Plugins: {},
+        PluginHeaders: [],
+        nativePromise: () => Promise.resolve(),
+      },
+    });
     if (sessionStorage.getItem("wendao-app-store-capture-ready")) return;
     localStorage.clear();
     sessionStorage.clear();
+    localStorage.setItem("wendao-free-chapters-v1", "[8]");
     sessionStorage.setItem("wendao-app-store-capture-ready", "true");
   });
   const screenshotUrl = new URL(baseUrl);
-  screenshotUrl.searchParams.set("chapter", "8");
+  screenshotUrl.searchParams.set("chapter", "9");
   screenshotUrl.searchParams.set("lang", locale);
   await page.goto(screenshotUrl.toString(), { waitUntil: "networkidle" });
-  await page.locator("[data-chapter-id='8']").first().waitFor();
-
-  if (locale === "en") await page.getByText("Chapter 8", { exact: false }).first().waitFor();
-
-  await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
+  await page.getByTestId("reading-access-gate").waitFor();
   await page.waitForTimeout(180);
   await screenshot(page, locale, shots[locale][0]);
+
+  const readingUrl = new URL(baseUrl);
+  readingUrl.searchParams.set("chapter", "8");
+  readingUrl.searchParams.set("lang", locale);
+  await page.goto(readingUrl.toString(), { waitUntil: "networkidle" });
+  await page.locator("[data-chapter-id='8']").first().waitFor();
+  if (locale === "en") await page.getByText("Chapter 8", { exact: false }).first().waitFor();
 
   await scrollSection(page, ".transcription-layer");
   await screenshot(page, locale, shots[locale][1]);
