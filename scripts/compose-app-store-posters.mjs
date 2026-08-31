@@ -84,7 +84,7 @@ try {
           </style></head>
           <body><main class="poster">
             <header class="top">
-              <div class="brand">${locale === "zh-Hans" ? "三慢问道 AI · WENDAO" : "WENDAO AI · DAODEJING"}</div>
+              <div class="brand">${locale === "zh-Hans" ? "三慢问道 AI · 道德经" : "WENDAO AI · DAODEJING"}</div>
               <span class="count">${String(index + 1).padStart(2, "0")} / 06</span>
               <h1><span>${lineOne}</span><span>${lineTwo}</span></h1>
             </header>

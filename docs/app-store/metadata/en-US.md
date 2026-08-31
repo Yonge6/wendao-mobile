@@ -1,6 +1,6 @@
-# Wendao AI · App Store English metadata
+# Wendao AI: Daodejing · App Store English metadata
 
-- App name: `Wendao AI: Tao Companion`
+- App name: `Wendao AI: Daodejing`
 - Subtitle: `Reflect with the Daodejing`
 - Primary category: `Lifestyle`
 - Secondary category: none
@@ -47,6 +47,6 @@ True to yourself. Flow with life.
 
 `Laozi,Taoism,philosophy,reflection,meditation,classics,pinyin,wisdom,life,journal`
 
-## What's New in Version 1.3
+## What's New in Version 1.4
 
-This is Wendao’s biggest update yet: Wendao AI becomes a long-term reflection companion after each chapter. Today’s recommended chapter is always free, and you can choose 10 chapters to keep forever. A Wendao Companion membership unlocks all 81 chapters and unlimited AI; a separate one-time purchase unlocks complete reading forever. Version 1.3 also redesigns conversation, improves launch, and adds a clear save-to-Photos flow for share images.
+Wendao AI: Daodejing now makes its classical foundation clear in the name. It reflects with the Daodejing chapter you are reading, first understanding the situation you actually face and then offering one grounded response. Version 1.4 also updates the global App Store presentation while retaining today’s free chapter, 10 chapters you choose, all 81 chapters, Wendao AI, automatic memory, weekly reflection, and share-image saving.
