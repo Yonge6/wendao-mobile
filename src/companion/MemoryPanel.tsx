@@ -74,6 +74,10 @@ export default function MemoryPanel({
 
   const resolve = async (memoryId: string) => {
     if (!config || saving) return;
+    const confirmed = window.confirm(isZh
+      ? "确认不再使用这条记忆？之后的回答不会再参考它，历史对话不会被删除。"
+      : "Stop using this memory? Future answers will no longer refer to it, and your conversation history will not be deleted.");
+    if (!confirmed) return;
     setSaving(true);
     try {
       await setCompanionMemoryStatus(config.apiUrl, session.access_token, memoryId, "resolved");
@@ -121,7 +125,7 @@ export default function MemoryPanel({
           <article className={memory.status !== "active" ? "is-inactive" : ""} key={memory.id}>
             <span>{LABELS[language][memory.kind]}</span>
             <p>{memory.summary}</p>
-            {memory.status === "active" ? <button type="button" disabled={saving} onClick={() => void resolve(memory.id)}>{isZh ? "这件事已过去" : "This has passed"}</button> : <small>{isZh ? "已结束" : "Resolved"}</small>}
+            {memory.status === "active" ? <button type="button" disabled={saving} onClick={() => void resolve(memory.id)}>{isZh ? "不再用于后续回答" : "Stop using in future answers"}</button> : <small>{isZh ? "已停止使用" : "No longer used"}</small>}
           </article>
         ))}
       </div>

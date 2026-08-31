@@ -100,7 +100,6 @@ function SignedInCompanion({
   const abortRef = useRef<AbortController | null>(null);
   const slowTimerRef = useRef<number | null>(null);
   const conversationRef = useRef<HTMLDivElement>(null);
-  const questionRef = useRef<HTMLTextAreaElement>(null);
   const settingsRef = useRef<HTMLDivElement>(null);
   const isZh = language === "zh";
 
@@ -127,13 +126,6 @@ function SignedInCompanion({
     if (!conversation) return;
     conversation.scrollTo({ top: conversation.scrollHeight, behavior: asking ? "smooth" : "auto" });
   }, [asking, messages]);
-
-  useEffect(() => {
-    const input = questionRef.current;
-    if (!input) return;
-    input.style.height = "auto";
-    input.style.height = `${Math.min(input.scrollHeight, 132)}px`;
-  }, [question]);
 
   const refresh = useCallback(async () => {
     const client = companionClient();
@@ -341,34 +333,40 @@ function SignedInCompanion({
         ) : null}
         {messages.length ? (
         <div className="companion-conversation" aria-live="polite">
-          {messages.map((message) => (
-            <article className={`is-${message.role}`} key={message.id}>
-              <span>{message.role === "user" ? (isZh ? "你" : "You") : (isZh ? "AI 问道" : "Wendao AI")}</span>
-              <CompanionMessageContent text={message.content ? message.content : (phase === "slow"
-                ? (isZh ? "仍在认真整理，这次会多用一点时间…" : "Still working carefully—this one needs a little longer…")
-                : phase === "answering"
-                  ? (isZh ? "正在组织回应…" : "Composing a response…")
-                  : (isZh ? "正在读这一章…" : "Reading this chapter…"))} />
-              {message.status === "error" && message.retryQuestion ? (
-                <button type="button" onClick={() => void askQuestion(message.retryQuestion!)} disabled={asking}>
-                  {isZh ? "重新回答" : "Try again"}
-                </button>
-              ) : null}
-              {message.role === "assistant" && message.id === lastAssistantId && message.content && !message.status ? (
-                <div className="companion-message-actions">
-                  <button type="button" onClick={() => void copyAnswer(message)}>
-                    {copiedMessageId === message.id ? (isZh ? "已复制" : "Copied") : (isZh ? "复制回应" : "Copy")}
+          {messages.map((message) => {
+            const isThinking = message.role === "assistant" && !message.content && (message.status === "pending" || message.status === "streaming");
+            return (
+              <article className={`is-${message.role}${isThinking ? " is-thinking" : ""}`} key={message.id}>
+                <span>{message.role === "user" ? (isZh ? "你" : "You") : (isZh ? "AI 问道" : "Wendao AI")}</span>
+                <CompanionMessageContent text={message.content ? message.content : (phase === "slow"
+                  ? (isZh ? "仍在认真整理，这次会多用一点时间…" : "Still working carefully—this one needs a little longer…")
+                  : phase === "answering"
+                    ? (isZh ? "正在组织回应…" : "Composing a response…")
+                    : (isZh ? "正在读这一章…" : "Reading this chapter…"))} />
+                {isThinking ? (
+                  <span className="companion-thinking-dots" aria-hidden="true"><i /><i /><i /></span>
+                ) : null}
+                {message.status === "error" && message.retryQuestion ? (
+                  <button type="button" onClick={() => void askQuestion(message.retryQuestion!)} disabled={asking}>
+                    {isZh ? "重新回答" : "Try again"}
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => onShareAnswer?.(message.content)}
-                  >
-                    {isZh ? "分享图片" : "Share image"}
-                  </button>
-                </div>
-              ) : null}
-            </article>
-          ))}
+                ) : null}
+                {message.role === "assistant" && message.id === lastAssistantId && message.content && !message.status ? (
+                  <div className="companion-message-actions">
+                    <button type="button" onClick={() => void copyAnswer(message)}>
+                      {copiedMessageId === message.id ? (isZh ? "已复制" : "Copied") : (isZh ? "复制回应" : "Copy")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onShareAnswer?.(message.content)}
+                    >
+                      {isZh ? "分享图片" : "Share image"}
+                    </button>
+                  </div>
+                ) : null}
+              </article>
+            );
+          })}
         </div>
       ) : (
         <div className="companion-empty" aria-label={isZh ? "提问建议" : "Question suggestions"}>
@@ -391,7 +389,6 @@ function SignedInCompanion({
           <label htmlFor="companion-question">{isZh ? "此刻，你真正想问什么？" : "What do you genuinely want to ask now?"}</label>
           <div className="companion-question-control">
             <textarea
-              ref={questionRef}
               id="companion-question"
               maxLength={2000}
               rows={2}
@@ -408,20 +405,22 @@ function SignedInCompanion({
             <button type="submit" disabled={asking || !question.trim()} aria-label={isZh ? "发送问题" : "Send question"}>↑</button>
           </div>
         </form>
-        <p className="companion-response-status" role="status">
-          {asking
-            ? (phase === "slow"
-              ? (isZh ? "这次思考较深，正在换一条更稳定的路径。" : "This is taking longer; switching to a more reliable path.")
-            : (isZh ? "正在结合本章与你的处境回应" : "Responding with this chapter and your situation in view"))
-            : (isZh ? "写下具体处境，我会先理解，再结合本章与记忆回应。" : "Describe one concrete situation. I will understand first, then respond with this chapter and your memories in view.")}
-        </p>
-        <div className="companion-home-actions">
-        {(!Capacitor.isNativePlatform() && state.entitlement?.source === "stripe")
-          || (Capacitor.getPlatform() === "ios" && state.entitlement?.source === "apple") ? (
-            <button className="companion-text-button" type="button" onClick={() => void manageMembership()}>{isZh ? "管理会员" : "Manage membership"}</button>
-          ) : null}
-        {asking ? <button className="companion-text-button" type="button" onClick={() => abortRef.current?.abort()}>{isZh ? "停止回答" : "Stop response"}</button> : null}
-        {accessError ? <span className="companion-error" role="alert">{isZh ? "会员信息暂时未能刷新，当前会话仍可继续。" : "Membership details could not refresh; this conversation can continue."}</span> : null}
+        <div className="companion-compose-meta">
+          <p className="companion-response-status" role="status">
+            {asking
+              ? (phase === "slow"
+                ? (isZh ? "正在换一条更稳定的回应路径。" : "Switching to a more reliable response path.")
+              : (isZh ? "正在结合本章与你的处境回应。" : "Responding with this chapter and your situation in view."))
+              : (isZh ? "写下具体处境，我会先理解，再结合本章与记忆回应。" : "Describe one concrete situation. I will understand first, then respond with this chapter and your memories in view.")}
+          </p>
+          <div className="companion-home-actions">
+            {(!Capacitor.isNativePlatform() && state.entitlement?.source === "stripe")
+              || (Capacitor.getPlatform() === "ios" && state.entitlement?.source === "apple") ? (
+                <button className="companion-text-button" type="button" onClick={() => void manageMembership()}>{isZh ? "管理会员" : "Manage membership"}</button>
+              ) : null}
+            {asking ? <button className="companion-text-button" type="button" onClick={() => abortRef.current?.abort()}>{isZh ? "停止回答" : "Stop response"}</button> : null}
+            {accessError ? <span className="companion-error" role="alert">{isZh ? "会员信息暂时未能刷新，当前会话仍可继续。" : "Membership details could not refresh; this conversation can continue."}</span> : null}
+          </div>
         </div>
       </div>
     </section>

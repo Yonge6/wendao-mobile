@@ -807,6 +807,59 @@ test("keeps the Companion dialog inside an iPhone viewport", async ({ page }) =>
   expect(Math.abs(geometry.closeTop - geometry.settingsTop)).toBeLessThanOrEqual(0.5);
 });
 
+test("keeps the Companion composer compact and fixed while thinking and after answering", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/?chapter=64&lang=zh");
+  await page.getByRole("button", { name: "打开我的问道并登录", exact: true }).click();
+
+  await page.locator(".companion-dialog-body").evaluate((body) => {
+    body.innerHTML = `
+      <section class="companion-home">
+        <div class="companion-thread">
+          <div class="companion-conversation">
+            <article class="is-user"><span>你</span><div class="companion-message-content">怎样把这一章落到今天？</div></article>
+            <article class="is-assistant is-thinking"><span>AI 问道</span><div class="companion-message-content">正在读这一章…</div><span class="companion-thinking-dots"><i></i><i></i><i></i></span></article>
+          </div>
+        </div>
+        <div class="companion-compose-zone">
+          <form class="companion-question-form"><div class="companion-question-control"><textarea rows="2" placeholder="写下一个处境、矛盾或选择…"></textarea><button type="submit">↑</button></div></form>
+          <div class="companion-compose-meta"><p class="companion-response-status">正在结合本章与你的处境回应。</p><div class="companion-home-actions"><button class="companion-text-button" type="button">停止回答</button></div></div>
+        </div>
+      </section>`;
+  });
+
+  const measure = async () => page.locator(".companion-home").evaluate((home) => {
+    const composer = home.querySelector<HTMLElement>(".companion-compose-zone")!.getBoundingClientRect();
+    const textarea = home.querySelector<HTMLTextAreaElement>("textarea")!.getBoundingClientRect();
+    const thread = home.querySelector<HTMLElement>(".companion-thread")!.getBoundingClientRect();
+    const dots = home.querySelector<HTMLElement>(".companion-thinking-dots i");
+    return {
+      composerTop: composer.top,
+      composerBottom: composer.bottom,
+      composerHeight: composer.height,
+      textareaHeight: textarea.height,
+      threadBottom: thread.bottom,
+      animationName: dots ? getComputedStyle(dots).animationName : "",
+      homeBottom: home.getBoundingClientRect().bottom,
+    };
+  });
+
+  const thinking = await measure();
+  expect(thinking.textareaHeight).toBe(52);
+  expect(thinking.composerBottom).toBeLessThanOrEqual(thinking.homeBottom);
+  expect(Math.abs(thinking.composerTop - thinking.threadBottom)).toBeLessThanOrEqual(12);
+  expect(thinking.animationName).toBe("companion-thinking-pulse");
+
+  await page.locator(".companion-thread").evaluate((thread) => {
+    thread.innerHTML = `<div class="companion-conversation"><article class="is-assistant"><span>AI 问道</span><div class="companion-message-content">${"回答这一章与你的处境。".repeat(180)}</div></article></div>`;
+  });
+  const answered = await measure();
+  expect(answered.textareaHeight).toBe(thinking.textareaHeight);
+  expect(Math.abs(answered.composerTop - thinking.composerTop)).toBeLessThanOrEqual(1);
+  expect(Math.abs(answered.composerBottom - thinking.composerBottom)).toBeLessThanOrEqual(1);
+  expect(Math.abs(answered.composerHeight - thinking.composerHeight)).toBeLessThanOrEqual(1);
+});
+
 test("searches all textual layers from the directory", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "目录", exact: true }).click();

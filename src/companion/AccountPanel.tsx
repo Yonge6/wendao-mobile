@@ -82,7 +82,7 @@ export default function AccountPanel({
 
   return (
     <section className="companion-account-panel">
-      <button className="companion-text-button" type="button" onClick={onBack}>← {isZh ? "返回" : "Back"}</button>
+      <button className="companion-text-button" type="button" onClick={onBack}>← {isZh ? "返回对话" : "Back to conversation"}</button>
       <header>
         <span className="drawer-kicker">{isZh ? "数据与账号" : "Data and account"}</span>
         <h3>{isZh ? "你的记录，应当由你掌握。" : "Your record should remain in your hands."}</h3>

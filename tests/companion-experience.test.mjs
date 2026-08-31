@@ -14,7 +14,7 @@ test("conversation renders emphasis as typography and keeps the reading area dom
   assert.doesNotMatch(panel, /本月 \$\{state\.usage\.used_questions\}/);
   assert.doesNotMatch(panel, /wendao_usage_periods/);
   assert.doesNotMatch(panel, /Enter 发送 · Shift\+Enter 换行/);
-  assert.match(panel, /<\/form>\s*<p className="companion-response-status"/);
+  assert.match(panel, /<\/form>\s*<div className="companion-compose-meta">[\s\S]*?<p className="companion-response-status"/);
   assert.match(panel, /复制回应/);
   assert.match(panel, /分享图片/);
   assert.doesNotMatch(panel, /继续追问/);
@@ -40,6 +40,27 @@ test("conversation renders emphasis as typography and keeps the reading area dom
   assert.match(css, /\.companion-settings\s*\{[^}]*top:\s*var\(--companion-control-top\)/s);
   assert.match(css, /\.companion-settings\s*\{[^}]*right:\s*calc\(var\(--companion-control-right\) \+ var\(--companion-control-size\) \+ 8px\)/s);
   assert.match(css, /\.companion-home\s*\{[^}]*overflow:\s*hidden/s);
+  assert.match(css, /\.companion-home\s*\{[^}]*grid-template-areas:[\s\S]*?"thread"[\s\S]*?"compose"/s);
+  assert.match(css, /\.companion-compose-zone\s*\{[^}]*grid-area:\s*compose/s);
+  assert.match(css, /\.companion-question-form textarea\s*\{[^}]*height:\s*52px[^}]*max-height:\s*52px/s);
+  assert.doesNotMatch(panel, /input\.style\.height/);
+  assert.match(panel, /className="companion-thinking-dots"/);
+  assert.match(css, /@keyframes companion-thinking-pulse/);
+});
+
+test("memory actions explain their effect and require confirmation", async () => {
+  const [memoryPanel, accountPanel, css] = await Promise.all([
+    readFile(new URL("../src/companion/MemoryPanel.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/companion/AccountPanel.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/prototype.css", import.meta.url), "utf8"),
+  ]);
+
+  assert.match(memoryPanel, /不再用于后续回答/);
+  assert.match(memoryPanel, /历史对话不会被删除/);
+  assert.match(memoryPanel, /window\.confirm/);
+  assert.doesNotMatch(memoryPanel, /这件事已过去/);
+  assert.match(accountPanel, /返回对话/);
+  assert.match(css, /\.companion-memory-panel > \.companion-text-button,[\s\S]*?justify-self:\s*start/s);
 });
 
 test("conversation image sharing reuses the chapter poster and canonical QR flow", async () => {
