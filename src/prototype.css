@@ -2054,6 +2054,10 @@ textarea {
 }
 
 .companion-layer {
+  --companion-usable-height: min(
+    var(--companion-viewport-height, 100dvh),
+    calc(100dvh - var(--companion-viewport-top, 0px))
+  );
   position: fixed;
   z-index: 125;
   top: var(--companion-viewport-top, 0px);
@@ -2064,8 +2068,8 @@ textarea {
   box-sizing: border-box;
   width: 100vw;
   max-width: 100%;
-  height: var(--companion-viewport-height, 100dvh);
-  max-height: 100%;
+  height: var(--companion-usable-height);
+  max-height: var(--companion-usable-height);
   place-items: center;
   overflow: hidden;
   padding: 18px;
@@ -2086,6 +2090,9 @@ textarea {
 }
 
 .companion-dialog {
+  --companion-control-size: 36px;
+  --companion-control-top: calc(env(safe-area-inset-top, 0px) + 13px);
+  --companion-control-right: 18px;
   position: relative;
   display: grid;
   box-sizing: border-box;
@@ -2093,7 +2100,7 @@ textarea {
   width: min(1040px, calc(100vw - 32px));
   min-width: 0;
   max-width: 100%;
-  height: min(1040px, calc(var(--companion-viewport-height, 100dvh) - 32px));
+  height: min(1040px, calc(var(--companion-usable-height, 100dvh) - 32px));
   max-height: 100%;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--gold) 32%, transparent);
@@ -2150,9 +2157,14 @@ textarea {
 }
 
 .companion-dialog-header > button {
-  flex: 0 0 auto;
-  width: 36px;
-  height: 36px;
+  position: absolute;
+  z-index: 5;
+  top: var(--companion-control-top);
+  right: var(--companion-control-right);
+  display: grid;
+  width: var(--companion-control-size);
+  height: var(--companion-control-size);
+  place-items: center;
   padding: 0;
   border: 1px solid color-mix(in srgb, var(--gold) 20%, transparent);
   border-radius: 50%;
@@ -2436,20 +2448,22 @@ textarea {
   gap: 9px;
   min-width: 0;
   height: 100%;
+  max-height: 100%;
   min-height: 0;
+  overflow: hidden;
 }
 
 .companion-settings {
   position: absolute;
   z-index: 4;
-  top: calc(env(safe-area-inset-top, 0px) + 15px);
-  right: 64px;
+  top: var(--companion-control-top);
+  right: calc(var(--companion-control-right) + var(--companion-control-size) + 8px);
 }
 
 .companion-settings > button {
   display: grid;
-  width: 36px;
-  height: 36px;
+  width: var(--companion-control-size);
+  height: var(--companion-control-size);
   place-items: center;
   padding: 0;
   border: 1px solid color-mix(in srgb, var(--gold) 20%, transparent);
@@ -4349,8 +4363,8 @@ textarea {
     width: 100vw;
     width: 100dvw;
     max-width: 100dvw;
-    height: var(--companion-viewport-height, 100dvh);
-    max-height: var(--companion-viewport-height, 100dvh);
+    height: var(--companion-usable-height);
+    max-height: var(--companion-usable-height);
     place-items: stretch;
     padding: 0;
   }
@@ -4375,11 +4389,6 @@ textarea {
     padding-right: 18px;
     padding-bottom: 8px;
     padding-left: 18px;
-  }
-
-  .companion-settings {
-    top: calc(env(safe-area-inset-top, 0px) + 12px);
-    right: 62px;
   }
 
   .companion-dialog-body {

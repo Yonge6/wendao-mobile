@@ -765,24 +765,46 @@ test("keeps the Companion dialog inside an iPhone viewport", async ({ page }) =>
   await page.goto("/?chapter=64&lang=zh");
   await page.getByRole("button", { name: "打开我的问道并登录", exact: true }).click();
 
+  await page.locator(".companion-layer").evaluate((element) => {
+    const layer = element as HTMLElement;
+    layer.style.setProperty("--companion-viewport-height", "980px");
+    layer.style.setProperty("--companion-viewport-top", "20px");
+
+    const settings = document.createElement("div");
+    settings.className = "companion-settings";
+    const button = document.createElement("button");
+    button.type = "button";
+    button.setAttribute("aria-label", "测试设置按钮");
+    settings.append(button);
+    layer.querySelector(".companion-dialog")?.append(settings);
+  });
+
   const geometry = await page.locator(".companion-dialog").evaluate((element) => {
     const bounds = element.getBoundingClientRect();
+    const layerBounds = element.parentElement!.getBoundingClientRect();
+    const closeBounds = element.querySelector<HTMLElement>(".companion-dialog-header > button")!.getBoundingClientRect();
+    const settingsBounds = element.querySelector<HTMLElement>(".companion-settings > button")!.getBoundingClientRect();
     return {
       documentOverflow: document.documentElement.scrollWidth - window.innerWidth,
+      layerBottom: layerBounds.bottom,
       left: bounds.left,
       right: bounds.right,
       bottom: bounds.bottom,
       width: bounds.width,
+      closeTop: closeBounds.top,
+      settingsTop: settingsBounds.top,
       viewportWidth: window.innerWidth,
-      viewportHeight: window.visualViewport?.height ?? window.innerHeight,
+      viewportHeight: window.innerHeight,
     };
   });
 
   expect(geometry.documentOverflow).toBeLessThanOrEqual(0);
+  expect(geometry.layerBottom).toBeLessThanOrEqual(geometry.viewportHeight);
   expect(geometry.left).toBeGreaterThanOrEqual(0);
   expect(geometry.right).toBeLessThanOrEqual(geometry.viewportWidth);
   expect(geometry.bottom).toBeLessThanOrEqual(geometry.viewportHeight);
   expect(geometry.width).toBeLessThanOrEqual(geometry.viewportWidth);
+  expect(Math.abs(geometry.closeTop - geometry.settingsTop)).toBeLessThanOrEqual(0.5);
 });
 
 test("searches all textual layers from the directory", async ({ page }) => {

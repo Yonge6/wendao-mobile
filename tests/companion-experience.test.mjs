@@ -33,8 +33,13 @@ test("conversation renders emphasis as typography and keeps the reading area dom
   assert.match(panel, /aria-label=\{isZh \? "打开问道设置"/);
   assert.match(panel, /role="menu"/);
   assert.doesNotMatch(panel, /className="companion-tools"/);
-  assert.match(css, /\.companion-settings\s*\{[^}]*right:\s*64px/s);
-  assert.match(css, /\.companion-settings\s*\{[^}]*top:\s*calc\(env\(safe-area-inset-top, 0px\) \+ 15px\)/s);
+  assert.match(css, /--companion-usable-height:\s*min\(/);
+  assert.match(css, /calc\(100dvh - var\(--companion-viewport-top, 0px\)\)/);
+  assert.match(css, /\.companion-dialog\s*\{[^}]*--companion-control-top:/s);
+  assert.match(css, /\.companion-dialog-header > button\s*\{[^}]*top:\s*var\(--companion-control-top\)/s);
+  assert.match(css, /\.companion-settings\s*\{[^}]*top:\s*var\(--companion-control-top\)/s);
+  assert.match(css, /\.companion-settings\s*\{[^}]*right:\s*calc\(var\(--companion-control-right\) \+ var\(--companion-control-size\) \+ 8px\)/s);
+  assert.match(css, /\.companion-home\s*\{[^}]*overflow:\s*hidden/s);
 });
 
 test("conversation image sharing reuses the chapter poster and canonical QR flow", async () => {
