@@ -146,3 +146,13 @@ test("the subscription screen selects a plan before one explicit payment confirm
   assert.match(source, /确认并前往支付/);
   assert.match(source, /onClick=\{\(\) => void beginCheckout\(\)\}/);
 });
+
+test("the subscription screen recovers when StoreKit returns no or partial prices", async () => {
+  const source = await readFile(new URL("../src/companion/SubscriptionPanel.tsx", import.meta.url), "utf8");
+  assert.match(source, /products\.length === 0/);
+  assert.match(source, /products\.length < Object\.keys\(STOREKIT_PRODUCTS\)\.length/);
+  assert.match(source, /重新读取价格/);
+  assert.match(source, /visibilitychange/);
+  assert.match(source, /setSelectedPlan\(availablePlan\)/);
+  assert.doesNotMatch(source, /nativePrice\("annual"\) \?\? "…"/);
+});

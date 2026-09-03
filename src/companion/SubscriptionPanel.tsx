@@ -1,6 +1,6 @@
 import { Capacitor } from "@capacitor/core";
 import type { Session } from "@supabase/supabase-js";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import AppStoreDownloadLink from "./AppStoreDownloadLink";
 import { companionPublicConfig } from "./client";
@@ -27,16 +27,46 @@ export default function SubscriptionPanel({ language, session, onSignOut, onMemb
   const [busyPlan, setBusyPlan] = useState<"monthly" | "annual" | "lifetime" | null>(null);
   const [restoring, setRestoring] = useState(false);
   const [nativeProducts, setNativeProducts] = useState<StoreKitProduct[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(native);
   const [checkingMembership, setCheckingMembership] = useState(false);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
 
+  const reloadNativeProducts = useCallback(async () => {
+    if (!native) return;
+    setLoadingProducts(true);
+    setError("");
+    try {
+      const products = await loadStoreKitProducts();
+      setNativeProducts(products);
+      if (products.length === 0) {
+        setError(isZh
+          ? "未能从 App Store 读取价格。请确认网络和 App Store 账号地区后重试；商品刚开放时，Apple 同步也可能需要一点时间。"
+          : "Prices could not be loaded from the App Store. Check your connection and App Store region, then retry. Newly available products can also take a little time to sync.");
+      } else if (products.length < Object.keys(STOREKIT_PRODUCTS).length) {
+        setError(isZh
+          ? "部分方案仍在由 App Store 同步。你可以先选择已经显示价格的方案，或稍后重新读取。"
+          : "Some plans are still syncing with the App Store. You can choose a plan with a visible price now, or retry shortly.");
+      }
+    } catch {
+      setNativeProducts([]);
+      setError(isZh
+        ? "暂时无法连接 App Store 读取价格，请检查网络后重试。"
+        : "The App Store could not be reached for prices. Check your connection and retry.");
+    } finally {
+      setLoadingProducts(false);
+    }
+  }, [isZh, native]);
+
   useEffect(() => {
     if (!native) return;
-    void loadStoreKitProducts()
-      .then(setNativeProducts)
-      .catch(() => setError(isZh ? "暂时无法读取 App Store 订阅方案。" : "App Store plans are temporarily unavailable."));
-  }, [isZh, native]);
+    void reloadNativeProducts();
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") void reloadNativeProducts();
+    };
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+    return () => document.removeEventListener("visibilitychange", refreshWhenVisible);
+  }, [native, reloadNativeProducts]);
 
   const beginCheckout = async () => {
     const plan = selectedPlan;
@@ -85,6 +115,19 @@ export default function SubscriptionPanel({ language, session, onSignOut, onMemb
   const nativePrice = (plan: "monthly" | "annual" | "lifetime") => nativeProducts.find(
     (product) => product.id === STOREKIT_PRODUCTS[plan],
   )?.displayPrice;
+
+  useEffect(() => {
+    if (!native || loadingProducts) return;
+    const hasProduct = (plan: "monthly" | "annual" | "lifetime") => nativeProducts.some(
+      (product) => product.id === STOREKIT_PRODUCTS[plan],
+    );
+    if (hasProduct(selectedPlan)) return;
+    const availablePlan = (["annual", "monthly", "lifetime"] as const).find(hasProduct);
+    if (availablePlan) setSelectedPlan(availablePlan);
+  }, [loadingProducts, native, nativeProducts, selectedPlan]);
+
+  const priceLabel = (plan: "monthly" | "annual" | "lifetime") => nativePrice(plan)
+    ?? (loadingProducts ? (isZh ? "读取中…" : "Loading…") : (isZh ? "暂不可用" : "Unavailable"));
 
   const checkMembership = async () => {
     if (checkingMembership) return;
@@ -152,7 +195,7 @@ export default function SubscriptionPanel({ language, session, onSignOut, onMemb
           onClick={() => setSelectedPlan("annual")}
         >
           <span>{isZh ? "推荐" : "Recommended"}</span>
-          <strong>{`${isZh ? "年付" : "Annual"} ${nativePrice("annual") ?? "…"}`}</strong>
+          <strong>{`${isZh ? "年付" : "Annual"} ${priceLabel("annual")}`}</strong>
           <small>{isZh ? "持续记录、自动记忆与每周回看；海外基准 US$199.99" : "Unlimited questions, memory, and weekly reflection"}</small>
         </button>
         <button
@@ -162,7 +205,7 @@ export default function SubscriptionPanel({ language, session, onSignOut, onMemb
           disabled={busyPlan !== null || (native && !nativePrice("monthly"))}
           onClick={() => setSelectedPlan("monthly")}
         >
-          <strong>{`${isZh ? "月付" : "Monthly"} ${nativePrice("monthly") ?? "…"}`}</strong>
+          <strong>{`${isZh ? "月付" : "Monthly"} ${priceLabel("monthly")}`}</strong>
           <small>{isZh ? "按月保持灵活；海外基准 US$19.99" : "Unlimited questions, billed monthly"}</small>
         </button>
         <button
@@ -173,14 +216,14 @@ export default function SubscriptionPanel({ language, session, onSignOut, onMemb
           onClick={() => setSelectedPlan("lifetime")}
         >
           <span>{isZh ? "一次买断" : "One-time purchase"}</span>
-          <strong>{`${isZh ? "永久解锁 81 章" : "Unlock all 81 forever"} ${nativePrice("lifetime") ?? "…"}`}</strong>
+          <strong>{`${isZh ? "永久解锁 81 章" : "Unlock all 81 forever"} ${priceLabel("lifetime")}`}</strong>
           <small>{isZh ? "完整阅读永久保留；不含 AI 问答、记忆与每周回看" : "Permanent reading access; AI, memory, and weekly reflection are not included"}</small>
         </button>
       </div>
       <button
         className="companion-checkout-button"
         type="button"
-        disabled={busyPlan !== null || !nativePrice(selectedPlan)}
+        disabled={busyPlan !== null || loadingProducts || !nativePrice(selectedPlan)}
         onClick={() => void beginCheckout()}
       >
         {busyPlan
@@ -210,6 +253,11 @@ export default function SubscriptionPanel({ language, session, onSignOut, onMemb
       </button>
       {notice ? <p className="companion-plan-note" role="status">{notice}</p> : null}
       {error ? <p className="companion-error" role="alert">{error}</p> : null}
+      {error ? (
+        <button className="companion-text-button" type="button" disabled={loadingProducts} onClick={() => void reloadNativeProducts()}>
+          {loadingProducts ? (isZh ? "正在读取价格…" : "Loading prices…") : (isZh ? "重新读取价格" : "Retry prices")}
+        </button>
+      ) : null}
       <button className="companion-text-button" type="button" onClick={onOpenAccount}>
         {isZh ? "数据与账号" : "Data and account"}
       </button>
