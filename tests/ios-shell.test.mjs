@@ -36,7 +36,7 @@ test("Capacitor app identity and bundled web directory are stable", () => {
   assert.match(project, /PRODUCT_BUNDLE_IDENTIFIER = com\.yonge6\.wendao;/);
   assert.match(project, /DEVELOPMENT_TEAM = L855ZVM679;/);
   assert.match(project, /TARGETED_DEVICE_FAMILY = 1;/);
-  assert.match(project, /CURRENT_PROJECT_VERSION = 9;/);
+  assert.match(project, /CURRENT_PROJECT_VERSION = 10;/);
   assert.match(project, /MARKETING_VERSION = 1\.5;/);
   assert.match(project, /WendaoWidgetExtension/);
   assert.match(project, /PRODUCT_BUNDLE_IDENTIFIER = com\.yonge6\.wendao\.widget;/);

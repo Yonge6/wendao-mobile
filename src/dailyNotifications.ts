@@ -5,6 +5,7 @@ import { chapters } from "./data/chapters";
 import { dailyChapterId, localDateKey } from "./dailyEncounter";
 
 const DAILY_NOTIFICATION_KEY = "wendao-daily-encounter-enabled";
+const DAILY_NOTIFICATION_PROMPTED_KEY = "wendao-daily-encounter-prompted";
 const DAILY_NOTIFICATION_KIND = "wendao-daily-encounter";
 const DAILY_NOTIFICATION_ID_BASE = 810_000;
 const DAILY_NOTIFICATION_HOUR = 8;
@@ -86,6 +87,31 @@ export async function refreshDailyNotifications(language: "zh" | "en"): Promise<
   const permissions = await LocalNotifications.checkPermissions();
   if (permissions.display !== "granted") return "denied";
   await scheduleDailyNotifications(language);
+  return "enabled";
+}
+
+export async function initializeDailyNotifications(language: "zh" | "en"): Promise<DailyNotificationState> {
+  if (Capacitor.getPlatform() !== "ios") return "unsupported";
+  const savedPreference = window.localStorage.getItem(DAILY_NOTIFICATION_KEY);
+  if (savedPreference !== null) {
+    window.localStorage.setItem(DAILY_NOTIFICATION_PROMPTED_KEY, "true");
+    if (savedPreference === "true") return refreshDailyNotifications(language);
+    const permissions = await LocalNotifications.checkPermissions();
+    return permissions.display === "denied" ? "denied" : "disabled";
+  }
+
+  const permissions = await LocalNotifications.checkPermissions();
+  const resolved = permissions.display === "prompt" || permissions.display === "prompt-with-rationale"
+    ? await LocalNotifications.requestPermissions()
+    : permissions;
+  window.localStorage.setItem(DAILY_NOTIFICATION_PROMPTED_KEY, "true");
+  if (resolved.display !== "granted") {
+    window.localStorage.setItem(DAILY_NOTIFICATION_KEY, "false");
+    return "denied";
+  }
+
+  await scheduleDailyNotifications(language);
+  window.localStorage.setItem(DAILY_NOTIFICATION_KEY, "true");
   return "enabled";
 }
 

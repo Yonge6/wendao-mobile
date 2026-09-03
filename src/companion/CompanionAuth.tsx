@@ -70,7 +70,8 @@ export default function CompanionAuth({ language, children }: CompanionAuthProps
     try {
       await startCompanionSignIn(provider);
     } catch (nextError) {
-      setError(nextError instanceof Error ? nextError.message : "AUTH_FAILED");
+      const message = nextError instanceof Error ? nextError.message : "AUTH_FAILED";
+      if (message !== "APPLE_SIGN_IN_CANCELLED") setError(message);
     } finally {
       setBusyProvider(null);
     }

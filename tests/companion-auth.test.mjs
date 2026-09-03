@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { readNativeAuthCallback } from "../src/companion/auth-callback.ts";
+import { readFile } from "node:fs/promises";
 
 test("reads the PKCE code from the Wendao native auth callback", () => {
   assert.deepEqual(
@@ -31,4 +32,17 @@ test("rejects an incomplete native auth callback", () => {
     () => readNativeAuthCallback("com.yonge6.wendao://auth/callback"),
     /OAUTH_CODE_MISSING/,
   );
+});
+
+test("native Apple uses an ID token while Google always asks which account to use", async () => {
+  const [auth, nativePlugin] = await Promise.all([
+    readFile(new URL("../src/companion/auth.ts", import.meta.url), "utf8"),
+    readFile(new URL("../ios/App/App/WendaoStoreKitPlugin.swift", import.meta.url), "utf8"),
+  ]);
+  assert.match(auth, /WendaoAppleSignIn\.signIn\(\)/);
+  assert.match(auth, /signInWithIdToken\(\{[\s\S]+provider: "apple"[\s\S]+nonce: credential\.nonce/);
+  assert.match(auth, /prompt: "select_account"/);
+  assert.match(nativePlugin, /ASAuthorizationAppleIDProvider/);
+  assert.match(nativePlugin, /request\.nonce = self\.sha256\(nonce\)/);
+  assert.match(nativePlugin, /bridge\?\.registerPluginInstance\(WendaoAppleSignInPlugin\(\)\)/);
 });

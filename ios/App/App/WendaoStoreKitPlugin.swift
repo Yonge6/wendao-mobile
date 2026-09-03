@@ -1,5 +1,8 @@
+import AuthenticationServices
 import Capacitor
+import CryptoKit
 import Photos
+import Security
 import StoreKit
 import UIKit
 
@@ -197,8 +200,96 @@ public class WendaoStoreKitPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 }
 
+@objc(WendaoAppleSignInPlugin)
+public final class WendaoAppleSignInPlugin: CAPPlugin, CAPBridgedPlugin, ASAuthorizationControllerDelegate, ASAuthorizationControllerPresentationContextProviding {
+    public let identifier = "WendaoAppleSignInPlugin"
+    public let jsName = "WendaoAppleSignIn"
+    public let pluginMethods: [CAPPluginMethod] = [
+        CAPPluginMethod(name: "signIn", returnType: CAPPluginReturnPromise),
+    ]
+
+    private var pendingCall: CAPPluginCall?
+    private var rawNonce: String?
+
+    @objc func signIn(_ call: CAPPluginCall) {
+        DispatchQueue.main.async {
+            guard self.pendingCall == nil else {
+                call.reject("Apple sign in is already open", "APPLE_SIGN_IN_IN_PROGRESS")
+                return
+            }
+            guard let nonce = self.makeNonce() else {
+                call.reject("Apple sign in could not start", "APPLE_NONCE_FAILED")
+                return
+            }
+
+            self.pendingCall = call
+            self.rawNonce = nonce
+            let request = ASAuthorizationAppleIDProvider().createRequest()
+            request.requestedScopes = [.fullName, .email]
+            request.nonce = self.sha256(nonce)
+            let controller = ASAuthorizationController(authorizationRequests: [request])
+            controller.delegate = self
+            controller.presentationContextProvider = self
+            controller.performRequests()
+        }
+    }
+
+    public func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
+        if let window = bridge?.viewController?.view.window { return window }
+        return UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap(\.windows)
+            .first { $0.isKeyWindow } ?? ASPresentationAnchor()
+    }
+
+    public func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
+        guard let call = pendingCall,
+              let nonce = rawNonce,
+              let credential = authorization.credential as? ASAuthorizationAppleIDCredential,
+              let tokenData = credential.identityToken,
+              let identityToken = String(data: tokenData, encoding: .utf8) else {
+            finishWithError(message: "Apple did not return an identity token", code: "APPLE_ID_TOKEN_MISSING")
+            return
+        }
+
+        var result: [String: String] = ["identityToken": identityToken, "nonce": nonce]
+        if let givenName = credential.fullName?.givenName, !givenName.isEmpty { result["givenName"] = givenName }
+        if let familyName = credential.fullName?.familyName, !familyName.isEmpty { result["familyName"] = familyName }
+        pendingCall = nil
+        rawNonce = nil
+        call.resolve(result)
+    }
+
+    public func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: Error) {
+        if let authorizationError = error as? ASAuthorizationError, authorizationError.code == .canceled {
+            finishWithError(message: "APPLE_SIGN_IN_CANCELLED", code: "APPLE_SIGN_IN_CANCELLED")
+        } else {
+            finishWithError(message: "Apple sign in could not be completed", code: "APPLE_SIGN_IN_FAILED")
+        }
+    }
+
+    private func finishWithError(message: String, code: String) {
+        let call = pendingCall
+        pendingCall = nil
+        rawNonce = nil
+        call?.reject(message, code)
+    }
+
+    private func makeNonce(length: Int = 32) -> String? {
+        let characters = Array("0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._")
+        var bytes = [UInt8](repeating: 0, count: length)
+        guard SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes) == errSecSuccess else { return nil }
+        return String(bytes.map { characters[Int($0) % characters.count] })
+    }
+
+    private func sha256(_ value: String) -> String {
+        SHA256.hash(data: Data(value.utf8)).map { String(format: "%02x", $0) }.joined()
+    }
+}
+
 final class WendaoBridgeViewController: CAPBridgeViewController {
     override func capacitorDidLoad() {
         bridge?.registerPluginInstance(WendaoStoreKitPlugin())
+        bridge?.registerPluginInstance(WendaoAppleSignInPlugin())
     }
 }

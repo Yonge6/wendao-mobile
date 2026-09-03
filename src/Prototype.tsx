@@ -47,6 +47,7 @@ import { dailyChapterId, localDateKey } from "./dailyEncounter";
 import {
   DAILY_NOTIFICATION_TIME_LABEL,
   dailyNotificationsEnabled,
+  initializeDailyNotifications,
   installDailyNotificationListener,
   refreshDailyNotifications,
   setDailyNotificationsEnabled,
@@ -1873,6 +1874,7 @@ export default function Prototype() {
   const clientId = useRef(stableId(CLIENT_ID_KEY));
   const sessionId = useRef(window.crypto.randomUUID());
   const appOpenTracked = useRef(false);
+  const dailyNotificationsInitialized = useRef(false);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const chapterOpeningRef = useRef(false);
   const chapterOpeningTimerRef = useRef<number | null>(null);
@@ -1974,8 +1976,13 @@ export default function Prototype() {
   }, []);
 
   useEffect(() => {
-    if (runtimeSurface() !== "ios" || !dailyNotificationsEnabled()) return;
-    void refreshDailyNotifications(language)
+    if (runtimeSurface() !== "ios") return;
+    const operation = dailyNotificationsInitialized.current
+      ? (dailyNotificationsEnabled() ? refreshDailyNotifications(language) : null)
+      : initializeDailyNotifications(language);
+    dailyNotificationsInitialized.current = true;
+    if (!operation) return;
+    void operation
       .then(setDailyNotificationState)
       .catch(() => setDailyNotificationState("error"));
   }, [language]);

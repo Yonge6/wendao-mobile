@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-test("daily encounters are opt-in, scheduled at 08:00, and refresh from canonical chapters", async () => {
+test("daily encounters ask on first launch, schedule at 08:00, and refresh from canonical chapters", async () => {
   const [notifications, daily, prototype, chapters, widget] = await Promise.all([
     readFile(new URL("../src/dailyNotifications.ts", import.meta.url), "utf8"),
     readFile(new URL("../src/dailyEncounter.ts", import.meta.url), "utf8"),
@@ -14,11 +14,14 @@ test("daily encounters are opt-in, scheduled at 08:00, and refresh from canonica
   assert.match(notifications, /DAILY_NOTIFICATION_HOUR = 8/);
   assert.match(notifications, /SCHEDULE_DAYS = 60/);
   assert.match(notifications, /requestPermissions/);
+  assert.match(notifications, /initializeDailyNotifications/);
+  assert.match(notifications, /DAILY_NOTIFICATION_PROMPTED_KEY/);
   assert.match(notifications, /LocalNotifications\.schedule/);
   assert.match(notifications, /今日偶遇｜三慢问道/);
   assert.match(daily, /import \{ chapters \} from "\.\/data\/chapters"/);
   assert.match(prototype, /每日今日偶遇/);
   assert.match(prototype, /dailyNotificationsEnabled\(\) \? "enabled" : "disabled"/);
+  assert.match(prototype, /initializeDailyNotifications\(language\)/);
   assert.equal(JSON.parse(chapters).length, 81);
   assert.match(widget, /Bundle\.main\.url\(forResource: "chapters"/);
   assert.match(widget, /com\.yonge6\.wendao:\/\/chapter/);
