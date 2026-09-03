@@ -2,8 +2,8 @@ import { Capacitor } from "@capacitor/core";
 import type { Session } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
 
+import AppStoreDownloadLink from "./AppStoreDownloadLink";
 import { companionPublicConfig } from "./client";
-import { WENDAO_APP_STORE_URL } from "./plans";
 import {
   loadStoreKitProducts,
   purchaseStoreKit,
@@ -116,10 +116,10 @@ export default function SubscriptionPanel({ language, session, onSignOut, onMemb
           <strong>{isZh ? "完整阅读，与这一章深入对话" : "Read fully and reflect with each chapter"}</strong>
           <small>{isZh ? "自动记忆、每周回看与订阅均由 App 安全管理" : "Automatic memory, weekly reflection, and subscriptions are securely managed in the app"}</small>
         </div>
-        <a className="companion-app-store-link" href={WENDAO_APP_STORE_URL} target="_blank" rel="noreferrer">
+        <AppStoreDownloadLink className="companion-app-store-link" language={language}>
           {isZh ? "前往 App Store 下载" : "Download on the App Store"}
           <span aria-hidden="true">↗</span>
-        </a>
+        </AppStoreDownloadLink>
         <p className="companion-plan-note">{isZh
           ? "已经在 App 内开通？请回到 iPhone App 阅读全部章节，并继续 AI 问道。"
           : "Already unlocked access in the app? Return to the iPhone app to read every chapter and continue with Wendao AI."}</p>

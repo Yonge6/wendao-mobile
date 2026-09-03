@@ -43,7 +43,8 @@ import {
 import { chapters, type Chapter, type RelatedItem } from "./data/chapters";
 import type { ShareCardKind } from "./shareCard";
 import { initializeNativeShell, nativeImpact, runtimeSurface, syncNativeTheme } from "./native";
-import { WENDAO_APP_STORE_REVIEW_URL, WENDAO_APP_STORE_URL } from "./companion/plans";
+import AppStoreDownloadLink from "./companion/AppStoreDownloadLink";
+import { WENDAO_APP_STORE_REVIEW_URL } from "./companion/plans";
 import { reviewStoreKit } from "./companion/storekit";
 import { loadStoreKitEntitlements } from "./companion/storekit";
 import {
@@ -889,9 +890,9 @@ function ReadingAccessGate({
         </button>
       </div>
       {!native ? (
-        <a className="reading-access-app-link" href={WENDAO_APP_STORE_URL} target="_blank" rel="noreferrer">
+        <AppStoreDownloadLink className="reading-access-app-link" language={language}>
           {isZh ? "前往 App Store 下载" : "Download on the App Store"}<span aria-hidden="true">↗</span>
-        </a>
+        </AppStoreDownloadLink>
       ) : null}
       <small className="reading-access-footnote">{isZh
         ? "订阅和买断均由 App Store 安全处理，可恢复购买。"
@@ -1177,19 +1178,14 @@ function SideDrawer({
                     <ChevronRightIcon />
                   </button>
                 ) : surface === "web" ? (
-                  <a
-                    href={WENDAO_APP_STORE_URL}
-                    target="_blank"
-                    rel="noreferrer"
-                    onClick={() => onAppStoreAction("download")}
-                  >
+                  <AppStoreDownloadLink language={language} onOpen={() => onAppStoreAction("download")}>
                     <span className="drawer-nav-icon"><DownloadIcon /></span>
                     <span>
                       <strong>{isZh ? "下载 App" : "Download the App"}</strong>
                       <small>{isZh ? "离线阅读，在 iPhone 上继续慢慢问" : "Read offline and continue on iPhone"}</small>
                     </span>
                     <ChevronRightIcon />
-                  </a>
+                  </AppStoreDownloadLink>
                 ) : null}
               </nav>
 

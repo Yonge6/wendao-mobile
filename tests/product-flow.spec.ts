@@ -492,13 +492,57 @@ test("offers an App Store download on H5 and a rating action in the iOS app", as
   await page.goto("/");
   await page.getByRole("button", { name: "打开更多功能" }).click();
   const webDrawer = page.getByRole("dialog", { name: "你的空间" });
-  await expect(webDrawer.getByRole("link", { name: /下载 App/ })).toHaveAttribute(
+  const downloadLink = webDrawer.getByRole("link", { name: /下载 App/ });
+  await expect(downloadLink).toHaveAttribute(
     "href",
     "https://apps.apple.com/us/app/wendao-daodejing/id6796945428",
   );
   await expect(webDrawer.getByRole("button", { name: /给 App 评分/ })).toHaveCount(0);
 
+  const popupPromise = page.waitForEvent("popup");
+  await downloadLink.click();
+  const popup = await popupPromise;
+  await expect.poll(() => new URL(popup.url()).hostname).toBe("apps.apple.com");
+  await expect(page.getByRole("dialog", { name: "在默认浏览器中打开" })).toHaveCount(0);
+  await popup.close();
+
   await page.close();
+});
+
+test("guides iPhone WeChat readers to the default browser and copies the App Store link", async ({ browser }) => {
+  const context = await browser.newContext({
+    userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148 MicroMessenger/8.0.50",
+    viewport: { width: 390, height: 844 },
+  });
+  const page = await context.newPage();
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: {
+        writeText: async (value: string) => {
+          window.sessionStorage.setItem("wendao-copied-app-store-url", value);
+        },
+      },
+    });
+  });
+
+  await page.goto("/?chapter=64&lang=zh");
+  await page.getByRole("button", { name: "打开更多功能" }).click();
+  await page.getByRole("dialog", { name: "你的空间" }).getByRole("link", { name: /下载 App/ }).click();
+
+  await expect(page).toHaveURL(/127\.0\.0\.1/);
+  const guide = page.getByRole("dialog", { name: "在默认浏览器中打开" });
+  await expect(guide).toBeVisible();
+  await expect(guide).toContainText("选择“在默认浏览器中打开”");
+  await guide.getByRole("button", { name: "复制 App Store 链接" }).click();
+  await expect(guide.getByRole("status")).toHaveText("已复制，可粘贴到 Safari 打开");
+  await expect.poll(() => page.evaluate(() => window.sessionStorage.getItem("wendao-copied-app-store-url"))).toBe(
+    "https://apps.apple.com/us/app/wendao-daodejing/id6796945428",
+  );
+
+  await guide.getByRole("button", { name: "知道了" }).click();
+  await expect(guide).toHaveCount(0);
+  await context.close();
 });
 
 test("shows only the rating action in the native iOS drawer", async ({ page }) => {

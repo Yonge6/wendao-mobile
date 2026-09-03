@@ -38,7 +38,7 @@ test("generates and stores a weekly reflection without question quota", async ()
   const actions = [];
   const store = {
     getWeeklyReflection: async () => null,
-    getEntitlement: async () => ({ status: "active", expires_at: "2026-09-01T00:00:00Z" }),
+    getEntitlement: async () => ({ status: "active", expires_at: "2099-09-01T00:00:00Z" }),
     getWeeklySource: async () => ({
       messages: [{ role: "user", content: "I rush endings", chapter_id: 64 }],
       memories: [{ kind: "recurring_theme", summary: "Rushing endings" }],
@@ -65,7 +65,7 @@ test("falls back when the weekly visible stream ends before any answer", async (
   const actions = [];
   const store = {
     getWeeklyReflection: async () => null,
-    getEntitlement: async () => ({ status: "active", expires_at: "2026-09-01T00:00:00Z" }),
+    getEntitlement: async () => ({ status: "active", expires_at: "2099-09-01T00:00:00Z" }),
     getWeeklySource: async () => ({
       messages: [{ role: "user", content: "I keep postponing the last handoff", chapter_id: 64 }],
       memories: [],
@@ -93,7 +93,7 @@ test("falls back when the weekly visible stream ends before any answer", async (
 test("returns a specific code when both weekly model paths fail", async () => {
   const store = {
     getWeeklyReflection: async () => null,
-    getEntitlement: async () => ({ status: "active", expires_at: "2026-09-01T00:00:00Z" }),
+    getEntitlement: async () => ({ status: "active", expires_at: "2099-09-01T00:00:00Z" }),
     getWeeklySource: async () => ({
       messages: [{ role: "user", content: "A real weekly question", chapter_id: 64 }],
       memories: [],
