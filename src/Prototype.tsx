@@ -20,6 +20,7 @@ import {
   CheckIcon,
   ChevronRightIcon,
   DownloadIcon,
+  BellIcon,
   EnvelopeClosedIcon,
   HamburgerMenuIcon,
   InfoCircledIcon,
@@ -31,6 +32,7 @@ import {
   StarIcon,
   SunIcon,
 } from "@radix-ui/react-icons";
+import { App as CapacitorApp } from "@capacitor/app";
 import "@fontsource/noto-sans-sc/400.css";
 import "@fontsource/noto-sans-sc/500.css";
 import "@fontsource/noto-serif-sc/400.css";
@@ -41,6 +43,15 @@ import {
   type HumanDesignReadingChart,
 } from "./humanDesignReading";
 import { chapters, type Chapter, type RelatedItem } from "./data/chapters";
+import { dailyChapterId, localDateKey } from "./dailyEncounter";
+import {
+  DAILY_NOTIFICATION_TIME_LABEL,
+  dailyNotificationsEnabled,
+  installDailyNotificationListener,
+  refreshDailyNotifications,
+  setDailyNotificationsEnabled,
+  type DailyNotificationState,
+} from "./dailyNotifications";
 import type { ShareCardKind } from "./shareCard";
 import { initializeNativeShell, nativeImpact, runtimeSurface, syncNativeTheme } from "./native";
 import AppStoreDownloadLink from "./companion/AppStoreDownloadLink";
@@ -493,7 +504,7 @@ function loadTheme(): Theme {
   if (typeof window === "undefined") return "light";
   const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
   if (stored === "light" || stored === "dark") return stored;
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  return "light";
 }
 
 function isAdminLocation() {
@@ -553,20 +564,6 @@ validatePinyinReadings();
 function reorderFrom(id: number) {
   const index = chapters.findIndex((chapter) => chapter.id === id);
   return [...chapters.slice(index), ...chapters.slice(0, index)];
-}
-
-function localDateKey(date = new Date()) {
-  return [
-    date.getFullYear(),
-    String(date.getMonth() + 1).padStart(2, "0"),
-    String(date.getDate()).padStart(2, "0"),
-  ].join("-");
-}
-
-function dailyChapterId(dateKey = localDateKey()) {
-  let hash = 0;
-  for (const character of dateKey) hash = (hash * 31 + character.charCodeAt(0)) >>> 0;
-  return chapters[hash % chapters.length].id;
 }
 
 function scrollReadingToTop(behavior: ScrollBehavior = "smooth") {
@@ -839,7 +836,7 @@ function CompanionDialog({
                 {isZh ? "正在展开你的问道…" : "Opening your Wendao…"}
               </div>
             )}>
-              <CompanionPanel language={language} chapterId={chapterId} onShareAnswer={onShareAnswer} />
+              <CompanionPanel language={language} chapterId={chapterId} onShareAnswer={onShareAnswer} onSignedOut={onClose} />
             </Suspense>
           ) : null}
         </div>
@@ -925,6 +922,9 @@ type SideDrawerProps = {
   onSupportOpen: () => void;
   onCompanionOpen: () => void;
   onAppStoreAction: (action: "download" | "rate") => void;
+  dailyNotificationState: DailyNotificationState;
+  dailyNotificationBusy: boolean;
+  onDailyNotificationChange: (enabled: boolean) => void;
 };
 
 function SideDrawer({
@@ -951,6 +951,9 @@ function SideDrawer({
   onSupportOpen,
   onCompanionOpen,
   onAppStoreAction,
+  dailyNotificationState,
+  dailyNotificationBusy,
+  onDailyNotificationChange,
 }: SideDrawerProps) {
   const isZh = language === "zh";
   const surface = runtimeSurface();
@@ -1152,6 +1155,30 @@ function SideDrawer({
                     ))}
                   </div>
                 </div>
+                {surface === "ios" ? (
+                  <div className="drawer-nav-row">
+                    <span className="drawer-nav-icon"><BellIcon /></span>
+                    <span>
+                      <strong>{isZh ? "每日今日偶遇" : "Daily encounter"}</strong>
+                      <small>{dailyNotificationState === "denied"
+                        ? (isZh ? "通知权限未开启，可在系统设置中允许" : "Notifications are off in iOS Settings")
+                        : dailyNotificationState === "error"
+                          ? (isZh ? "暂时未能设置，请稍后再试" : "Could not set this up. Try again later")
+                          : (isZh ? `每天 ${DAILY_NOTIFICATION_TIME_LABEL}，遇见当天这一章` : `Meet the day’s chapter at ${DAILY_NOTIFICATION_TIME_LABEL}`)}</small>
+                    </span>
+                    <button
+                      type="button"
+                      className={`theme-toggle ${dailyNotificationState === "enabled" ? "is-on" : ""}`}
+                      role="switch"
+                      aria-checked={dailyNotificationState === "enabled"}
+                      aria-label={isZh ? "切换每日今日偶遇通知" : "Toggle daily encounter notification"}
+                      disabled={dailyNotificationBusy}
+                      onClick={() => onDailyNotificationChange(dailyNotificationState !== "enabled")}
+                    >
+                      <span />
+                    </button>
+                  </div>
+                ) : null}
                 <button type="button" onClick={() => onViewChange("about")}>
                   <span className="drawer-nav-icon"><InfoCircledIcon /></span>
                   <span>
@@ -1841,6 +1868,8 @@ export default function Prototype() {
   const [freeChapterIds, setFreeChapterIds] = useState(loadFreeChapterIds);
   const [hasFullReadingAccess, setHasFullReadingAccess] = useState(false);
   const [readingAccessReady, setReadingAccessReady] = useState(runtimeSurface() !== "ios");
+  const [dailyNotificationState, setDailyNotificationState] = useState<DailyNotificationState>(() => dailyNotificationsEnabled() ? "enabled" : "disabled");
+  const [dailyNotificationBusy, setDailyNotificationBusy] = useState(false);
   const clientId = useRef(stableId(CLIENT_ID_KEY));
   const sessionId = useRef(window.crypto.randomUUID());
   const appOpenTracked = useRef(false);
@@ -1905,6 +1934,51 @@ export default function Prototype() {
   useEffect(() => {
     void initializeNativeShell(theme);
   }, []);
+
+  useEffect(() => {
+    if (runtimeSurface() !== "ios") return;
+    let active = true;
+    const openChapter = (nextChapterId: number) => {
+      if (!active || !chapters.some((chapter) => chapter.id === nextChapterId)) return;
+      setChapterId(nextChapterId);
+      setChapterEntrySource("daily");
+      setVisibleChapterCount(1);
+      setDirectoryOpen(false);
+      setDrawerOpen(false);
+      setShareOpen(false);
+      setCompanionOpen(false);
+      window.requestAnimationFrame(() => scrollReadingToTop("auto"));
+      trackEvent("chapter_view", { source: "daily_notification" }, nextChapterId);
+    };
+    const handles: Array<{ remove: () => Promise<void> }> = [];
+    void installDailyNotificationListener(openChapter).then((handle) => {
+      if (!handle) return;
+      if (active) handles.push(handle);
+      else void handle.remove();
+    });
+    void CapacitorApp.addListener("appUrlOpen", ({ url }) => {
+      const match = url.match(/^com\.yonge6\.wendao:\/\/chapter\/(\d{1,2})(?:[/?#]|$)/);
+      if (match) openChapter(Number(match[1]));
+    }).then((handle) => {
+      if (active) handles.push(handle);
+      else void handle.remove();
+    });
+    void CapacitorApp.getLaunchUrl().then((result) => {
+      const match = result?.url.match(/^com\.yonge6\.wendao:\/\/chapter\/(\d{1,2})(?:[/?#]|$)/);
+      if (match) openChapter(Number(match[1]));
+    });
+    return () => {
+      active = false;
+      handles.forEach((handle) => void handle.remove());
+    };
+  }, []);
+
+  useEffect(() => {
+    if (runtimeSurface() !== "ios" || !dailyNotificationsEnabled()) return;
+    void refreshDailyNotifications(language)
+      .then(setDailyNotificationState)
+      .catch(() => setDailyNotificationState("error"));
+  }, [language]);
 
   useEffect(() => {
     if (runtimeSurface() !== "ios") return;
@@ -2036,6 +2110,20 @@ export default function Prototype() {
     setDrawerOpen(false);
     setCompanionOpen(true);
     trackEvent("companion_open", { source: "reading_composer" });
+  };
+
+  const changeDailyNotifications = async (enabled: boolean) => {
+    if (dailyNotificationBusy) return;
+    setDailyNotificationBusy(true);
+    try {
+      const nextState = await setDailyNotificationsEnabled(enabled, language);
+      setDailyNotificationState(nextState);
+      trackEvent("daily_notification_change", { value: nextState });
+    } catch {
+      setDailyNotificationState("error");
+    } finally {
+      setDailyNotificationBusy(false);
+    }
   };
 
   const saveProfile = async (event: FormEvent) => {
@@ -2579,6 +2667,9 @@ export default function Prototype() {
             void reviewStoreKit().catch(() => window.location.assign(WENDAO_APP_STORE_REVIEW_URL));
           }
         }}
+        dailyNotificationState={dailyNotificationState}
+        dailyNotificationBusy={dailyNotificationBusy}
+        onDailyNotificationChange={(enabled) => void changeDailyNotifications(enabled)}
       />
       <CompanionDialog
         open={companionOpen}

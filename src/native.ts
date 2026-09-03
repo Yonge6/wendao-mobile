@@ -2,6 +2,7 @@ import { Capacitor, registerPlugin } from "@capacitor/core";
 import { Directory, Filesystem } from "@capacitor/filesystem";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
 import { Share } from "@capacitor/share";
+import { SplashScreen } from "@capacitor/splash-screen";
 import { StatusBar, Style } from "@capacitor/status-bar";
 
 type NativeTheme = "light" | "dark";
@@ -28,6 +29,11 @@ export async function initializeNativeShell(theme: NativeTheme): Promise<void> {
     StatusBar.setOverlaysWebView({ overlay: true }),
     syncNativeTheme(theme),
   ]);
+
+  await new Promise<void>((resolve) => {
+    window.requestAnimationFrame(() => window.requestAnimationFrame(() => resolve()));
+  });
+  await SplashScreen.hide({ fadeOutDuration: 120 }).catch(() => undefined);
 }
 
 export async function syncNativeTheme(theme: NativeTheme): Promise<void> {

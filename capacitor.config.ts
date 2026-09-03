@@ -13,8 +13,11 @@ const config: CapacitorConfig = {
     CapacitorHttp: {
       enabled: true,
     },
+    LocalNotifications: {
+      presentationOptions: ["banner", "list"],
+    },
     SplashScreen: {
-      launchShowDuration: 180,
+      launchAutoHide: false,
       backgroundColor: "#f7f1e6",
       showSpinner: false,
     },

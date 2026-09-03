@@ -15,6 +15,15 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
+test("starts new readers in day mode and preserves an explicit night-mode choice", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+
+  await page.evaluate(() => window.localStorage.setItem("wendao-theme", "dark"));
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+});
+
 test("keeps a locked chapter free only after the reader confirms the choice", async ({ page }) => {
   await page.goto("/?chapter=2&lang=zh");
 
@@ -566,6 +575,8 @@ test("shows only the rating action in the native iOS drawer", async ({ page }) =
   await page.getByRole("button", { name: "打开更多功能" }).click();
   const drawer = page.getByRole("dialog", { name: "你的空间" });
   await expect(drawer.getByRole("button", { name: /给 App 评分/ })).toBeVisible();
+  await expect(drawer.getByText("每日今日偶遇", { exact: true })).toBeVisible();
+  await expect(drawer.getByRole("switch", { name: "切换每日今日偶遇通知" })).toBeVisible();
   await expect(drawer.getByRole("link", { name: /下载 App/ })).toHaveCount(0);
 });
 

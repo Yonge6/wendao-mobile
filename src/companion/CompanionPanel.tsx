@@ -17,6 +17,7 @@ type CompanionPanelProps = {
   chapterId: number;
   initialQuestion?: string;
   onShareAnswer?: (answer: string) => void;
+  onSignedOut?: () => void;
 };
 
 type ConversationMessage = {
@@ -86,7 +87,7 @@ function SignedInCompanion({
   initialQuestion,
   onShareAnswer,
   onSignOut,
-}: CompanionPanelProps & { session: Session; onSignOut: () => Promise<void> }) {
+}: CompanionPanelProps & { session: Session; onSignOut: (mode: "switch" | "sign-out" | "deleted") => Promise<void> }) {
   const [state, setState] = useState<CompanionState | null>(null);
   const [accessError, setAccessError] = useState("");
   const [question, setQuestion] = useState(initialQuestion ?? "");
@@ -172,7 +173,7 @@ function SignedInCompanion({
     );
   }
   if (!entitlementActive(state.entitlement)) {
-    return <SubscriptionPanel language={language} session={session} onSignOut={onSignOut} onMembershipChanged={refresh} onOpenAccount={() => setView("account")} />;
+    return <SubscriptionPanel language={language} session={session} onSignOut={() => onSignOut("sign-out")} onMembershipChanged={refresh} onOpenAccount={() => setView("account")} />;
   }
 
   if (view === "memory") {
@@ -427,7 +428,7 @@ function SignedInCompanion({
   );
 }
 
-export default function CompanionPanel({ language, chapterId, initialQuestion, onShareAnswer }: CompanionPanelProps) {
+export default function CompanionPanel({ language, chapterId, initialQuestion, onShareAnswer, onSignedOut }: CompanionPanelProps) {
   return (
     <CompanionAuth language={language}>
       {(session, signOut) => (
@@ -437,7 +438,10 @@ export default function CompanionPanel({ language, chapterId, initialQuestion, o
           chapterId={chapterId}
           initialQuestion={initialQuestion}
           onShareAnswer={onShareAnswer}
-          onSignOut={signOut}
+          onSignOut={async (mode) => {
+            await signOut();
+            if (mode !== "switch") onSignedOut?.();
+          }}
         />
       )}
     </CompanionAuth>

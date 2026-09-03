@@ -120,7 +120,7 @@ test("Apple account deletion remains available and reports the continuing store 
   assert.deepEqual(await response.json(), { deleted: true, appleSubscriptionMayContinue: true });
 });
 
-test("the shipped Companion UI exposes export and in-app account deletion", async () => {
+test("the shipped Companion UI separates switching and sign-out from account deletion", async () => {
   const [panel, account, api] = await Promise.all([
     readFile(new URL("../src/companion/CompanionPanel.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/companion/AccountPanel.tsx", import.meta.url), "utf8"),
@@ -128,8 +128,12 @@ test("the shipped Companion UI exposes export and in-app account deletion", asyn
   ]);
   assert.match(panel, /view === "account"[\s\S]+<AccountPanel/);
   assert.match(account, /导出我的数据/);
-  assert.match(account, /删除账号/);
-  assert.match(account, /confirmation !== "DELETE"/);
+  assert.match(account, /切换账号/);
+  assert.match(account, /退出登录/);
+  assert.match(account, /删除账号与数据/);
+  assert.match(account, /role="alertdialog"/);
+  assert.match(account, /会员与记录不会删除/);
+  assert.doesNotMatch(account, /输入 DELETE 确认/);
   assert.match(api, /method: "DELETE", body: JSON\.stringify\(\{ confirmation: "DELETE" \}\)/);
 });
 
