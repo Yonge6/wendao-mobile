@@ -7,6 +7,7 @@ import {
   freeChapterSlotsRemaining,
   keepFreeChapter,
   loadFreeChapterIds,
+  membershipEntitlementIsActive,
 } from "../src/readingAccess.ts";
 
 function memoryStorage(initial = {}) {
@@ -32,4 +33,12 @@ test("only ten deliberately kept chapters are stored", () => {
 test("full access unlocks any chapter while free choices remain limited", () => {
   assert.equal(chapterIsReadable({ chapterId: 81, dailyChapterId: 1, freeChapterIds: [2], hasFullAccess: false }), false);
   assert.equal(chapterIsReadable({ chapterId: 81, dailyChapterId: 1, freeChapterIds: [2], hasFullAccess: true }), true);
+});
+
+test("active and grace-period account memberships unlock reading", () => {
+  const now = Date.parse("2026-09-04T12:00:00.000Z");
+  assert.equal(membershipEntitlementIsActive({ status: "active", expires_at: null }, now), true);
+  assert.equal(membershipEntitlementIsActive({ status: "grace", expires_at: "2026-09-05T12:00:00.000Z" }, now), true);
+  assert.equal(membershipEntitlementIsActive({ status: "active", expires_at: "2026-09-03T12:00:00.000Z" }, now), false);
+  assert.equal(membershipEntitlementIsActive({ status: "expired", expires_at: null }, now), false);
 });

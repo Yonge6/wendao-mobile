@@ -36,6 +36,14 @@ test("keeps a locked chapter free only after the reader confirms the choice", as
   await gate.getByRole("button", { name: /免费保留这一章/ }).click();
   await expect(page.locator("article.chapter-current")).toHaveCount(1);
   await expect.poll(async () => page.evaluate(() => JSON.parse(window.localStorage.getItem("wendao-free-chapters-v1") ?? "[]"))).toContain(2);
+
+  const reading = page.getByTestId("mobile-scroll");
+  await reading.evaluate((element) => { element.scrollTop = element.scrollHeight; });
+  await expect(page.getByText("下一章正在展开", { exact: true })).toBeVisible();
+  await expect.poll(async () => (
+    await page.locator("article.chapter").count() === 2
+      || await page.getByTestId("reading-access-gate").isVisible()
+  )).toBe(true);
 });
 
 const chartSnapshot = {

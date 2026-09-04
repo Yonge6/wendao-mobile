@@ -57,14 +57,15 @@ import type { ShareCardKind } from "./shareCard";
 import { initializeNativeShell, nativeImpact, runtimeSurface, syncNativeTheme } from "./native";
 import AppStoreDownloadLink from "./companion/AppStoreDownloadLink";
 import { WENDAO_APP_STORE_REVIEW_URL } from "./companion/plans";
-import { reviewStoreKit } from "./companion/storekit";
-import { loadStoreKitEntitlements } from "./companion/storekit";
+import { loadStoreKitEntitlements, reviewStoreKit, STOREKIT_PRODUCTS } from "./companion/storekit";
+import { companionClient } from "./companion/client";
 import {
   chapterIsReadable,
   FREE_CHAPTER_LIMIT,
   freeChapterSlotsRemaining,
   keepFreeChapter,
   loadFreeChapterIds,
+  membershipEntitlementIsActive,
   READING_ACCESS_CHANGED_EVENT,
 } from "./readingAccess";
 
@@ -1868,7 +1869,9 @@ export default function Prototype() {
   const [adminOpen, setAdminOpen] = useState(isAdminLocation);
   const [freeChapterIds, setFreeChapterIds] = useState(loadFreeChapterIds);
   const [hasFullReadingAccess, setHasFullReadingAccess] = useState(false);
+  const [hasCompanionMembership, setHasCompanionMembership] = useState(false);
   const [readingAccessReady, setReadingAccessReady] = useState(runtimeSurface() !== "ios");
+  const [companionSignedIn, setCompanionSignedIn] = useState<boolean | null>(null);
   const [dailyNotificationState, setDailyNotificationState] = useState<DailyNotificationState>(() => dailyNotificationsEnabled() ? "enabled" : "disabled");
   const [dailyNotificationBusy, setDailyNotificationBusy] = useState(false);
   const clientId = useRef(stableId(CLIENT_ID_KEY));
@@ -1988,24 +1991,89 @@ export default function Prototype() {
   }, [language]);
 
   useEffect(() => {
-    if (runtimeSurface() !== "ios") return;
     let active = true;
+    let refreshId = 0;
+    const client = companionClient();
     const refresh = async () => {
-      try {
-        const entitlements = await loadStoreKitEntitlements();
-        if (active) setHasFullReadingAccess(entitlements.length > 0);
-      } catch {
-        if (active) setHasFullReadingAccess(false);
-      } finally {
-        if (active) setReadingAccessReady(true);
+      const currentRefreshId = ++refreshId;
+      let nativeAccess: boolean | null = runtimeSurface() === "ios" ? null : false;
+      let nativeCompanionAccess: boolean | null = runtimeSurface() === "ios" ? null : false;
+      let cloudAccess: boolean | null = client ? null : false;
+      let signedIn: boolean | null = client ? null : false;
+
+      if (runtimeSurface() === "ios") {
+        try {
+          const entitlements = await loadStoreKitEntitlements();
+          nativeAccess = entitlements.length > 0;
+          nativeCompanionAccess = entitlements.some(({ productId }) => (
+            productId === STOREKIT_PRODUCTS.monthly || productId === STOREKIT_PRODUCTS.annual
+          ));
+        } catch {
+          nativeAccess = null;
+          nativeCompanionAccess = null;
+        }
+        if (active && currentRefreshId === refreshId) {
+          if (nativeAccess === true) setHasFullReadingAccess(true);
+          if (nativeCompanionAccess === true) setHasCompanionMembership(true);
+          setReadingAccessReady(true);
+        }
       }
+
+      if (client) {
+        try {
+          const { data, error } = await client.auth.getSession();
+          if (error) throw error;
+          const session = data.session;
+          signedIn = Boolean(session);
+          if (!session) {
+            cloudAccess = false;
+          } else {
+            const result = await client
+              .from("wendao_entitlements")
+              .select("status,expires_at")
+              .eq("user_id", session.user.id)
+              .maybeSingle();
+            if (result.error) throw result.error;
+            cloudAccess = membershipEntitlementIsActive(result.data);
+          }
+        } catch {
+          signedIn = null;
+          cloudAccess = null;
+        }
+      }
+
+      if (!active || currentRefreshId !== refreshId) return;
+      if (signedIn !== null) setCompanionSignedIn(signedIn);
+      setHasFullReadingAccess((current) => {
+        if (nativeAccess === true || cloudAccess === true) return true;
+        if (nativeAccess !== null && cloudAccess !== null) return false;
+        return current;
+      });
+      setHasCompanionMembership((current) => {
+        if (nativeCompanionAccess === true || cloudAccess === true) return true;
+        if (nativeCompanionAccess !== null && cloudAccess !== null) return false;
+        return current;
+      });
+      setReadingAccessReady(true);
     };
     void refresh();
     const handleChange = () => void refresh();
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") void refresh();
+    };
     window.addEventListener(READING_ACCESS_CHANGED_EVENT, handleChange);
+    document.addEventListener("visibilitychange", handleVisibility);
+    const authSubscription = client?.auth.onAuthStateChange((_event, session) => {
+      if (!active) return;
+      setCompanionSignedIn(Boolean(session));
+      window.setTimeout(handleChange, 0);
+    });
     return () => {
       active = false;
+      refreshId += 1;
       window.removeEventListener(READING_ACCESS_CHANGED_EVENT, handleChange);
+      document.removeEventListener("visibilitychange", handleVisibility);
+      authSubscription?.data.subscription.unsubscribe();
     };
   }, []);
 
@@ -2068,7 +2136,7 @@ export default function Prototype() {
 
     observer.observe(trigger);
     return () => observer.disconnect();
-  }, [orderedChapters, visibleChapterCount]);
+  }, [lockedChapter?.id, orderedChapters, visibleChapterCount]);
 
   useEffect(() => () => {
     if (chapterOpeningTimerRef.current !== null) window.clearTimeout(chapterOpeningTimerRef.current);
@@ -2520,13 +2588,21 @@ export default function Prototype() {
         <button
           type="button"
           className={`ai-composer ${isReadingScrolled ? "is-reading" : ""}`}
-          aria-label={isZh ? "打开我的问道并登录" : "Open My Wendao and sign in"}
+          aria-label={companionSignedIn
+            ? (isZh ? "打开我的问道" : "Open My Wendao")
+            : (isZh ? "打开我的问道并登录" : "Open My Wendao and sign in")}
           onClick={openCompanion}
         >
           <span className="composer-spark" aria-hidden="true">✦</span>
           <div className="composer-field">
             <small className="composer-expectation" id="composer-expectation">
-              {isZh ? "AI 问道 · 登录后使用" : "Wendao AI · sign in to use"}
+              {companionSignedIn === false
+                ? (isZh ? "AI 问道 · 登录后使用" : "Wendao AI · sign in to use")
+                : hasCompanionMembership
+                  ? (isZh ? "AI 问道 · 会员可用" : "Wendao AI · membership active")
+                  : companionSignedIn
+                  ? (isZh ? "AI 问道 · 查看会员" : "Wendao AI · view membership")
+                    : (isZh ? "AI 问道 · 正在同步" : "Wendao AI · syncing")}
             </small>
             <span className="composer-placeholder">
               {isZh ? "写下一个处境、矛盾或选择…" : "Describe a situation, tension, or choice…"}

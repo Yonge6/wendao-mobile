@@ -11,6 +11,7 @@ import WeeklyReflectionPanel from "./WeeklyReflectionPanel";
 import { Capacitor } from "@capacitor/core";
 import { manageStoreKit } from "./storekit";
 import AccountPanel from "./AccountPanel";
+import { membershipEntitlementIsActive } from "../readingAccess";
 
 type CompanionPanelProps = {
   language: "zh" | "en";
@@ -31,12 +32,6 @@ type ConversationMessage = {
 type CompanionState = {
   entitlement: { status: string; source: string; expires_at: string | null } | null;
 };
-
-function entitlementActive(entitlement: CompanionState["entitlement"]) {
-  if (!entitlement || !["active", "grace"].includes(entitlement.status)) return false;
-  if (!entitlement.expires_at) return entitlement.status === "active";
-  return Date.parse(entitlement.expires_at) > Date.now();
-}
 
 function friendlyCompanionError(error: unknown, isZh: boolean) {
   const message = error instanceof Error ? error.message : "";
@@ -172,7 +167,7 @@ function SignedInCompanion({
       />
     );
   }
-  if (!entitlementActive(state.entitlement)) {
+  if (!membershipEntitlementIsActive(state.entitlement)) {
     return <SubscriptionPanel language={language} session={session} onSignOut={() => onSignOut("sign-out")} onMembershipChanged={refresh} onOpenAccount={() => setView("account")} />;
   }
 

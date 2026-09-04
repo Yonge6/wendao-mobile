@@ -7,6 +7,21 @@ export type ReadingAccessState = {
   hasFullAccess: boolean;
 };
 
+export type ReadingMembershipEntitlement = {
+  status: string;
+  expires_at: string | null;
+};
+
+export function membershipEntitlementIsActive(
+  entitlement: ReadingMembershipEntitlement | null,
+  now = Date.now(),
+): boolean {
+  if (!entitlement || !["active", "grace"].includes(entitlement.status)) return false;
+  if (!entitlement.expires_at) return entitlement.status === "active";
+  const expiresAt = Date.parse(entitlement.expires_at);
+  return Number.isFinite(expiresAt) && expiresAt > now;
+}
+
 function validChapterIds(value: unknown): number[] {
   if (!Array.isArray(value)) return [];
   return [...new Set(value.filter((item): item is number => (
