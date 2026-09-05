@@ -26,6 +26,16 @@
 
 The initial account-blocker details below are historical; upload is now resolved. Remaining work is screenshots, saving/verifying the selected build and final review submission.
 
+### Continuation after unlock at 14:19–14:23
+
+- Build 15 is selected and saved on version 1.7.
+- Captured and visually inspected authentic 13-inch iPad portrait screenshots from the 1.7 (15) simulator build in English and Simplified Chinese.
+- Store upload files are JPEG, 2064 × 2752, without an alpha channel:
+  - `docs/app-store/screenshots/ipad/en-US/01-reading.jpg`
+  - `docs/app-store/screenshots/ipad/zh-Hans/01-reading.jpg`
+- Uploaded the English screenshot as the default 13-inch iPad media and configured Simplified Chinese as an independent localization with its Chinese screenshot. App Store Connect shows 1/10 screenshots for each localization.
+- App Store Connect now shows “Add for Review” enabled. The actual review submission has not yet been sent; the next UI action changes the App Review submission state.
+
 1. Unlock the Mac. Computer Use cannot capture or operate the simulator while locked; do not work around this restriction.
 2. Sign in to the developer Apple Account in Xcode → Settings → Apple Accounts. The current list is empty. The sign-in dialog was opened for the user; no credentials were entered or collected.
 3. Retry distribution of the existing 1.7 (15) archive in Xcode Organizer. The command-line export failed with `Failed to Use Accounts`; Organizer independently confirmed missing App Store Connect account access. No successful upload of build 15 exists yet.
