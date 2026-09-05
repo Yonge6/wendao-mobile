@@ -1,4 +1,12 @@
-# App Store 1.7 (15) release preparation
+# App Store 1.7 release preparation
+
+## Replacement build prepared at 16:23, 2026-09-05
+
+- Prepared build **1.7 (16)** to replace build 15 after fixing the drawer's “一休冥想” destination so it opens the Yixiu homepage (`https://yixiu.wonderelian.com/`).
+- App and Widget use marketing version 1.7 and build number 16 in all four target/configuration combinations; the archive supports iPhone and iPad.
+- `npm test`: 146/146 passed. `ios:sync` verified 818 bundled files, all 81 chapters, and application source commit `c7dd4bb`.
+- Release archive and strict signature verification succeeded: `/Users/yongyuan/Library/Developer/Xcode/Archives/2026-09-05/Wendao AI 1.7 (16).xcarchive`.
+- The original 1.7 (15) submission remains documented below as release history until withdrawal and replacement submission are verified.
 
 ## Verified on 2026-09-05
 
