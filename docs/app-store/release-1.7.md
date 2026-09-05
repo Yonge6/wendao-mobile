@@ -6,7 +6,17 @@
 - App and Widget use marketing version 1.7 and build number 16 in all four target/configuration combinations; the archive supports iPhone and iPad.
 - `npm test`: 146/146 passed. `ios:sync` verified 818 bundled files, all 81 chapters, and application source commit `c7dd4bb`.
 - Release archive and strict signature verification succeeded: `/Users/yongyuan/Library/Developer/Xcode/Archives/2026-09-05/Wendao AI 1.7 (16).xcarchive`.
-- The original 1.7 (15) submission remains documented below as release history until withdrawal and replacement submission are verified.
+- The original 1.7 (15) submission remains documented below as release history.
+
+## Replacement submission completed at 16:32, 2026-09-05
+
+- Withdrew the original **1.7 (15)** review submission; App Store Connect recorded the version as Developer Rejected before the replacement was prepared.
+- Xcode Organizer uploaded **1.7 (16)** successfully at 16:27. App Store Connect processed build ID `9cee9f67-8661-4ae9-8f15-fc294ed4c661` and reported the upload complete.
+- Replaced build 15 with build 16, updated the review notes to identify build 16 and the corrected Yixiu homepage link, and saved the version.
+- Verified that English and Simplified Chinese each retain one localized 13-inch iPad screenshot.
+- Submitted one item for review. App Store Connect now shows **Waiting for Review** (`正在等待审核`).
+- Replacement review submission ID: `a702d105-eb8d-4f66-a431-797f1f80cd14`.
+- Automatic release after approval, immediate availability to all users, and preservation of the existing rating remain unchanged.
 
 ## Verified on 2026-09-05
 
