@@ -24,6 +24,7 @@ type ShareCardPanelProps = {
   profileReady: boolean;
   initialKind?: ShareCardKind;
   companionShare?: { answer: string } | null;
+  onCreateManual: () => void;
   onAction?: (action: string, kind: ShareCardKind) => void;
 };
 
@@ -34,6 +35,7 @@ export default function ShareCardPanel({
   profileReady,
   initialKind = "verse",
   companionShare,
+  onCreateManual,
   onAction,
 }: ShareCardPanelProps) {
   const isZh = language === "zh";
@@ -44,6 +46,7 @@ export default function ShareCardPanel({
   const [saveConfirming, setSaveConfirming] = useState(false);
   const [saving, setSaving] = useState(false);
   const previewScrollRef = useRef<HTMLDivElement>(null);
+  const needsManual = !companionShare && kind === "manual" && !profileReady;
   const content = useMemo(
     () => companionShare
       ? buildCompanionShareCardContent(chapter, language, companionShare.answer)
@@ -60,6 +63,10 @@ export default function ShareCardPanel({
     let cancelled = false;
     setRendering(true);
     setImageUrl("");
+    if (needsManual) {
+      setRendering(false);
+      return;
+    }
     void renderShareCardDataUrl(content)
       .then((url) => {
         if (!cancelled) setImageUrl(url);
@@ -73,7 +80,7 @@ export default function ShareCardPanel({
     return () => {
       cancelled = true;
     };
-  }, [content, isZh]);
+  }, [content, isZh, needsManual]);
 
   useEffect(() => {
     if (!feedback) return;
@@ -87,7 +94,6 @@ export default function ShareCardPanel({
   }, [chapter.id, kind, language]);
 
   const selectKind = (nextKind: ShareCardKind) => {
-    if (nextKind === "manual" && !profileReady) return;
     setKind(nextKind);
     setFeedback("");
     onAction?.("card_type", nextKind);
@@ -170,15 +176,12 @@ export default function ShareCardPanel({
     <div className="share-card-panel">
       {!companionShare ? <div className="share-kind-tabs" role="tablist" aria-label={isZh ? "分享卡类型" : "Share card type"}>
         {SHARE_CARD_KINDS.map((option) => {
-          const disabled = option === "manual" && !profileReady;
           return (
             <button
               type="button"
               role="tab"
               aria-selected={kind === option}
-              aria-disabled={disabled}
               className={kind === option ? "is-active" : ""}
-              disabled={disabled}
               onClick={() => selectKind(option)}
               key={option}
             >
@@ -188,15 +191,20 @@ export default function ShareCardPanel({
         })}
       </div> : null}
 
-      {!companionShare && !profileReady ? (
-        <p className="share-manual-note">
-          {isZh ? "生成真实人生说明书后，可分享匿名说明书卡。" : "Create a verified life manual to share an anonymous manual card."}
-        </p>
-      ) : null}
-
       <div className="share-card-workspace">
         <div className="share-card-preview-scroll" ref={previewScrollRef} data-testid="share-card-preview-scroll">
-          <figure
+          {needsManual ? (
+            <section className="share-manual-intro" aria-labelledby="share-manual-title">
+              <span className="drawer-kicker">{isZh ? "认识自己 · 多一种视角" : "Another lens on yourself"}</span>
+              <h3 id="share-manual-title">{isZh ? "让这一章，也与你有关" : "See this chapter in your own life"}</h3>
+              <p>{isZh
+                ? "录入出生日期、时间和地点后，你可以生成人生说明书。它会结合人类图的反思视角与本章《道德经》，帮助你观察自己的做事节奏、选择方式和相处习惯，把阅读带回真实生活。"
+                : "Enter your birth date, time and place to create a life manual. It brings a Human Design reflection lens to this chapter, helping you explore your pace, decisions and relationships—and bring your reading into daily life."}</p>
+              <p className="share-manual-caveat">{isZh
+                ? "这是一份自我探索的参考，不是科学结论，也不替你定义人生。生成后，可在这里分享匿名说明书卡，不包含姓名和出生资料。"
+                : "This is a tool for self-exploration, not a scientific conclusion or a definition of who you are. Once created, you can share an anonymous card here without your name or birth details."}</p>
+            </section>
+          ) : <figure
             className="share-card-preview"
             aria-label={`${content.primary} ${pinyinDescription} ${content.secondaryLabel} ${content.secondary}`.trim()}
           >
@@ -213,10 +221,16 @@ export default function ShareCardPanel({
                   : (isZh ? "等待重新生成" : "Waiting to retry")}
               </div>
             )}
-          </figure>
+          </figure>}
         </div>
 
         <div className="share-card-controls">
+          {needsManual ? (
+            <button type="button" className="share-action-primary" onClick={onCreateManual}>
+              {isZh ? "录入出生信息" : "Enter birth details"}
+              <span aria-hidden="true">→</span>
+            </button>
+          ) : <>
           <button
             type="button"
             className="share-action-primary"
@@ -265,6 +279,7 @@ export default function ShareCardPanel({
             </div>
           ) : null}
           {feedback ? <p className="share-action-feedback" aria-live="polite">{feedback}</p> : null}
+          </>}
         </div>
       </div>
     </div>

@@ -1386,6 +1386,7 @@ textarea {
 
 .web-sheet .sheet-title-row.has-eyebrow {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   justify-content: space-between;
   gap: 8px;
@@ -1401,11 +1402,12 @@ textarea {
   color: var(--gold);
   font: 500 10px/1.45 var(--sans);
   letter-spacing: 0.08em;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 
 .web-sheet .sheet-title-row.has-eyebrow .sheet-title {
-  white-space: nowrap;
+  min-width: 0;
+  white-space: normal;
 }
 
 .web-sheet .sheet-description {
@@ -1468,16 +1470,49 @@ textarea {
   box-shadow: 0 4px 12px color-mix(in srgb, var(--ink) 18%, transparent);
 }
 
-.share-kind-tabs button:disabled {
-  cursor: not-allowed;
-  opacity: 0.36;
+.share-manual-intro {
+  max-width: 440px;
+  margin: clamp(8px, 3vh, 32px) auto;
+  padding: 24px 20px;
+  border: 1px solid color-mix(in srgb, var(--gold) 28%, transparent);
+  border-radius: 24px;
+  background: color-mix(in srgb, var(--gold) 5%, transparent);
 }
 
-.share-manual-note {
-  margin: 8px 5px 0;
+.share-manual-intro h3 {
+  margin: 16px 0;
+  color: var(--ink);
+  font: 500 clamp(21px, 5vw, 26px)/1.5 var(--serif);
+}
+
+.share-manual-intro p {
+  margin: 0;
   color: var(--ink-soft);
-  font-size: 10px;
-  line-height: 1.55;
+  font-size: 14px;
+  line-height: 1.85;
+}
+
+.share-manual-intro .share-manual-caveat {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid color-mix(in srgb, var(--gold) 22%, transparent);
+  font-size: 12px;
+}
+
+.directory-copy { min-width: 0; }
+.directory-match { display: flex; flex-direction: column; gap: 5px; margin-top: 5px; }
+.directory-match-source { color: var(--ink-soft); font: 500 11px/1.5 var(--sans); }
+.directory-match-excerpt { color: var(--ink); font: 400 13px/1.75 var(--sans); overflow-wrap: anywhere; }
+.directory-copy mark {
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--gold) 24%, transparent);
+  color: inherit;
+  font-weight: 600;
+}
+[data-search-match="true"] {
+  outline: 1px solid color-mix(in srgb, var(--gold) 55%, transparent);
+  outline-offset: 6px;
+  background: color-mix(in srgb, var(--gold) 9%, transparent);
 }
 
 .share-card-workspace {

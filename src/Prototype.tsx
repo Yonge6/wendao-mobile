@@ -40,6 +40,7 @@ import "@fontsource/noto-serif-sc/600.css";
 import type { HumanDesignReadingChart } from "./humanDesignReading";
 import { chapters, type Chapter, type RelatedItem } from "./data/chapters";
 import { dailyChapterId, localDateKey } from "./dailyEncounter";
+import { normalizeSearch, searchChapters, searchExcerpt, type SearchMatch } from "./chapterSearch";
 import {
   DAILY_NOTIFICATION_TIME_LABEL,
   dailyNotificationsEnabled,
@@ -475,36 +476,9 @@ function personalizedAdvice(chapter: Chapter, chart: ChartSnapshot, language: La
   return `对${type}、${profile}人生角色的你来说，《${copy.title}》先照见的是：“${inspiration}”${typeSentence}。${strategySentence}；${authoritySentence}。你的${profile}人生角色尤其适合${profileSentence}。这是结合本章与人类图的观察镜，不替你做决定。`;
 }
 
-// Build each chapter's bilingual search text only when search is first used.
-// Reuse it across keystrokes without adding work to the initial reading frame.
-const chapterSearchCache = new WeakMap<Chapter, string>();
-
-function chapterSearchText(chapter: Chapter) {
-  const cached = chapterSearchCache.get(chapter);
-  if (cached !== undefined) return cached;
-  const text = [
-    chapter.id,
-    `第${chapter.id}章`,
-    chapter.silkOrder,
-    chapter.theme.zh,
-    chapter.theme.en,
-    chapter.sources.silkBTranscription,
-    chapter.sources.receivedReference,
-    chapter.sources.reconstructionNotes,
-    chapter.zh.title,
-    ...chapter.zh.reconstructedVerse,
-    ...chapter.zh.lineByLineTranslation,
-    ...chapter.zh.explanation.flatMap((item) => [item.title, item.body]),
-    ...chapter.zh.related.flatMap((item) => [item.title, item.body, ...(item.points ?? [])]),
-    chapter.zh.action,
-    chapter.en.title,
-    ...chapter.en.verse,
-    ...chapter.en.explanation.flatMap((item) => [item.title, item.body]),
-    ...chapter.en.related.flatMap((item) => [item.title, item.body, ...(item.points ?? [])]),
-    chapter.en.action,
-  ].join(" ").toLocaleLowerCase().replace(/\s+/g, "");
-  chapterSearchCache.set(chapter, text);
-  return text;
+function SearchHighlight({ text, query }: { text: string; query: string }) {
+  const excerpt = searchExcerpt(text, query, 50);
+  return <>{excerpt.before}{excerpt.highlight ? <mark>{excerpt.highlight}</mark> : null}{excerpt.after}</>;
 }
 
 function loadTheme(): Theme {
@@ -1873,6 +1847,7 @@ export default function Prototype() {
   const chapterOpeningRef = useRef(false);
   const chapterOpeningTimerRef = useRef<number | null>(null);
   const initialSectionHandledRef = useRef(false);
+  const [searchTarget, setSearchTarget] = useState<{ chapterId: number; match: SearchMatch } | null>(null);
   const orderedChapters = useMemo(() => reorderFrom(chapterId), [chapterId]);
   const todayChapterId = dailyChapterId(recommendationDate);
   const isZh = language === "zh";
@@ -1880,12 +1855,10 @@ export default function Prototype() {
   const shareChapter = chapters.find((chapter) => chapter.id === shareChapterId) ?? activeChapter;
   const shareCopy = shareChapter[language];
   const profileReady = Boolean(chart?.chartHash);
-  const normalizedDirectoryQuery = directoryQuery.trim().toLocaleLowerCase().replace(/\s+/g, "");
+  const normalizedDirectoryQuery = normalizeSearch(directoryQuery.trim());
   const directoryChapters = useMemo(
-    () => normalizedDirectoryQuery
-      ? chapters.filter((chapter) => chapterSearchText(chapter).includes(normalizedDirectoryQuery))
-      : chapters,
-    [normalizedDirectoryQuery],
+    () => searchChapters(chapters, normalizedDirectoryQuery, language),
+    [normalizedDirectoryQuery, language],
   );
   const canReadChapter = (id: number) => chapterIsReadable({
     chapterId: id,
@@ -1897,6 +1870,28 @@ export default function Prototype() {
   const firstLockedIndex = visibleCandidates.findIndex((chapter) => !canReadChapter(chapter.id));
   const displayedChapters = firstLockedIndex < 0 ? visibleCandidates : visibleCandidates.slice(0, firstLockedIndex);
   const lockedChapter = firstLockedIndex < 0 ? null : visibleCandidates[firstLockedIndex];
+  const searchTargetReadable = Boolean(searchTarget && canReadChapter(searchTarget.chapterId));
+
+  useEffect(() => {
+    if (!searchTarget || searchTarget.chapterId !== chapterId || !searchTargetReadable || directoryOpen) return;
+    let highlighted: HTMLElement | undefined;
+    const timer = window.setTimeout(() => {
+      const chapter = document.querySelector<HTMLElement>(`.chapter[data-chapter-id="${searchTarget.chapterId}"]`);
+      const section = chapter?.querySelector<HTMLElement>(`[data-share-section="${searchTarget.match.section}"]`);
+      const candidates = section?.querySelectorAll<HTMLElement>("h1, h2, p, q, small") ?? [];
+      const exact = [...candidates].find((node) => normalizeSearch(node.dataset.copyText ?? node.textContent ?? "").includes(searchTarget.match.normalized));
+      const target = exact ?? section;
+      const scroll = document.querySelector<HTMLElement>("[data-testid='mobile-scroll']");
+      if (!target || !scroll) return;
+      const headerBottom = document.querySelector(".reading-header-fixed")?.getBoundingClientRect().bottom ?? scroll.getBoundingClientRect().top;
+      scroll.scrollTo({ top: scroll.scrollTop + target.getBoundingClientRect().top - headerBottom - 20, behavior: "auto" });
+      if (exact) { exact.dataset.searchMatch = "true"; highlighted = exact; }
+    }, 180);
+    return () => {
+      window.clearTimeout(timer);
+      if (highlighted) delete highlighted.dataset.searchMatch;
+    };
+  }, [searchTarget, chapterId, searchTargetReadable, directoryOpen, language]);
 
   const trackEvent = (eventName: string, metadata: Record<string, string | number> = {}, eventChapter = chapterId) => {
     const googleTag = (window as typeof window & { gtag?: (...args: unknown[]) => void }).gtag;
@@ -2140,8 +2135,10 @@ export default function Prototype() {
     setIsOpeningNextChapter(false);
   };
 
-  const selectChapter = (id: number) => {
+  const selectChapter = (id: number, match?: SearchMatch) => {
     resetChapterOpening();
+    setSearchTarget(match ? { chapterId: id, match } : null);
+    if (match) setLanguage(match.language);
     nativeImpact("light");
     setChapterId(id);
     setChapterEntrySource("directory");
@@ -2162,6 +2159,7 @@ export default function Prototype() {
 
   const meetAChapter = () => {
     resetChapterOpening();
+    setSearchTarget(null);
     nativeImpact("medium");
     const candidates = chapters.filter((chapter) => chapter.id !== chapterId);
     const next = candidates[Math.floor(Math.random() * candidates.length)];
@@ -2263,12 +2261,14 @@ export default function Prototype() {
   };
 
   const openDirectory = (focusSearch: boolean) => {
+    setSearchTarget(null);
     setDirectoryFocusRequested(focusSearch);
     setDirectoryOpen(true);
     trackEvent("directory_open", { source: focusSearch ? "header_search" : "header" });
   };
 
   const changeLanguage = (nextLanguage: Language) => {
+    setSearchTarget(null);
     resetChapterOpening();
     setLanguage(nextLanguage);
     setVisibleChapterCount(1);
@@ -2636,14 +2636,14 @@ export default function Prototype() {
               </button>
             ) : null}
           </div>
-          <small>
+          <small aria-live="polite">
             {normalizedDirectoryQuery
-              ? (isZh ? `找到 ${directoryChapters.length} 章` : `${directoryChapters.length} chapters found`)
+              ? (isZh ? `找到 ${directoryChapters.length} 章 · 按相关度排序` : `${directoryChapters.length} chapters found · Most relevant first`)
               : (isZh ? "可搜索乙本转写、校读正文、传世参照与现代解读" : "Includes Silk B, base readings, received references, and interpretation")}
           </small>
         </div>
         <div className="directory-list">
-          {directoryChapters.map((chapter) => {
+          {directoryChapters.map(({ chapter, match }) => {
             const copy = chapter[language];
             const readable = canReadChapter(chapter.id);
             return (
@@ -2652,12 +2652,19 @@ export default function Prototype() {
                 className={`${chapter.id === chapterId ? "directory-item is-current" : "directory-item"} ${readable ? "" : "is-locked"}`.trim()}
                 key={chapter.id}
                 data-chapter-id={chapter.id}
-                onClick={() => selectChapter(chapter.id)}
+                onClick={() => selectChapter(chapter.id, match)}
               >
                 <span className="directory-number">{String(chapter.silkOrder).padStart(2, "0")}</span>
                 <span className="directory-copy">
-                  <strong>{copy.title}</strong>
+                  <strong><SearchHighlight text={copy.title} query={directoryQuery} /></strong>
                   <small>{isZh ? `今本第 ${chapter.id} 章` : `Received chapter ${chapter.id}`}</small>
+                  {match ? <span className="directory-match">
+                    <span className="directory-match-source">{match.weight === 100 ? (isZh ? "原文" : "Text") : match.label[language]}{match.language !== language ? (match.language === "zh" ? " · 中文" : " · English") : ""}</span>
+                    <span className="directory-match-excerpt"><SearchHighlight
+                      text={match.weight === 100 ? (match.language === "zh" ? chapter.zh.reconstructedVerse : chapter.en.verse).slice(0, 2).join(" ") : match.text}
+                      query={directoryQuery}
+                    /></span>
+                  </span> : null}
                 </span>
                 {readable
                   ? <span className="directory-arrow" aria-hidden="true">→</span>
@@ -2698,6 +2705,11 @@ export default function Prototype() {
               profileReady={profileReady}
               initialKind={shareInitialKind}
               companionShare={companionShare}
+              onCreateManual={() => {
+                setShareOpen(false);
+                setDrawerView("profile");
+                setDrawerOpen(true);
+              }}
             />
           </Suspense>
         ) : null}

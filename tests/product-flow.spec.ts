@@ -251,6 +251,76 @@ test("starts at the former default size and offers two larger reading steps", as
   await expect(page.locator(".verse-line-ruby > .verse-punctuation")).toHaveCount(0);
 });
 
+test("search explains matches and opens the matching passage without spending free chapters", async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/?chapter=8&lang=zh");
+  await page.getByRole("button", { name: "搜索章节", exact: true }).click();
+  const search = page.getByRole("searchbox", { name: "搜索章节" });
+  await search.fill("关系");
+  expect(await page.locator(".directory-item").count()).toBeGreaterThan(1);
+  expect(await page.locator(".directory-match-excerpt mark").count()).toBeGreaterThan(1);
+  await expect(page.locator(".directory-search")).toContainText("按相关度排序");
+  await page.screenshot({ path: testInfo.outputPath("search-matching-excerpts.png") });
+  await search.fill(chapter8Insights.points![1].slice(10, 30));
+  await page.locator('.directory-item[data-chapter-id="8"]').click();
+  const highlighted = page.locator('[data-search-match="true"]');
+  await expect(highlighted).toContainText(chapter8Insights.points![1]);
+  await expect(highlighted).toBeInViewport();
+  const header = await page.locator(".reading-header-fixed").boundingBox();
+  expect((await highlighted.boundingBox())!.y).toBeGreaterThan(header!.y + header!.height);
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem("wendao-free-chapters-v1")!))).toEqual([1, 8, 21, 64]);
+  await page.getByRole("button", { name: "搜索章节", exact: true }).click();
+  await search.fill("上善如水");
+  await page.getByRole("button", { name: "清除搜索" }).click();
+  await expect(page.locator(".directory-item")).toHaveCount(81);
+  await expect(page.locator(".directory-match")).toHaveCount(0);
+});
+
+test("a locked search match waits for deliberate unlock before locating the passage", async ({ page }) => {
+  const locked = chapters.find((chapter) => chapter.id === 2)!;
+  const insight = locked.zh.related.find((item) => item.title === "对我们的启发")!.points![0];
+  await page.goto("/?chapter=8&lang=zh");
+  await page.getByRole("button", { name: "搜索章节", exact: true }).click();
+  await page.getByRole("searchbox", { name: "搜索章节" }).fill(insight.slice(10, 30));
+  await page.locator('.directory-item[data-chapter-id="2"]').click();
+  await expect(page.getByTestId("reading-access-gate")).toBeVisible();
+  await expect(page.locator('[data-search-match="true"]')).toHaveCount(0);
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem("wendao-free-chapters-v1")!))).toEqual([1, 8, 21, 64]);
+  await page.getByRole("button", { name: /免费保留这一章/ }).click();
+  await expect(page.locator('[data-search-match="true"]')).toContainText(insight);
+  await expect(page.locator('[data-search-match="true"]')).toBeInViewport();
+});
+
+for (const language of ["zh", "en"] as const) {
+  test(`invites readers without a chart to create a life manual from sharing (${language})`, async ({ page }, testInfo) => {
+    await page.setViewportSize({ width: 320, height: 640 });
+    await page.goto(`/?chapter=8&lang=${language}`);
+    await page.locator(".chapter-current .chapter-share-quick").click();
+    const manualTab = page.getByRole("tab", { name: language === "zh" ? "说明书" : "Life manual", exact: true });
+    await manualTab.click();
+    await expect(manualTab).toHaveAttribute("aria-selected", "true");
+    await expect(page.locator(".share-manual-intro")).toBeVisible();
+    await expect(page.locator(".share-manual-intro")).toContainText(language === "zh" ? "不是科学结论" : "not a scientific conclusion");
+    await expect(page.locator(".share-card-preview")).toHaveCount(0);
+    await expect(page.locator(".share-action-grid")).toHaveCount(0);
+    const enter = page.getByRole("button", { name: language === "zh" ? "录入出生信息" : "Enter birth details" });
+    await expect(enter).toBeInViewport();
+    const titleBounds = await page.locator(".is-share-sheet .sheet-title-row").boundingBox();
+    const eyebrowBounds = await page.locator(".is-share-sheet .sheet-eyebrow").boundingBox();
+    expect(eyebrowBounds!.x + eyebrowBounds!.width).toBeLessThanOrEqual(titleBounds!.x + titleBounds!.width + 1);
+    await page.screenshot({ path: testInfo.outputPath(`manual-invitation-${language}.png`) });
+    await page.getByRole("tab", { name: language === "zh" ? "原文" : "Original", exact: true }).click();
+    await expect(page.locator(".share-card-preview img")).toBeVisible();
+    await expect(page.locator(".share-action-grid")).toBeVisible();
+    await manualTab.click();
+    await enter.click();
+    await expect(page.locator(".is-share-sheet")).not.toBeVisible();
+    await expect(page.locator(".drawer-form")).toBeVisible();
+    await expect(page.getByLabel(language === "zh" ? "姓名或称呼" : "Name", { exact: true })).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0);
+  });
+}
+
 test("opens the complete original-text poster and shares an exact chapter link", async ({ page }) => {
   await page.addInitScript(() => {
     Object.defineProperty(navigator, "share", {
@@ -263,7 +333,7 @@ test("opens the complete original-text poster and shares an exact chapter link",
   await page.goto("/?chapter=8&lang=zh");
   await page.locator(".chapter-current .chapter-share-quick").click();
   await expect(page.getByRole("heading", { name: "分享这一章" })).toBeVisible();
-  await expect(page.getByRole("tab", { name: "说明书" })).toBeDisabled();
+  await expect(page.getByRole("tab", { name: "说明书" })).toBeEnabled();
   await expect(page.locator(".is-share-sheet").getByText(/iPhone|1080 × 2340|分享你选中的文字|图片放一个阅读瞬间/)).toHaveCount(0);
 
   const preview = page.locator(".share-card-preview img");
