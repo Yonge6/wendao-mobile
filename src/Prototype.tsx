@@ -986,7 +986,7 @@ function SideDrawer({
     },
     {
       id: "yixiu",
-      href: "https://yixiu.wonderelian.com/mountain-stream-sounds-for-focus/?utm_source=wendao&utm_medium=owned_referral&utm_campaign=focus_sounds&utm_content=works_along_the_way",
+      href: "https://yixiu.wonderelian.com/",
       name: isZh ? "一休冥想" : "Yixiu Meditation",
       tagline: isZh ? "听水慢读" : "Read with water",
       description: isZh

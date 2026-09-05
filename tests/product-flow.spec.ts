@@ -481,7 +481,7 @@ test("drawer presents five bilingual related works in the intended order with sa
   await expect(wonderElianLink).toContainText("WonderElian 是永歌 Elian 的个人创作空间");
   await expect(links.first()).toHaveAttribute("href", "https://wonderelian.com/");
   const yixiuLink = works.getByRole("link", { name: /一休冥想/ });
-  await expect(yixiuLink).toHaveAttribute("href", "https://yixiu.wonderelian.com/mountain-stream-sounds-for-focus/?utm_source=wendao&utm_medium=owned_referral&utm_campaign=focus_sounds&utm_content=works_along_the_way");
+  await expect(yixiuLink).toHaveAttribute("href", "https://yixiu.wonderelian.com/");
   await expect(yixiuLink).toContainText("听水慢读");
   await expect(yixiuLink).toContainText("没有音乐和人声");
   const xiaziLink = works.getByRole("link", { name: /虾子曰/ });
