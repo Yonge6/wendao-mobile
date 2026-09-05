@@ -3000,6 +3000,7 @@ textarea {
 }
 
 .companion-compose-zone {
+  position: relative;
   grid-area: compose;
   display: grid;
   grid-template-rows: auto auto;
@@ -3007,6 +3008,26 @@ textarea {
   gap: 5px;
   padding-top: 9px;
 }
+
+.companion-history-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding-bottom: 5px; }
+.companion-history-toolbar > span { color: var(--ink-soft); font: 11px/1.6 var(--sans); }
+.companion-history-toolbar > div { display: flex; gap: 8px; }
+.companion-history-toolbar button, .companion-history-notice button, .companion-history-list > button, .companion-jump-latest {
+  border: 1px solid color-mix(in srgb, var(--gold) 28%, transparent);
+  border-radius: 12px;
+  padding: 8px 11px;
+  background: var(--paper);
+  color: var(--ink);
+  font: 12px/1.5 var(--sans);
+  cursor: pointer;
+}
+.companion-history-toolbar button:disabled { opacity: .5; cursor: default; }
+.companion-history-notice, .companion-history-list > p { color: var(--ink-soft); font: 12px/1.75 var(--sans); }
+.companion-history-list { display: flex; flex-direction: column; gap: 12px; padding: 8px 0 20px; }
+.companion-history-list > button { display: flex; flex-direction: column; gap: 6px; text-align: left; overflow-wrap: anywhere; }
+.companion-history-list > button:first-child { align-self: flex-start; }
+.companion-history-list small { color: var(--ink-soft); font-size: 11px; }
+.companion-jump-latest { position: absolute; right: 4px; top: -35px; z-index: 2; border-radius: 999px; box-shadow: 0 3px 10px color-mix(in srgb, var(--ink) 10%, transparent); }
 
 .share-loading {
   margin: 0;

@@ -163,6 +163,9 @@ export async function handleCompanionRequest(request, dependencies = {}) {
         replayed: true,
       }, headers);
     }
+    if (reservation.state === "released") {
+      throw new HttpError(409, "request_released", "The previous attempt ended; a new request may be started");
+    }
     if (reservation.state !== "reserved") {
       throw new HttpError(409, "request_in_progress", "This question is already being answered");
     }

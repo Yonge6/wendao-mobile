@@ -4,6 +4,7 @@ export const healthPayload = Object.freeze({
   ok: true,
   service: "wendao-companion-api",
   version: 1,
+  revision: "2026-09-05-ai-continuity",
 });
 
 export default function handler(request, response) {
@@ -25,4 +26,3 @@ export default function handler(request, response) {
     });
   }
 }
-

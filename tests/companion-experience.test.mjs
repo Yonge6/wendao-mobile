@@ -45,6 +45,8 @@ test("conversation renders emphasis as typography and keeps the reading area dom
   assert.match(css, /\.companion-question-form textarea\s*\{[^}]*height:\s*52px[^}]*max-height:\s*52px/s);
   assert.doesNotMatch(panel, /input\.style\.height/);
   assert.match(panel, /className="companion-thinking-dots"/);
+  assert.match(panel, /key=\{session\.user\.id\}/);
+  assert.doesNotMatch(panel, /localStorage\.setItem|sessionStorage\.setItem/);
   assert.match(css, /@keyframes companion-thinking-pulse/);
 });
 
@@ -71,7 +73,8 @@ test("conversation image sharing reuses the chapter poster and canonical QR flow
     readFile(new URL("../src/shareCard.ts", import.meta.url), "utf8"),
   ]);
 
-  assert.match(panel, /onShareAnswer\?\.\(message\.content\)/);
+  assert.match(panel, /onShareAnswer\?\.\(message\.content, message\.chapter_id \?\? chapterId\)/);
+  assert.match(prototype, /setShareChapterId\(sourceChapterId\)/);
   assert.match(prototype, /title=\{companionShare/);
   assert.match(sharePanel, /buildCompanionShareCardContent/);
   assert.match(shareCard, /shareChapterUrl\(chapter\.id, "inspiration", language\)/);

@@ -732,7 +732,7 @@ type CompanionDialogProps = {
   language: Language;
   chapterId: number;
   chapterTitle: string;
-  onShareAnswer: (answer: string) => void;
+  onShareAnswer: (answer: string, sourceChapterId?: number) => void;
 };
 
 function CompanionDialog({
@@ -2289,10 +2289,10 @@ export default function Prototype() {
     setShareOpen(true);
   };
 
-  const openCompanionShare = (answer: string) => {
+  const openCompanionShare = (answer: string, sourceChapterId = chapterId) => {
     setCompanionShare({ answer });
     setShareReturnsToCompanion(true);
-    setShareChapterId(chapterId);
+    setShareChapterId(sourceChapterId);
     setCompanionOpen(false);
     setShareOpen(true);
     trackEvent("companion_answer_share", { source: "conversation" });

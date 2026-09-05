@@ -51,10 +51,31 @@ test("retrieves at most five active memories without raw account fields", () => 
     { id: "5", kind: "current_situation", summary: "团队成员本周休假", status: "active", confidence: 0.6, updated_at: "2026-08-15" },
     { id: "6", kind: "current_situation", summary: "不应被选中", status: "active", confidence: 0.5, updated_at: "2026-08-14" },
     { id: "7", kind: "current_situation", summary: "已经过去", status: "resolved", confidence: 1, updated_at: "2026-08-20" },
-  ]);
+  ], { question: "项目交接完成时容易赶进度，团队成员休假，想列清单，不喜欢频繁提醒", now: Date.parse("2026-08-20") });
 
   assert.equal(selected.length, 5);
   assert.deepEqual(Object.keys(selected[0]).sort(), ["kind", "summary"]);
+});
+
+test("question relevance beats unrelated confidence, ignores expired memories and supports English", () => {
+  const memories = [
+    { kind: "current_situation", summary: "正在和同事交接项目", status: "active", confidence: 0.5 },
+    { kind: "current_situation", summary: "周末准备去海边旅行", status: "active", confidence: 1 },
+    { kind: "current_situation", summary: "项目交接已完成", status: "active", confidence: 1, expires_at: "2026-08-01" },
+  ];
+  assert.deepEqual(selectRelevantMemories(memories, { question: "项目交接时怎样与同事沟通？", now: Date.parse("2026-09-05") }).map((item) => item.summary), ["正在和同事交接项目"]);
+  assert.deepEqual(selectRelevantMemories(memories, { question: "怎样练习书法？" }), []);
+  assert.deepEqual(selectRelevantMemories(memories, { question: "" }), []);
+  const english = [{ kind: "current_situation", summary: "Preparing a project handoff with colleagues", status: "active", confidence: 0.6 }];
+  assert.equal(selectRelevantMemories(english, { question: "How should I handle the project handoff?" }).length, 1);
+  assert.equal(selectRelevantMemories(english, { question: "What is the weather today?" }).length, 0);
+});
+
+test("short follow-ups may use the last user situation but an explicit new topic does not", () => {
+  const memories = [{ kind: "current_situation", summary: "正在交接项目", status: "active" }];
+  const conversation = [{ role: "user", content: "项目交接该怎么做？" }];
+  assert.equal(selectRelevantMemories(memories, { question: "那怎么办？", conversation }).length, 1);
+  assert.equal(selectRelevantMemories(memories, { question: "我想学习书法", conversation }).length, 0);
 });
 
 test("life manual is optional and strips raw birth and account data", () => {

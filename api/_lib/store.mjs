@@ -150,7 +150,7 @@ export function createCompanionStore(environment, dependencies = {}) {
       const [memories, profiles] = await Promise.all([
         memoryEnabled
           ? select(
-              `/wendao_memories?select=kind,summary,status,confidence,updated_at&user_id=${userFilter}&status=eq.active&order=confidence.desc,updated_at.desc&limit=5`,
+              `/wendao_memories?select=kind,summary,status,confidence,updated_at,expires_at&user_id=${userFilter}&status=eq.active&order=updated_at.desc&limit=100`,
               signal,
             )
           : Promise.resolve([]),
@@ -340,7 +340,7 @@ export function createCompanionStore(environment, dependencies = {}) {
       const userFilter = encodeURIComponent(`eq.${userId}`);
       const threadFilter = encodeURIComponent(`eq.${threadId}`);
       const rows = await select(
-        `/wendao_messages?select=role,content,created_at&user_id=${userFilter}&thread_id=${threadFilter}&order=created_at.desc&limit=12`,
+        `/wendao_messages?select=role,content,created_at&user_id=${userFilter}&thread_id=${threadFilter}&order=created_at.desc,role.asc&limit=12`,
         signal,
       );
       return rows.reverse().map(({ role, content }) => ({ role, content }));

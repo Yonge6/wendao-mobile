@@ -61,6 +61,8 @@ export async function streamCompanionAnswer({
   question,
   handlers,
   signal,
+  onRequestIdChanged,
+  allowReleasedRetry = true,
 }: {
   apiUrl: string;
   accessToken: string;
@@ -71,6 +73,8 @@ export async function streamCompanionAnswer({
   question: string;
   handlers: CompanionEventHandlers;
   signal?: AbortSignal;
+  onRequestIdChanged?: (requestId: string) => void;
+  allowReleasedRetry?: boolean;
 }) {
   let completed = false;
   const response = await fetch(`${apiUrl}/api/companion/respond`, {
@@ -84,8 +88,15 @@ export async function streamCompanionAnswer({
     signal,
   });
   if (!response.ok) {
-    const payload = await response.json().catch(() => null) as { error?: { message?: string } } | null;
-    throw new Error(payload?.error?.message || "Wendao Companion is temporarily unavailable");
+    const payload = await response.json().catch(() => null) as { error?: { code?: string; message?: string } } | null;
+    // Rotate only after the server proves the previous reservation was released.
+    // Uncertain or completed requests always reuse the original id for replay.
+    if (response.status === 409 && payload?.error?.code === "request_released" && allowReleasedRetry) {
+      const nextId = crypto.randomUUID();
+      onRequestIdChanged?.(nextId);
+      return streamCompanionAnswer({ apiUrl, accessToken, requestId: nextId, threadId, chapterId, locale, question, handlers, signal, onRequestIdChanged, allowReleasedRetry: false });
+    }
+    throw new CompanionApiError(payload?.error?.code || "request_failed", payload?.error?.message || "Wendao Companion is temporarily unavailable", response.status);
   }
   if (!response.body) throw new Error("Wendao Companion is temporarily unavailable");
   await readCompanionEvents(response.body, {

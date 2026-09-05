@@ -39,16 +39,39 @@ export async function loadChapterContext(chapterId, locale) {
   return chapterContextFromCollection(await loadCanonicalChapters(), chapterId, locale);
 }
 
-export function selectRelevantMemories(memories, limit = 5) {
-  return memories
-    .filter((memory) => memory.status === "active")
-    .sort((left, right) => {
-      const confidence = Number(right.confidence ?? 0) - Number(left.confidence ?? 0);
-      if (confidence !== 0) return confidence;
-      return Date.parse(right.updated_at ?? 0) - Date.parse(left.updated_at ?? 0);
+const memorySegmenter = new Intl.Segmenter("zh", { granularity: "word" });
+const memoryStopWords = new Set("怎样 如何 什么 怎么 怎么办 那么 这个 那个 这样 那样 现在 今天 最近 一个 一些 自己 可以 应该 还是 是否 已经 正在 想要 需要 真的 事情 问题 时候 如果 但是 因为 所以 就是 关于 请问 继续 谢谢 告诉 觉得 怎么样 我们 你们 他们 what how should could would with that this have from about your their them then just does when where which please today really want need more help the and for are was you can not but into".split(" "));
+
+function memoryTerms(text) {
+  return new Set([...memorySegmenter.segment(String(text ?? "").toLocaleLowerCase().slice(0, 4000))]
+    .filter((part) => part.isWordLike && part.segment.length >= 2 && !memoryStopWords.has(part.segment))
+    .map((part) => part.segment));
+}
+
+export function selectRelevantMemories(memories, { question = "", conversation = [], chapter, limit = 5, now = Date.now() } = {}) {
+  let queryTerms = memoryTerms(question);
+  // Only use earlier context for a genuinely underspecified follow-up.
+  if (!queryTerms.size && question.trim()) {
+    queryTerms = memoryTerms(conversation.filter((message) => message.role === "user").at(-1)?.content);
+  }
+  if (!queryTerms.size) return [];
+  const chapterTerms = memoryTerms(chapter?.theme);
+  const overlap = (left, right) => [...left].filter((term) => right.has(term)).length;
+  return memories.slice(0, 100)
+    .filter((memory) => memory.status === "active" && typeof memory.summary === "string"
+      && (!memory.expires_at || Date.parse(memory.expires_at) > now))
+    .map((memory, index) => {
+      const terms = memoryTerms(memory.summary);
+      return { memory, index, relevance: overlap(queryTerms, terms), chapterRelevance: overlap(chapterTerms, terms) };
     })
+    .filter(({ relevance }) => relevance > 0)
+    .sort((left, right) => right.relevance - left.relevance
+      || right.chapterRelevance - left.chapterRelevance
+      || Number(right.memory.confidence ?? 0) - Number(left.memory.confidence ?? 0)
+      || (Date.parse(right.memory.updated_at) || 0) - (Date.parse(left.memory.updated_at) || 0)
+      || left.index - right.index)
     .slice(0, Math.min(5, Math.max(0, limit)))
-    .map(({ kind, summary }) => ({ kind, summary }));
+    .map(({ memory: { kind, summary } }) => ({ kind, summary: summary.slice(0, 1000) }));
 }
 
 function minimalLifeManual(input) {
@@ -110,7 +133,7 @@ export function buildCompanionMessages({
   const manual = minimalLifeManual(lifeManual);
   const context = {
     chapter,
-    memories: selectRelevantMemories(memories),
+    memories: selectRelevantMemories(memories, { question, conversation, chapter }),
     ...(manual ? { lifeManual: manual } : {}),
   };
 

@@ -75,6 +75,15 @@ test("context reads only memory summaries and chart core", async () => {
   assert.deepEqual(context.lifeManual, { type: "Generator", authority: "Sacral" });
   assert.ok(urls.every((url) => !url.includes("birth_date") && !url.includes("email")));
   assert.ok(urls.some((url) => url.includes("select=chart_core")));
+  assert.ok(urls.some((url) => url.includes("wendao_memories") && url.includes("limit=100") && url.includes("expires_at")));
+});
+
+test("context history orders same-time pairs and never queries another user's thread", async () => {
+  const urls = [];
+  const store = createCompanionStore(environment, { fetchImpl: async (url) => { urls.push(url); return Response.json([{ role: "assistant", content: "answer" }, { role: "user", content: "question" }]); } });
+  const history = await store.getRecentMessages("owner", "thread");
+  assert.deepEqual(history.map((message) => message.role), ["user", "assistant"]);
+  assert.match(urls[0], /user_id=eq.owner&thread_id=eq.thread&order=created_at.desc,role.asc&limit=12/);
 });
 
 test("memory changes use owned server-only RPCs", async () => {

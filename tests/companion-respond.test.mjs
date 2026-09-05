@@ -12,6 +12,18 @@ const environment = {
 const userId = "11111111-1111-4111-8111-111111111111";
 const requestId = "22222222-2222-4222-8222-222222222222";
 
+test("distinguishes a released reservation from an in-progress request before any model call", async () => {
+  for (const [state, code] of [["released", "request_released"], ["pending", "request_in_progress"]]) {
+    const response = await handleCompanionRequest(request("项目怎么收尾？"), {
+      environment,
+      authenticate: async () => ({ id: userId }),
+      store: { reserveQuestion: async () => ({ state, questionsThisMonth: 0 }) },
+    });
+    assert.equal(response.status, 409);
+    assert.equal((await response.json()).error.code, code);
+  }
+});
+
 function request(question, overrides = {}) {
   return new Request("https://api.example/companion/respond", {
     method: "POST",

@@ -1,6 +1,6 @@
 import { FormEvent, type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { GearIcon } from "@radix-ui/react-icons";
-import type { Session } from "@supabase/supabase-js";
+import type { Session, SupabaseClient } from "@supabase/supabase-js";
 import CompanionAuth from "./CompanionAuth";
 import SubscriptionPanel from "./SubscriptionPanel";
 import { companionClient, companionPublicConfig } from "./client";
@@ -12,12 +12,14 @@ import { Capacitor } from "@capacitor/core";
 import { manageStoreKit } from "./storekit";
 import AccountPanel from "./AccountPanel";
 import { membershipEntitlementIsActive } from "../readingAccess";
+import { loadRecentThreads, loadThreadMessages, type CompanionThread } from "./history";
+import type { CompanionPublicConfig } from "./config";
 
 type CompanionPanelProps = {
   language: "zh" | "en";
   chapterId: number;
   initialQuestion?: string;
-  onShareAnswer?: (answer: string) => void;
+  onShareAnswer?: (answer: string, sourceChapterId?: number) => void;
   onSignedOut?: () => void;
 };
 
@@ -27,6 +29,9 @@ type ConversationMessage = {
   content: string;
   status?: "pending" | "streaming" | "error";
   retryQuestion?: string;
+  retry?: { requestId: string; chapterId: number; locale: "zh" | "en"; threadId: string | null };
+  failureNote?: string;
+  chapter_id?: number | null;
 };
 
 type CompanionState = {
@@ -37,8 +42,8 @@ function friendlyCompanionError(error: unknown, isZh: boolean) {
   const message = error instanceof Error ? error.message : "";
   if (/timed out|timeout/i.test(message)) {
     return isZh
-      ? "这次整理比预期更久，回答没有完整送达。可以直接重试，我会换一条更快的路径。"
-      : "This response took longer than expected and did not arrive intact. Try again and I will use a faster path.";
+      ? "这次整理比预期更久，回答没有完整送达。问题已经保留，可以直接重试。"
+      : "This response took longer than expected and did not arrive intact. Your question is preserved and ready to retry.";
   }
   return isZh
     ? "这次回答没有完整送达。问题已经保留，可以直接重试。"
@@ -75,29 +80,101 @@ function CompanionMessageContent({ text }: { text: string }) {
   );
 }
 
-function SignedInCompanion({
+export function SignedInCompanion({
   session,
   language,
   chapterId,
   initialQuestion,
   onShareAnswer,
   onSignOut,
-}: CompanionPanelProps & { session: Session; onSignOut: (mode: "switch" | "sign-out" | "deleted") => Promise<void> }) {
+  client = companionClient(),
+  config = companionPublicConfig(),
+}: CompanionPanelProps & {
+  session: Session;
+  onSignOut: (mode: "switch" | "sign-out" | "deleted") => Promise<void>;
+  client?: SupabaseClient | null;
+  config?: CompanionPublicConfig | null;
+}) {
   const [state, setState] = useState<CompanionState | null>(null);
   const [accessError, setAccessError] = useState("");
   const [question, setQuestion] = useState(initialQuestion ?? "");
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
   const [threadId, setThreadId] = useState<string | null>(null);
   const [asking, setAsking] = useState(false);
-  const [phase, setPhase] = useState<"idle" | "preparing" | "answering" | "slow">("idle");
+  const [phase, setPhase] = useState<"idle" | "preparing" | "answering" | "slow" | "fallback">("idle");
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
-  const [view, setView] = useState<"conversation" | "memory" | "weekly" | "account">("conversation");
+  const [view, setView] = useState<"conversation" | "history" | "memory" | "weekly" | "account">("conversation");
+  const [historyState, setHistoryState] = useState<"loading" | "ready" | "error">("loading");
+  const [threads, setThreads] = useState<CompanionThread[]>([]);
+  const [awayFromBottom, setAwayFromBottom] = useState(false);
+  const followOutputRef = useRef(true);
+  const historyAbortRef = useRef<AbortController | null>(null);
+  const historyRequestRef = useRef<{ selectedId?: string; listOnly: boolean }>({ listOnly: false });
   const [settingsOpen, setSettingsOpen] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const slowTimerRef = useRef<number | null>(null);
   const conversationRef = useRef<HTMLDivElement>(null);
   const settingsRef = useRef<HTMLDivElement>(null);
   const isZh = language === "zh";
+
+  const restoreHistory = useCallback(async (selectedId?: string, listOnly = false) => {
+    historyRequestRef.current = { selectedId, listOnly };
+    historyAbortRef.current?.abort();
+    const controller = new AbortController();
+    historyAbortRef.current = controller;
+    setHistoryState("loading");
+    const timeout = window.setTimeout(() => {
+      if (!controller.signal.aborted) {
+        setHistoryState("error");
+        controller.abort();
+      }
+    }, 10_000);
+    try {
+      if (!client) throw new Error("Client unavailable");
+      const recent = await loadRecentThreads(client, session.user.id, controller.signal);
+      if (controller.signal.aborted) return;
+      setThreads(recent);
+      if (!listOnly) {
+        const selected = selectedId ? recent.find((thread) => thread.id === selectedId) : recent[0];
+        if (selectedId && !selected) throw new Error("Conversation unavailable");
+        const saved = selected ? await loadThreadMessages(client, session.user.id, selected.id, controller.signal) : [];
+        if (controller.signal.aborted) return;
+        followOutputRef.current = true;
+        setAwayFromBottom(false);
+        setMessages(saved);
+        setThreadId(selected?.id ?? null);
+        setView((current) => current === "history" ? "conversation" : current);
+      }
+      setHistoryState("ready");
+    } catch {
+      if (!controller.signal.aborted) setHistoryState("error");
+    } finally {
+      window.clearTimeout(timeout);
+    }
+  }, [client, session.user.id]);
+
+  useEffect(() => {
+    void restoreHistory();
+    return () => historyAbortRef.current?.abort();
+  }, [restoreHistory]);
+
+  const startNewConversation = () => {
+    if (abortRef.current) return;
+    historyAbortRef.current?.abort();
+    setHistoryState("ready");
+    setThreadId(null);
+    setMessages([]);
+    setQuestion("");
+    setView("conversation");
+    followOutputRef.current = true;
+    setAwayFromBottom(false);
+  };
+
+  const scrollToLatest = () => {
+    followOutputRef.current = true;
+    setAwayFromBottom(false);
+    conversationRef.current?.scrollTo({ top: conversationRef.current.scrollHeight, behavior: "auto" });
+  };
 
   useEffect(() => {
     if (initialQuestion) setQuestion(initialQuestion);
@@ -119,12 +196,12 @@ function SignedInCompanion({
 
   useEffect(() => {
     const conversation = conversationRef.current;
-    if (!conversation) return;
-    conversation.scrollTo({ top: conversation.scrollHeight, behavior: asking ? "smooth" : "auto" });
-  }, [asking, messages]);
+    if (!conversation || !followOutputRef.current) return;
+    // No smooth animation per streaming chunk: it fights user scroll and motion preferences.
+    conversation.scrollTo({ top: conversation.scrollHeight, behavior: "auto" });
+  }, [asking, messages, view, state]);
 
   const refresh = useCallback(async () => {
-    const client = companionClient();
     if (!client) return;
     setAccessError("");
     const entitlementResult = await client
@@ -139,7 +216,7 @@ function SignedInCompanion({
     setState({
       entitlement: entitlementResult.data,
     });
-  }, [session.user.id]);
+  }, [client, session.user.id]);
 
   useEffect(() => {
     void refresh();
@@ -178,47 +255,56 @@ function SignedInCompanion({
     return <WeeklyReflectionPanel session={session} language={language} onBack={() => setView("conversation")} />;
   }
 
-  const askQuestion = async (rawQuestion: string) => {
+  const askQuestion = async (rawQuestion: string, retryMessage?: ConversationMessage) => {
     const nextQuestion = rawQuestion.trim();
-    const config = companionPublicConfig();
-    if (!nextQuestion || !config || asking) return;
-    const id = crypto.randomUUID();
-    const assistantId = crypto.randomUUID();
+    if (!nextQuestion || !config || asking || abortRef.current || historyState !== "ready") return;
+    const id = retryMessage?.retry?.requestId ?? crypto.randomUUID();
+    const assistantId = retryMessage?.id ?? crypto.randomUUID();
+    const requestContext = retryMessage?.retry ? { ...retryMessage.retry } : { requestId: id, chapterId, locale: language, threadId };
+    const controller = new AbortController();
+    abortRef.current = controller;
+    followOutputRef.current = true;
+    setAwayFromBottom(false);
     setQuestion("");
     setAsking(true);
     setPhase("preparing");
-    setMessages((current) => [
+    setMessages((current) => retryMessage ? current.map((message) => message.id === assistantId
+      ? { ...message, status: "pending", failureNote: undefined } : message) : [
       ...current,
-      { id, role: "user", content: nextQuestion },
-      { id: assistantId, role: "assistant", content: "", status: "pending" },
+      { id, role: "user", content: nextQuestion, chapter_id: chapterId },
+      { id: assistantId, role: "assistant", content: "", status: "pending", chapter_id: chapterId },
     ]);
-    const controller = new AbortController();
-    abortRef.current = controller;
-    slowTimerRef.current = window.setTimeout(() => setPhase("slow"), 18_000);
+    slowTimerRef.current = window.setTimeout(() => setPhase((current) => current === "fallback" ? current : "slow"), 18_000);
+    let replacementStarted = false;
     try {
       await streamCompanionAnswer({
         apiUrl: config.apiUrl,
         accessToken: session.access_token,
         requestId: id,
-        threadId,
-        chapterId,
-        locale: language,
+        onRequestIdChanged: (requestId) => { requestContext.requestId = requestId; },
+        threadId: requestContext.threadId,
+        chapterId: requestContext.chapterId,
+        locale: requestContext.locale,
         question: nextQuestion,
         signal: controller.signal,
         handlers: {
           meta: (payload) => {
             if (payload.phase === "preparing") setPhase("preparing");
-            else if (payload.phase === "fallback") setPhase("slow");
+            else if (payload.phase === "fallback") setPhase("fallback");
             else setPhase("answering");
           },
-          delta: ({ text }) => setMessages((current) => current.map((message) => (
-            message.id === assistantId
-              ? { ...message, content: message.content + text, status: "streaming" }
-              : message
-          ))),
+          delta: ({ text }) => {
+            const replace = Boolean(retryMessage) && !replacementStarted;
+            replacementStarted = true;
+            setMessages((current) => current.map((message) => (
+              message.id === assistantId
+                ? { ...message, content: (replace ? "" : message.content) + text, status: "streaming" }
+                : message
+            )));
+          },
           done: (payload) => {
             setMessages((current) => current.map((message) => (
-              message.id === assistantId ? { ...message, status: undefined } : message
+              message.id === assistantId ? { ...message, status: undefined, retry: undefined, retryQuestion: undefined, failureNote: undefined } : message
             )));
             if (typeof payload.threadId === "string") setThreadId(payload.threadId);
           },
@@ -234,7 +320,7 @@ function SignedInCompanion({
         : friendlyCompanionError(nextError, isZh);
       setMessages((current) => current.map((message) => (
         message.id === assistantId
-          ? { ...message, content: message.content || failureMessage, status: "error", retryQuestion: nextQuestion }
+          ? { ...message, status: "error", failureNote: failureMessage, retryQuestion: nextQuestion, retry: requestContext }
           : message
       )));
     } finally {
@@ -264,7 +350,6 @@ function SignedInCompanion({
   const lastAssistantId = [...messages].reverse().find((message) => message.role === "assistant")?.id;
 
   const manageMembership = async () => {
-    const config = companionPublicConfig();
     if (!config) return;
     try {
       if (Capacitor.getPlatform() === "ios" && state.entitlement?.source === "apple") {
@@ -315,12 +400,44 @@ function SignedInCompanion({
           </div>
         ) : null}
       </div>
-      {messages.length === 0 ? (
-        <header className="companion-home-heading">
-          <h3>{isZh ? "从真正关心的地方，慢慢问。" : "Begin with what genuinely matters."}</h3>
-        </header>
-      ) : null}
-      <div className="companion-thread" ref={conversationRef}>
+      <header className="companion-home-heading">
+        <div className="companion-history-toolbar">
+          <span>{isZh ? `本次问道 · 第 ${chapterId} 章` : `This question · Chapter ${chapterId}`}</span>
+          <div>
+            <button type="button" disabled={asking} onClick={() => {
+              setView("history");
+              void restoreHistory(undefined, true);
+            }}>{isZh ? "最近对话" : "Recent chats"}</button>
+            <button type="button" disabled={asking} onClick={startNewConversation}>{isZh ? "新对话" : "New chat"}</button>
+          </div>
+        </div>
+        {messages.length === 0 && view === "conversation" && historyState === "ready" ? <h3>{isZh ? "从真正关心的地方，慢慢问。" : "Begin with what genuinely matters."}</h3> : null}
+      </header>
+      <div className="companion-thread" ref={conversationRef} onScroll={(event) => {
+        const element = event.currentTarget;
+        const nearBottom = element.scrollHeight - element.scrollTop - element.clientHeight < 64;
+        followOutputRef.current = nearBottom;
+        setAwayFromBottom(!nearBottom);
+      }}>
+        {historyState === "loading" ? <p className="companion-history-notice" role="status">{isZh ? "正在读取最近对话…" : "Loading recent conversations…"}</p>
+          : historyState === "error" ? <div className="companion-history-notice" role="alert">
+            <p>{isZh ? "暂时没能读取对话，已有记录不会丢失。你可以重试，或开始新对话。" : "Could not load your conversations. Your saved chats are unchanged. Retry or start a new chat."}</p>
+            <button type="button" onClick={() => void restoreHistory(historyRequestRef.current.selectedId, historyRequestRef.current.listOnly)}>{isZh ? "重新读取" : "Retry loading"}</button>
+          </div> : null}
+        {view === "history" ? <div className="companion-history-list">
+          <button type="button" onClick={() => {
+            historyAbortRef.current?.abort();
+            setHistoryState("ready");
+            setView("conversation");
+          }}>{isZh ? "← 返回当前对话" : "← Back to conversation"}</button>
+          <p>{isZh ? "最近 20 段对话，选择一段继续。" : "Your 20 most recent chats. Choose one to continue."}</p>
+          {threads.map((thread) => <button type="button" key={thread.id} onClick={() => void restoreHistory(thread.id)}>
+            <strong>{thread.title || (isZh ? "一次问道" : "A conversation")}</strong>
+            <small>{new Date(thread.last_message_at).toLocaleDateString(isZh ? "zh-CN" : "en-US")} · {thread.chapter_id ? (isZh ? `从第 ${thread.chapter_id} 章开始` : `Started with chapter ${thread.chapter_id}`) : ""}</small>
+          </button>)}
+          {historyState === "ready" && !threads.length ? <p>{isZh ? "还没有保存的对话，从此刻开始吧。" : "No saved conversations yet. Begin here."}</p> : null}
+        </div> : <>
+        {messages.length >= 40 ? <p className="companion-history-notice">{isZh ? `显示本段对话最近 ${messages.length} 条消息` : `Showing the latest ${messages.length} messages in this chat`}</p> : null}
         {initialQuestion && messages.length === 0 ? (
           <div className="companion-pending-question">
             <span>{isZh ? "你刚才想问" : "You wanted to ask"}</span>
@@ -333,8 +450,8 @@ function SignedInCompanion({
             const isThinking = message.role === "assistant" && !message.content && (message.status === "pending" || message.status === "streaming");
             return (
               <article className={`is-${message.role}${isThinking ? " is-thinking" : ""}`} key={message.id}>
-                <span>{message.role === "user" ? (isZh ? "你" : "You") : (isZh ? "AI 问道" : "Wendao AI")}</span>
-                <CompanionMessageContent text={message.content ? message.content : (phase === "slow"
+                <span>{message.role === "user" ? (isZh ? "你" : "You") : (isZh ? "AI 问道" : "Wendao AI")}{message.chapter_id && message.chapter_id !== chapterId ? (isZh ? ` · 第 ${message.chapter_id} 章` : ` · Chapter ${message.chapter_id}`) : ""}</span>
+                <CompanionMessageContent text={message.content || message.failureNote || (phase === "slow" || phase === "fallback"
                   ? (isZh ? "仍在认真整理，这次会多用一点时间…" : "Still working carefully—this one needs a little longer…")
                   : phase === "answering"
                     ? (isZh ? "正在组织回应…" : "Composing a response…")
@@ -343,9 +460,12 @@ function SignedInCompanion({
                   <span className="companion-thinking-dots" aria-hidden="true"><i /><i /><i /></span>
                 ) : null}
                 {message.status === "error" && message.retryQuestion ? (
-                  <button type="button" onClick={() => void askQuestion(message.retryQuestion!)} disabled={asking}>
+                  <>
+                  {message.content && message.failureNote ? <p className="companion-history-notice">{message.failureNote}</p> : null}
+                  <button type="button" onClick={() => void askQuestion(message.retryQuestion!, message)} disabled={asking}>
                     {isZh ? "重新回答" : "Try again"}
                   </button>
+                  </>
                 ) : null}
                 {message.role === "assistant" && message.id === lastAssistantId && message.content && !message.status ? (
                   <div className="companion-message-actions">
@@ -354,7 +474,7 @@ function SignedInCompanion({
                     </button>
                     <button
                       type="button"
-                      onClick={() => onShareAnswer?.(message.content)}
+                      onClick={() => onShareAnswer?.(message.content, message.chapter_id ?? chapterId)}
                     >
                       {isZh ? "分享图片" : "Share image"}
                     </button>
@@ -364,7 +484,7 @@ function SignedInCompanion({
             );
           })}
         </div>
-      ) : (
+      ) : historyState === "ready" ? (
         <div className="companion-empty" aria-label={isZh ? "提问建议" : "Question suggestions"}>
           <p>{isZh ? "可以从一个具体处境开始：" : "Begin with one concrete situation:"}</p>
           <div>
@@ -378,9 +498,11 @@ function SignedInCompanion({
           </div>
           <small>{isZh ? "回答会以本章原文、今译与主旨为依据。" : "Answers are grounded in the chapter text, translation, and central idea."}</small>
         </div>
-      )}
+      ) : null}
+      </>}
       </div>
       <div className="companion-compose-zone">
+        {awayFromBottom && messages.length > 0 && view === "conversation" ? <button type="button" className="companion-jump-latest" onClick={scrollToLatest}>{isZh ? "↓ 回到最新回应" : "↓ Back to latest reply"}</button> : null}
         <form className="companion-question-form" onSubmit={ask}>
           <label htmlFor="companion-question">{isZh ? "此刻，你真正想问什么？" : "What do you genuinely want to ask now?"}</label>
           <div className="companion-question-control">
@@ -396,16 +518,17 @@ function SignedInCompanion({
                 void askQuestion(question);
               }}
               placeholder={isZh ? "写下一个处境、矛盾或选择…" : "Describe a situation, tension, or choice…"}
-              disabled={asking}
+              disabled={asking || historyState !== "ready" || view === "history"}
             />
-            <button type="submit" disabled={asking || !question.trim()} aria-label={isZh ? "发送问题" : "Send question"}>↑</button>
+            <button type="submit" disabled={asking || !question.trim() || historyState !== "ready" || view === "history"} aria-label={isZh ? "发送问题" : "Send question"}>↑</button>
           </div>
         </form>
         <div className="companion-compose-meta">
           <p className="companion-response-status" role="status">
             {asking
-              ? (phase === "slow"
+              ? (phase === "fallback"
                 ? (isZh ? "正在换一条更稳定的回应路径。" : "Switching to a more reliable response path.")
+              : phase === "slow" ? (isZh ? "这次整理需要更久，你可以继续等待或停止回答。" : "This response needs more time. You can wait or stop it.")
               : (isZh ? "正在结合本章与你的处境回应。" : "Responding with this chapter and your situation in view."))
               : (isZh ? "写下具体处境，我会先理解，再结合本章与记忆回应。" : "Describe one concrete situation. I will understand first, then respond with this chapter and your memories in view.")}
           </p>
@@ -428,6 +551,7 @@ export default function CompanionPanel({ language, chapterId, initialQuestion, o
     <CompanionAuth language={language}>
       {(session, signOut) => (
         <SignedInCompanion
+          key={session.user.id}
           session={session}
           language={language}
           chapterId={chapterId}
