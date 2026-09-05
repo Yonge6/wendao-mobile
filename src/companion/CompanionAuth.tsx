@@ -92,8 +92,8 @@ export default function CompanionAuth({ language, children }: CompanionAuthProps
       </h3>
       <p>
         {isZh
-          ? "登录后，对话、记忆与会员权益会在网页和 iPhone 之间同步。人生说明书不是使用 AI 的前提。"
-          : "Sign in to keep conversations, memories, and membership in sync across the web and iPhone. A life manual is never required."}
+          ? "登录后，对话、记忆与会员权益会在网页和 App 之间同步。人生说明书不是使用 AI 的前提。"
+          : "Sign in to keep conversations, memories, and membership in sync across the web and app. A life manual is never required."}
       </p>
       <div className="companion-auth-actions">
         <button type="button" onClick={() => void signIn("apple")} disabled={busyProvider !== null}>

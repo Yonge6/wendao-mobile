@@ -75,6 +75,83 @@ const chartSnapshot = {
   meta: {},
 };
 
+test("loads the saved life manual on demand and preserves both complete reading levels", async ({ page }) => {
+  const manualRequests: string[] = [];
+  page.on("request", (request) => {
+    if (/LifeManualReading|humanDesignReading|humanDesignGuidance/.test(request.url())) {
+      manualRequests.push(request.url());
+    }
+  });
+  await page.addInitScript((storedChart) => {
+    window.localStorage.setItem("wendao-chart-snapshot", JSON.stringify(storedChart));
+  }, chartSnapshot);
+  await page.goto("/?chapter=8&lang=zh");
+  await expect(page.locator(".chapter-current")).toBeVisible();
+  expect(manualRequests).toHaveLength(0);
+  await page.getByRole("button", { name: "打开更多功能" }).click();
+  expect(manualRequests).toHaveLength(0);
+  await page.getByRole("button", { name: "查看人生说明书", exact: true }).click();
+  await expect(page.locator(".foundational-reading article")).toHaveCount(4);
+  expect(manualRequests.length).toBeGreaterThan(0);
+  await page.getByRole("button", { name: /查看详细解读/ }).click();
+  await expect(page.locator(".profile-detail-sections article")).toHaveCount(14);
+  await page.getByRole("button", { name: "返回", exact: true }).click();
+  await expect(page.locator(".foundational-reading article")).toHaveCount(4);
+  await page.locator(".drawer-close").click();
+  await page.getByRole("button", { name: "切换到英文", exact: true }).click();
+  await page.getByRole("button", { name: "Open more", exact: true }).click();
+  await page.getByRole("button", { name: "View life manual", exact: true }).click();
+  await expect(page.locator(".foundational-reading article")).toHaveCount(4);
+  await expect(page.locator(".foundational-reading")).toContainText("Foundational reading");
+  await page.getByRole("button", { name: /Read the detailed guide/ }).click();
+  await expect(page.locator(".profile-detail-sections article")).toHaveCount(14);
+});
+
+for (const viewport of [
+  { width: 768, height: 1024 },
+  { width: 1024, height: 1366 },
+  { width: 1366, height: 1024 },
+  { width: 375, height: 1024 },
+]) {
+  test(`iPad ${viewport.width}x${viewport.height} keeps reading and overlays usable`, async ({ page }, testInfo) => {
+    await page.setViewportSize(viewport);
+    await page.goto("/?chapter=8&lang=zh");
+    await expect(page.locator(".chapter-current")).toBeVisible();
+    const assertFits = async (selector: string) => {
+      await expect.poll(async () => {
+        const bounds = await page.locator(selector).boundingBox();
+        if (!bounds) return Infinity;
+        return Math.max(0, -bounds.x, -bounds.y,
+          bounds.x + bounds.width - viewport.width,
+          bounds.y + bounds.height - viewport.height);
+      }).toBeLessThanOrEqual(1);
+    };
+    await assertFits(".reading-header-fixed");
+    expect((await page.locator(".reading-header-fixed").boundingBox())!.width).toBeLessThanOrEqual(720);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0);
+    await page.screenshot({ path: testInfo.outputPath("ipad-reading.png") });
+    await page.getByRole("button", { name: "搜索章节", exact: true }).click();
+    await page.getByRole("searchbox", { name: "搜索章节" }).fill("上善如水");
+    await expect(page.locator(".directory-item")).toHaveCount(1);
+    await assertFits(".web-sheet.is-directory-sheet");
+    await page.locator('.directory-item[data-chapter-id="8"]').click();
+    await page.getByRole("button", { name: "打开更多功能" }).click();
+    await assertFits(".side-drawer");
+    await page.locator(".drawer-close").click();
+    await page.getByRole("button", { name: "打开我的问道并登录", exact: true }).click();
+    await expect(page.getByRole("button", { name: "使用 Apple 登录" })).toBeVisible();
+    await assertFits(".companion-dialog");
+    await page.screenshot({ path: testInfo.outputPath("ipad-companion.png") });
+    await page.locator(".companion-dialog-header > button").click();
+    const reading = page.getByTestId("mobile-scroll");
+    await reading.evaluate((element) => { element.scrollTop = element.scrollHeight; });
+    await expect.poll(async () => (
+      await page.locator("article.chapter").count() === 2
+        || await page.getByTestId("reading-access-gate").isVisible()
+    )).toBe(true);
+  });
+}
+
 test("shows the calculated life manual even when background profile persistence fails", async ({ page }) => {
   await page.route("https://pluto-human-design-api.vercel.app/**", async (route) => {
     const path = new URL(route.request().url()).pathname;

@@ -1,18 +1,13 @@
-import { Capacitor, registerPlugin } from "@capacitor/core";
+import { Capacitor } from "@capacitor/core";
 import { Directory, Filesystem } from "@capacitor/filesystem";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
 import { Share } from "@capacitor/share";
 import { SplashScreen } from "@capacitor/splash-screen";
 import { StatusBar, Style } from "@capacitor/status-bar";
+import { saveStoreKitImage } from "./companion/storekit";
 
 type NativeTheme = "light" | "dark";
 export type ShareOutcome = "shared" | "copied" | "downloaded" | "saved" | "cancelled" | "unavailable";
-
-type NativeImagePlugin = {
-  saveImageToPhotos(input: { data: string; filename: string }): Promise<{ saved: boolean }>;
-};
-
-const nativeImage = registerPlugin<NativeImagePlugin>("WendaoStoreKit");
 
 const CANONICAL_URL = "https://wendao.wonderelian.com/";
 
@@ -116,7 +111,7 @@ export async function saveCardImage(dataUrl: string, filename: string, title: st
   try {
     if (Capacitor.getPlatform() === "ios") {
       const base64 = dataUrl.split(",")[1] ?? "";
-      const result = await nativeImage.saveImageToPhotos({ data: base64, filename });
+      const result = await saveStoreKitImage({ data: base64, filename });
       return result.saved ? "saved" : "unavailable";
     }
     if (Capacitor.isNativePlatform()) {

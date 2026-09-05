@@ -28,12 +28,18 @@ type StoreKitPlugin = {
   finish(input: { transactionId: string }): Promise<{ finished: boolean }>;
   manage(): Promise<void>;
   review(): Promise<void>;
+  saveImageToPhotos(input: { data: string; filename: string }): Promise<{ saved: boolean }>;
 };
 
 const nativeStoreKit = registerPlugin<StoreKitPlugin>("WendaoStoreKit");
 
 function requireNative() {
   if (Capacitor.getPlatform() !== "ios") throw new Error("STOREKIT_UNAVAILABLE");
+}
+
+export async function saveStoreKitImage(input: { data: string; filename: string }) {
+  requireNative();
+  return nativeStoreKit.saveImageToPhotos(input);
 }
 
 export async function loadStoreKitProducts(plugin: StoreKitPlugin = nativeStoreKit) {

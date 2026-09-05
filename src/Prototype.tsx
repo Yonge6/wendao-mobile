@@ -37,11 +37,7 @@ import "@fontsource/noto-sans-sc/400.css";
 import "@fontsource/noto-sans-sc/500.css";
 import "@fontsource/noto-serif-sc/400.css";
 import "@fontsource/noto-serif-sc/600.css";
-import {
-  detailedReading,
-  foundationalReading,
-  type HumanDesignReadingChart,
-} from "./humanDesignReading";
+import type { HumanDesignReadingChart } from "./humanDesignReading";
 import { chapters, type Chapter, type RelatedItem } from "./data/chapters";
 import { dailyChapterId, localDateKey } from "./dailyEncounter";
 import {
@@ -71,6 +67,7 @@ import {
 
 const ShareCardPanel = lazy(() => import("./ShareCardPanel"));
 const CompanionPanel = lazy(() => import("./companion/CompanionPanel"));
+const LifeManualReading = lazy(() => import("./LifeManualReading"));
 
 type Language = "zh" | "en";
 type Theme = "light" | "dark";
@@ -478,8 +475,14 @@ function personalizedAdvice(chapter: Chapter, chart: ChartSnapshot, language: La
   return `对${type}、${profile}人生角色的你来说，《${copy.title}》先照见的是：“${inspiration}”${typeSentence}。${strategySentence}；${authoritySentence}。你的${profile}人生角色尤其适合${profileSentence}。这是结合本章与人类图的观察镜，不替你做决定。`;
 }
 
-function chapterSearchText(chapter: (typeof chapters)[number]) {
-  return [
+// Build each chapter's bilingual search text only when search is first used.
+// Reuse it across keystrokes without adding work to the initial reading frame.
+const chapterSearchCache = new WeakMap<Chapter, string>();
+
+function chapterSearchText(chapter: Chapter) {
+  const cached = chapterSearchCache.get(chapter);
+  if (cached !== undefined) return cached;
+  const text = [
     chapter.id,
     `第${chapter.id}章`,
     chapter.silkOrder,
@@ -500,6 +503,8 @@ function chapterSearchText(chapter: (typeof chapters)[number]) {
     ...chapter.en.related.flatMap((item) => [item.title, item.body, ...(item.points ?? [])]),
     chapter.en.action,
   ].join(" ").toLocaleLowerCase().replace(/\s+/g, "");
+  chapterSearchCache.set(chapter, text);
+  return text;
 }
 
 function loadTheme(): Theme {
@@ -1211,7 +1216,7 @@ function SideDrawer({
                     <span className="drawer-nav-icon"><DownloadIcon /></span>
                     <span>
                       <strong>{isZh ? "下载 App" : "Download the App"}</strong>
-                      <small>{isZh ? "离线阅读，在 iPhone 上继续慢慢问" : "Read offline and continue on iPhone"}</small>
+                      <small>{isZh ? "离线阅读，在 App 里继续慢慢问" : "Read offline and continue in the app"}</small>
                     </span>
                     <ChevronRightIcon />
                   </AppStoreDownloadLink>
@@ -1367,15 +1372,9 @@ function SideDrawer({
                     <div><dt>{isZh ? "人生角色" : "Profile"}</dt><dd>{chart.core.profile}</dd></div>
                     <div><dt>{isZh ? "定义" : "Definition"}</dt><dd>{hdLabel(chart.core.definition, language)}</dd></div>
                   </dl>
-                  <div className="foundational-reading">
-                    <span className="reading-kicker">{isZh ? "基础解读" : "Foundational reading"}</span>
-                    {foundationalReading(chart, language).map((section) => (
-                      <article key={section.title}>
-                        <h4>{section.title}</h4>
-                        <p>{section.body}</p>
-                      </article>
-                    ))}
-                  </div>
+                  <Suspense fallback={<p role="status">{isZh ? "正在打开解读…" : "Opening your reading…"}</p>}>
+                    <LifeManualReading chart={chart} language={language} />
+                  </Suspense>
                   <small className="profile-cross">{isZh ? "轮回交叉" : "Incarnation cross"} · {chart.core.incarnationCross}</small>
                   <button
                     type="button"
@@ -1402,17 +1401,9 @@ function SideDrawer({
                   {hdLabel(chart.core.type, language)} · {chart.core.profile} · {hdLabel(chart.core.authority, language)}
                 </p>
               </div>
-              <div className="profile-detail-sections">
-                {detailedReading(chart, language).map((section, index) => (
-                  <article key={section.title}>
-                    <span>{String(index + 1).padStart(2, "0")}</span>
-                    <div>
-                      <h4>{section.title}</h4>
-                      <p>{section.body}</p>
-                    </div>
-                  </article>
-                ))}
-              </div>
+              <Suspense fallback={<p role="status">{isZh ? "正在打开解读…" : "Opening your reading…"}</p>}>
+                <LifeManualReading chart={chart} language={language} detailed />
+              </Suspense>
               <p className="reading-disclaimer">
                 {isZh
                   ? "人类图只作为自我观察与对话的视角，不是科学结论，也不替你作决定。请把真实经验、身体感受与现实信息放在任何标签之前。"

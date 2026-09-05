@@ -35,14 +35,20 @@ test("Capacitor app identity and bundled web directory are stable", () => {
   assert.match(capacitorConfig, /CapacitorHttp:[\s\S]*enabled: true/);
   assert.match(project, /PRODUCT_BUNDLE_IDENTIFIER = com\.yonge6\.wendao;/);
   assert.match(project, /DEVELOPMENT_TEAM = L855ZVM679;/);
-  assert.match(project, /TARGETED_DEVICE_FAMILY = 1;/);
-  assert.match(project, /CURRENT_PROJECT_VERSION = 11;/);
+  assert.equal([...project.matchAll(/TARGETED_DEVICE_FAMILY = "1,2";/g)].length, 4);
+  assert.match(project, /CURRENT_PROJECT_VERSION = 12;/);
   assert.match(project, /MARKETING_VERSION = 1\.6;/);
   assert.match(project, /WendaoWidgetExtension/);
   assert.match(project, /PRODUCT_BUNDLE_IDENTIFIER = com\.yonge6\.wendao\.widget;/);
   assert.match(infoPlist, /<key>ITSAppUsesNonExemptEncryption<\/key>\s*<false\/>/);
   assert.match(englishInfoPlist, /"CFBundleDisplayName" = "Wendao AI";/);
   assert.match(chineseInfoPlist, /"CFBundleDisplayName" = "三慢问道 AI";/);
+  const ipadOrientations = infoPlist.match(/<key>UISupportedInterfaceOrientations~ipad<\/key>\s*<array>([\s\S]*?)<\/array>/)?.[1];
+  assert.ok(ipadOrientations);
+  for (const orientation of ["Portrait", "PortraitUpsideDown", "LandscapeLeft", "LandscapeRight"]) {
+    assert.ok(ipadOrientations.includes(`<string>UIInterfaceOrientation${orientation}</string>`));
+  }
+  assert.match(infoPlist, /<key>UIRequiresFullScreen<\/key>\s*<false\/>/);
 });
 
 test("privacy manifest is bundled and explicitly disables tracking", () => {

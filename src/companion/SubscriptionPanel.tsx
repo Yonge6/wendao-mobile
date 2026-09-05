@@ -149,11 +149,11 @@ export default function SubscriptionPanel({ language, session, onSignOut, onMemb
   if (!native) {
     return (
       <section className="companion-subscription companion-app-download" aria-labelledby="companion-subscription-title">
-        <span className="drawer-kicker">{isZh ? "AI 问道 · iPhone App" : "Wendao AI · iPhone app"}</span>
+        <span className="drawer-kicker">{isZh ? "AI 问道 · App" : "Wendao AI · App"}</span>
         <h3 id="companion-subscription-title">{isZh ? "在 App 里开始同行" : "Begin in the Wendao app"}</h3>
         <p>{isZh
-          ? "AI 问道现已先在 iPhone App 开放。下载三慢问道 AI，用 Apple 或 Google 登录后，即可选择月付或年付会员，开始不限次数的章节 AI 对话。"
-          : "Wendao AI is currently available first in the iPhone app. Download Wendao AI, sign in with Apple or Google, and choose a monthly or annual membership for unlimited chapter-grounded conversations."}</p>
+          ? "AI 问道现已先在 App 开放。下载三慢问道 AI，用 Apple 或 Google 登录后，即可选择月付或年付会员，开始不限次数的章节 AI 对话。"
+          : "Wendao AI is currently available first in the app. Download Wendao AI, sign in with Apple or Google, and choose a monthly or annual membership for unlimited chapter-grounded conversations."}</p>
         <div className="companion-app-download-card">
           <span>{isZh ? "在 App 中继续" : "Continue in the app"}</span>
           <strong>{isZh ? "完整阅读，与这一章深入对话" : "Read fully and reflect with each chapter"}</strong>
@@ -164,8 +164,8 @@ export default function SubscriptionPanel({ language, session, onSignOut, onMemb
           <span aria-hidden="true">↗</span>
         </AppStoreDownloadLink>
         <p className="companion-plan-note">{isZh
-          ? "已经在 App 内开通？请回到 iPhone App 阅读全部章节，并继续 AI 问道。"
-          : "Already unlocked access in the app? Return to the iPhone app to read every chapter and continue with Wendao AI."}</p>
+          ? "已经在 App 内开通？请回到 App 阅读全部章节，并继续 AI 问道。"
+          : "Already unlocked access in the app? Return to the app to read every chapter and continue with Wendao AI."}</p>
         <button className="companion-text-button" type="button" disabled={checkingMembership} onClick={() => void checkMembership()}>
           {checkingMembership ? (isZh ? "正在检查…" : "Checking…") : (isZh ? "我已订阅，重新检查" : "I subscribed — check again")}
         </button>

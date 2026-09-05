@@ -2243,7 +2243,7 @@ textarea {
   display: grid;
   box-sizing: border-box;
   grid-template-rows: auto minmax(0, 1fr);
-  width: min(1040px, calc(100vw - 32px));
+  width: min(760px, calc(100vw - 32px));
   min-width: 0;
   max-width: 100%;
   height: min(1040px, calc(var(--companion-usable-height, 100dvh) - 32px));
