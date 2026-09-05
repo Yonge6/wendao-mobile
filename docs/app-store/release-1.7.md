@@ -17,6 +17,15 @@
 
 ## Blocking conditions / next steps
 
+### Continuation at 14:15–14:18, 2026-09-05
+
+- Xcode Organizer now verifies **Uploaded to Apple**, version **1.7 (15)**, uploaded **13:57**. Do not upload this archive again.
+- App Store Connect has processed build 15, ID `4b78bb03-dde2-4143-8cb7-2ae66edb83a7`. It was selected in the version form, but saving that selection was interrupted; verify the saved selection on resume.
+- Inspected the actual updated iPad simulator reading screen after deliberately keeping chapter 8 free. The portrait layout rendered correctly.
+- The Mac locked again before the simulator screenshot could be saved. No iPad screenshots were uploaded and no review submission was made. Unlock and keep the Mac unlocked during the remaining capture/submission workflow.
+
+The initial account-blocker details below are historical; upload is now resolved. Remaining work is screenshots, saving/verifying the selected build and final review submission.
+
 1. Unlock the Mac. Computer Use cannot capture or operate the simulator while locked; do not work around this restriction.
 2. Sign in to the developer Apple Account in Xcode → Settings → Apple Accounts. The current list is empty. The sign-in dialog was opened for the user; no credentials were entered or collected.
 3. Retry distribution of the existing 1.7 (15) archive in Xcode Organizer. The command-line export failed with `Failed to Use Accounts`; Organizer independently confirmed missing App Store Connect account access. No successful upload of build 15 exists yet.
