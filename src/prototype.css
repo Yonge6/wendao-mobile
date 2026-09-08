@@ -1434,6 +1434,7 @@ textarea {
 }
 
 .share-card-panel {
+  position: relative;
   display: flex;
   height: 100%;
   min-height: 0;
@@ -1635,48 +1636,30 @@ textarea {
   padding: 7px 5px;
 }
 
+.share-feedback-layer {
+  position: absolute;
+  z-index: 5;
+  top: 28%;
+  right: 16px;
+  left: 16px;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
 .share-action-feedback {
+  width: fit-content;
+  max-width: 100%;
   margin: 0;
-  color: var(--gold);
-  font-size: 10px;
-  line-height: 1.5;
-  text-align: center;
-}
-
-.share-save-confirmation {
-  display: flex;
-  min-height: 44px;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 8px 10px 8px 13px;
-  border: 1px solid color-mix(in srgb, var(--gold) 28%, transparent);
-  border-radius: 14px;
-  background: color-mix(in srgb, var(--gold) 6%, var(--field-surface));
-}
-
-.share-save-confirmation p {
-  margin: 0;
-  color: var(--ink);
-  font: 11px/1.45 var(--sans);
-}
-
-.share-save-confirmation > div {
-  display: flex;
-  flex: 0 0 auto;
-  gap: 6px;
-}
-
-.share-card-controls .share-save-confirmation button {
-  min-height: 34px;
-  padding: 7px 11px;
-  border-radius: 999px;
-}
-
-.share-card-controls .share-save-confirmation button.is-confirm {
-  border-color: var(--ink);
+  padding: 11px 18px;
+  border: 1px solid color-mix(in srgb, var(--paper) 18%, transparent);
+  border-radius: 16px;
   background: var(--ink);
   color: var(--paper);
+  box-shadow: 0 6px 24px #0003;
+  font: 500 14px/1.5 var(--sans);
+  text-align: center;
+  overflow-wrap: anywhere;
 }
 
 @media (max-width: 560px) {

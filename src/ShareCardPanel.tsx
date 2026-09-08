@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   CopyIcon,
   DownloadIcon,
@@ -6,7 +6,7 @@ import {
   Link2Icon,
 } from "@radix-ui/react-icons";
 import type { Chapter } from "./data/chapters";
-import { runtimeSurface, saveCardImage, shareCardImage, shareLink } from "./native";
+import { saveCardImage, shareCardImage, shareLink } from "./native";
 import {
   buildCompanionShareCardContent,
   buildShareCardContent,
@@ -42,8 +42,10 @@ export default function ShareCardPanel({
   const [kind, setKind] = useState<ShareCardKind>(initialKind);
   const [imageUrl, setImageUrl] = useState("");
   const [rendering, setRendering] = useState(true);
-  const [feedback, setFeedback] = useState("");
-  const [saveConfirming, setSaveConfirming] = useState(false);
+  const [feedback, setFeedback] = useState<{ message: string } | null>(null);
+  const showFeedback = useCallback((message: string) => {
+    setFeedback(message ? { message } : null);
+  }, []);
   const [saving, setSaving] = useState(false);
   const previewScrollRef = useRef<HTMLDivElement>(null);
   const needsManual = !companionShare && kind === "manual" && !profileReady;
@@ -72,7 +74,7 @@ export default function ShareCardPanel({
         if (!cancelled) setImageUrl(url);
       })
       .catch(() => {
-        if (!cancelled) setFeedback(isZh ? "图片生成失败，请稍后重试" : "Could not create the image. Try again.");
+        if (!cancelled) showFeedback(isZh ? "图片生成失败，请稍后重试" : "Could not create the image. Try again.");
       })
       .finally(() => {
         if (!cancelled) setRendering(false);
@@ -80,22 +82,21 @@ export default function ShareCardPanel({
     return () => {
       cancelled = true;
     };
-  }, [content, isZh, needsManual]);
+  }, [content, isZh, needsManual, showFeedback]);
 
   useEffect(() => {
     if (!feedback) return;
-    const timer = window.setTimeout(() => setFeedback(""), 2400);
+    const timer = window.setTimeout(() => setFeedback(null), 2400);
     return () => window.clearTimeout(timer);
   }, [feedback]);
 
   useEffect(() => {
     previewScrollRef.current?.scrollTo({ top: 0 });
-    setSaveConfirming(false);
   }, [chapter.id, kind, language]);
 
   const selectKind = (nextKind: ShareCardKind) => {
     setKind(nextKind);
-    setFeedback("");
+    setFeedback(null);
     onAction?.("card_type", nextKind);
   };
 
@@ -109,7 +110,7 @@ export default function ShareCardPanel({
       content.url,
     );
     if (outcome !== "cancelled") {
-      setFeedback(outcome === "shared"
+      showFeedback(outcome === "shared"
         ? (isZh ? "已打开系统分享" : "Share sheet opened")
         : outcome === "downloaded"
           ? (isZh ? "当前浏览器已保存图片" : "Image saved by your browser")
@@ -119,7 +120,8 @@ export default function ShareCardPanel({
   };
 
   const saveImage = async () => {
-    if (!imageUrl) return;
+    if (!imageUrl || rendering || saving) return;
+    setFeedback(null);
     setSaving(true);
     try {
       const outcome = await saveCardImage(
@@ -128,8 +130,8 @@ export default function ShareCardPanel({
         isZh ? "保存三慢问道分享卡" : "Save Wendao share card",
       );
       if (outcome !== "cancelled") {
-        setFeedback(outcome === "saved"
-          ? (isZh ? "已经保存到相册" : "Saved to Photos")
+        showFeedback(outcome === "saved"
+          ? (isZh ? "已保存到相册" : "Saved to Photos")
           : outcome === "downloaded"
             ? (isZh ? "图片已下载" : "Image downloaded")
             : outcome === "shared"
@@ -137,9 +139,6 @@ export default function ShareCardPanel({
               : (isZh ? "保存失败，请检查相册权限后重试" : "Could not save. Check Photos access and try again."));
       }
       onAction?.(`save_${outcome}`, kind);
-      if (outcome === "saved" || outcome === "downloaded" || outcome === "shared") {
-        setSaveConfirming(false);
-      }
     } finally {
       setSaving(false);
     }
@@ -148,10 +147,10 @@ export default function ShareCardPanel({
   const copyText = async () => {
     try {
       await navigator.clipboard.writeText(content.shareText);
-      setFeedback(isZh ? "分享文字已复制" : "Share text copied");
+      showFeedback(isZh ? "已复制文字" : "Text copied");
       onAction?.("text_copied", kind);
     } catch {
-      setFeedback(isZh ? "暂时无法复制" : "Copying is unavailable");
+      showFeedback(isZh ? "暂时无法复制" : "Copying is unavailable");
       onAction?.("text_unavailable", kind);
     }
   };
@@ -163,7 +162,7 @@ export default function ShareCardPanel({
       content.url,
     );
     if (outcome !== "cancelled") {
-      setFeedback(outcome === "shared"
+      showFeedback(outcome === "shared"
         ? (isZh ? "已打开系统分享" : "Share sheet opened")
         : outcome === "copied"
           ? (isZh ? "章节链接已复制" : "Chapter link copied")
@@ -174,6 +173,9 @@ export default function ShareCardPanel({
 
   return (
     <div className="share-card-panel">
+      <div className="share-feedback-layer" role="status" aria-live="polite" aria-atomic="true">
+        {feedback ? <p className="share-action-feedback">{feedback.message}</p> : null}
+      </div>
       {!companionShare ? <div className="share-kind-tabs" role="tablist" aria-label={isZh ? "分享卡类型" : "Share card type"}>
         {SHARE_CARD_KINDS.map((option) => {
           return (
@@ -243,14 +245,12 @@ export default function ShareCardPanel({
           <div className="share-action-grid">
             <button
               type="button"
-              onClick={() => {
-                setFeedback("");
-                setSaveConfirming(true);
-              }}
-              disabled={!imageUrl || rendering}
+              onClick={() => void saveImage()}
+              disabled={!imageUrl || rendering || saving}
+              aria-busy={saving}
             >
               <DownloadIcon />
-              {isZh ? "保存图片" : "Save image"}
+              {saving ? (isZh ? "正在保存…" : "Saving…") : (isZh ? "保存图片" : "Save image")}
             </button>
             <button type="button" onClick={() => void copyText()}>
               <CopyIcon />
@@ -261,24 +261,6 @@ export default function ShareCardPanel({
               {isZh ? "分享链接" : "Share link"}
             </button>
           </div>
-          {saveConfirming ? (
-            <div className="share-save-confirmation" role="group" aria-label={isZh ? "确认保存图片" : "Confirm image save"}>
-              <p>{isZh ? "确认保存这张图片？" : "Save this image now?"}</p>
-              <div>
-                <button type="button" onClick={() => setSaveConfirming(false)} disabled={saving}>
-                  {isZh ? "取消" : "Cancel"}
-                </button>
-                <button type="button" className="is-confirm" onClick={() => void saveImage()} disabled={saving}>
-                  {saving
-                    ? (isZh ? "正在保存…" : "Saving…")
-                    : runtimeSurface() === "ios"
-                      ? (isZh ? "保存到相册" : "Save to Photos")
-                      : (isZh ? "下载图片" : "Download image")}
-                </button>
-              </div>
-            </div>
-          ) : null}
-          {feedback ? <p className="share-action-feedback" aria-live="polite">{feedback}</p> : null}
           </>}
         </div>
       </div>

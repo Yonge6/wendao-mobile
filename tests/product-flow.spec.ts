@@ -357,17 +357,31 @@ test("opens the complete original-text poster and shares an exact chapter link",
   expect(payload.title).toMatch(/^三慢问道 · 第\d+章$/);
 });
 
-test("asks for a final save action before downloading a share image", async ({ page }) => {
+test("saves immediately and shows brief save and copy feedback above the controls", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
   await page.goto("/?chapter=8&lang=zh");
   await page.locator(".chapter-current .chapter-share-quick").click();
   await expect(page.locator(".share-card-preview img")).toBeVisible();
 
-  await page.getByRole("button", { name: "保存图片", exact: true }).click();
-  await expect(page.getByText("确认保存这张图片？", { exact: true })).toBeVisible();
+  const controlsBefore = await page.locator(".share-card-controls").boundingBox();
   const download = page.waitForEvent("download");
-  await page.getByRole("button", { name: "下载图片", exact: true }).click();
+  await page.getByRole("button", { name: "保存图片", exact: true }).click();
+  await expect(page.getByText("确认保存这张图片？", { exact: true })).toHaveCount(0);
   await download;
-  await expect(page.getByText("图片已下载", { exact: true })).toBeVisible();
+  const toast = page.locator(".share-action-feedback");
+  await expect(toast).toHaveText("图片已下载");
+  await page.getByRole("button", { name: "复制文字", exact: true }).click();
+  await expect(toast).toHaveText("已复制文字");
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toContain("https://wendao.wonderelian.com/");
+  await expect(toast).toBeInViewport();
+  const toastBounds = (await toast.boundingBox())!;
+  const panelBounds = (await page.locator(".share-card-panel").boundingBox())!;
+  expect(toastBounds.y + toastBounds.height).toBeLessThan(panelBounds.y + panelBounds.height / 2);
+  expect((await page.locator(".share-card-controls").boundingBox())!.y).toBe(controlsBefore!.y);
+  await expect(toast).toHaveCount(0, { timeout: 4000 });
+  await page.getByRole("button", { name: "复制文字", exact: true }).click();
+  await expect(toast).toHaveText("已复制文字");
 });
 
 test("switches all four complete posters and keeps life-manual details anonymous", async ({ page }) => {
