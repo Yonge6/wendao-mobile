@@ -4743,6 +4743,7 @@ textarea {
   }
 
   .wendao-workspace.is-companion-open .companion-dialog-header > div {
+    flex: 1;
     grid-template-columns: minmax(0, 1fr);
     gap: 3px;
   }

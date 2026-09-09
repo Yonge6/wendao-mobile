@@ -204,6 +204,7 @@ for (const language of ["zh", "en"]) {
     await expect(page.locator(".companion-dialog")).toBeVisible();
     const reader = page.getByTestId("mobile-scroll");
     expect((await reader.boundingBox())!.width).toBe(600);
+    expect((await page.locator("#companion-dialog-title").boundingBox())!.height).toBeLessThan(35);
     await page.getByRole("button", { name: language === "zh" ? "目录" : "Contents", exact: true }).click();
     await expect(page.locator(".web-sheet.is-directory-sheet")).toBeVisible();
     await page.locator('.directory-item[data-chapter-id="8"]').click();
