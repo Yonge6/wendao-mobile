@@ -19,3 +19,7 @@
 - 文件：`screenshots/share-1.8/{en-US,zh-Hans}/07-save-share.jpg`，1320 × 2868，无透明通道。
 - 来源：1.8 (17) iPhone 17 Pro Max 模拟器，实际第 9 章分享面板。已另外验证系统相册权限、保存成功和复制文字的小提示。
 - 本轮主要更新中英文推广文本、介绍和版本说明，以“借老子的智慧，聊眼前的困惑”说明对话方向；没有把 H5 微信行为写成 iOS 功能。
+
+## 1.8 (19) adaptive workspace
+
+Both iPad locales include the actual native `screenshots/adaptive-1.8/{locale}/02-read-and-reflect.jpg` (2752 × 2064, landscape), alongside the retained reading screenshot. The English wide screenshot is first; the Chinese wide image was deleted and reuploaded after processing stalled, then passed Apple validation. These show the free reading and sign-in state of the real app, without fabricated account access or AI messages. All seven iPhone screenshots remain available.

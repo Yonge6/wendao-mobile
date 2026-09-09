@@ -12,7 +12,7 @@
 
 ## Promotional text
 
-Read and reflect side by side on wider screens. Resize your window and continue the same conversation. Quiet AI dialogue inspired by Laozi, grounded in your chapter.
+Read and reflect side by side on wider screens. Bring life’s questions to Laozi’s wisdom. Today’s chapter and 10 chapters you choose are free.
 
 ## Description
 
