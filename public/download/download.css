@@ -1,0 +1,23 @@
+/* The same paper, ink and gold palette as the reading surface. */
+:root { color-scheme: light; font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif; color: #123f49; background: #f7f1e6; }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; min-height: 100vh; min-height: 100dvh; }
+main { width: min(100% - 40px, 440px); margin: 0 auto; padding: max(76px, env(safe-area-inset-top)) 0 max(32px, env(safe-area-inset-bottom)); }
+.brand { color: #85601f; font-size: 13px; letter-spacing: .12em; }
+h1 { margin: 28px 0 16px; font: 500 28px/1.5 "Songti SC", "STSong", serif; }
+p { font-size: 15px; line-height: 1.8; }
+#download-description { color: #315965; }
+#browser-pointer { position: absolute; top: max(18px, env(safe-area-inset-top)); right: 24px; font-size: 26px; color: #85601f; }
+#wechat-guide { margin: 24px 0; padding: 18px; border: 1px solid #ae7f2b66; border-radius: 18px; }
+ol { margin: 0; padding-left: 24px; }
+li { padding: 6px 0; font-size: 16px; line-height: 1.7; }
+#guide-result { margin-bottom: 0; color: #315965; font-size: 14px; }
+.primary, button { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 48px; padding: 12px 16px; border: 1px solid #123f49; border-radius: 24px; font: 500 15px/1.5 -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif; text-decoration: none; cursor: pointer; }
+.primary { margin-top: 28px; background: #123f49; color: #f7f1e6; }
+button { margin-top: 12px; background: transparent; color: #123f49; border-color: #ae7f2b80; }
+a:focus-visible, button:focus-visible { outline: 3px solid #ae7f2b; outline-offset: 4px; }
+#fallback-note { font-size: 13px; color: #315965; text-align: center; }
+.back-link { display: flex; min-height: 44px; width: fit-content; margin: 24px auto 0; align-items: center; color: #315965; text-underline-offset: 4px; font-size: 14px; }
+#copy-feedback { position: fixed; top: 28%; left: 50%; transform: translateX(-50%); max-width: calc(100% - 32px); width: max-content; border-radius: 16px; background: #123f49; color: #f7f1e6; box-shadow: 0 6px 24px #0003; font-size: 14px; line-height: 1.6; text-align: center; pointer-events: none; }
+#copy-feedback:not(:empty) { padding: 12px 18px; }

@@ -25,5 +25,11 @@ export const COMPANION_MEMBERSHIP = Object.freeze({
   localizationBase: "USD" as const,
 });
 
-export const WENDAO_APP_STORE_URL = "https://apps.apple.com/us/app/wendao-daodejing/id6796945428";
+export const WENDAO_APP_STORE_URL = "https://apps.apple.com/us/app/wendao-ai-daodejing/id6796945428";
 export const WENDAO_APP_STORE_REVIEW_URL = `${WENDAO_APP_STORE_URL}?action=write-review`;
+
+export function getWendaoAppStoreUrl(language: "zh" | "en") {
+  return language === "zh"
+    ? "https://apps.apple.com/cn/app/%E4%B8%89%E6%85%A2%E9%97%AE%E9%81%93-ai-%E9%81%93%E5%BE%B7%E7%BB%8F/id6796945428"
+    : WENDAO_APP_STORE_URL;
+}

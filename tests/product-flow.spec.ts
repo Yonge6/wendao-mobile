@@ -673,53 +673,90 @@ test("offers an App Store download on H5 and a rating action in the iOS app", as
   const downloadLink = webDrawer.getByRole("link", { name: /下载 App/ });
   await expect(downloadLink).toHaveAttribute(
     "href",
-    "https://apps.apple.com/us/app/wendao-daodejing/id6796945428",
+    "https://apps.apple.com/cn/app/%E4%B8%89%E6%85%A2%E9%97%AE%E9%81%93-ai-%E9%81%93%E5%BE%B7%E7%BB%8F/id6796945428",
   );
   await expect(webDrawer.getByRole("button", { name: /给 App 评分/ })).toHaveCount(0);
 
+  await page.context().route("https://apps.apple.com/**", (route) => route.fulfill({ status: 200, contentType: "text/html", body: "<h1>App Store destination</h1>" }));
   const popupPromise = page.waitForEvent("popup");
   await downloadLink.click();
   const popup = await popupPromise;
-  await expect.poll(() => new URL(popup.url()).hostname).toBe("apps.apple.com");
+  await expect(popup).toHaveURL("https://apps.apple.com/cn/app/%E4%B8%89%E6%85%A2%E9%97%AE%E9%81%93-ai-%E9%81%93%E5%BE%B7%E7%BB%8F/id6796945428");
   await expect(page.getByRole("dialog", { name: "在默认浏览器中打开" })).toHaveCount(0);
   await popup.close();
 
   await page.close();
 });
 
-test("guides iPhone WeChat readers to the default browser and copies the App Store link", async ({ browser }) => {
-  const context = await browser.newContext({
-    userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148 MicroMessenger/8.0.50",
-    viewport: { width: 390, height: 844 },
+for (const language of ["zh", "en"] as const) {
+  test(`WeChat download hands the same URL to an external browser and opens the App Store (${language})`, async ({ browser }, testInfo) => {
+    const expectedStoreUrl = language === "zh"
+      ? "https://apps.apple.com/cn/app/%E4%B8%89%E6%85%A2%E9%97%AE%E9%81%93-ai-%E9%81%93%E5%BE%B7%E7%BB%8F/id6796945428"
+      : "https://apps.apple.com/us/app/wendao-ai-daodejing/id6796945428";
+    const context = await browser.newContext({
+      userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148 MicroMessenger/8.0.50",
+      viewport: { width: 390, height: 844 },
+    });
+    const page = await context.newPage();
+    await page.addInitScript(() => {
+      Object.defineProperty(navigator, "clipboard", {
+        configurable: true,
+        value: { writeText: async (value: string) => { sessionStorage.setItem("wendao-copied-app-store-url", value); } },
+      });
+    });
+    await page.goto(`/?chapter=64&lang=${language}`);
+    await page.getByRole("button", { name: language === "zh" ? "打开更多功能" : "Open more", exact: true }).click();
+    await page.getByRole("link", { name: language === "zh" ? /下载 App/ : /Download the App/ }).click();
+    await expect(page).toHaveURL(new RegExp(`/download\\.html\\?lang=${language}&chapter=64$`));
+    await expect(page.getByRole("heading", { name: language === "zh" ? "在浏览器中继续下载" : "Continue in your browser" })).toBeVisible();
+    await page.reload();
+    const guide = page.getByRole("region", { name: language === "zh" ? "在默认浏览器中打开" : "Open in your default browser" });
+    await expect(guide).toContainText(language === "zh" ? "无需再次点击下载" : "No second download tap is needed");
+    await page.screenshot({ path: testInfo.outputPath(`wechat-download-${language}.png`) });
+    const storeLink = page.getByRole("link", { name: language === "zh" ? "打开 App Store" : "Open App Store", exact: true });
+    await expect(storeLink).toHaveAttribute("href", expectedStoreUrl);
+    await page.getByRole("button", { name: language === "zh" ? "复制 App Store 链接" : "Copy App Store link" }).click();
+    await expect(page.getByRole("status")).toContainText(language === "zh" ? "已复制" : "Link copied");
+    expect(await page.evaluate(() => sessionStorage.getItem("wendao-copied-app-store-url"))).toBe(expectedStoreUrl);
+    const downloadUrl = page.url();
+    const external = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    const outsidePage = await external.newPage();
+    await outsidePage.route("https://apps.apple.com/**", (route) => route.fulfill({ status: 200, contentType: "text/html", body: "<h1>App Store destination</h1>" }));
+    await outsidePage.goto(downloadUrl);
+    await expect(outsidePage).toHaveURL(expectedStoreUrl);
+    await expect(outsidePage.getByRole("heading", { name: "App Store destination" })).toBeVisible();
+    await external.close();
+    await context.close();
   });
+}
+
+test("WeChat download preserves the guide and provides recovery when copying is denied", async ({ browser }) => {
+  const context = await browser.newContext({ userAgent: "Mozilla/5.0 (iPhone) MicroMessenger/8.0.50", viewport: { width: 320, height: 640 } });
   const page = await context.newPage();
   await page.addInitScript(() => {
-    Object.defineProperty(navigator, "clipboard", {
-      configurable: true,
-      value: {
-        writeText: async (value: string) => {
-          window.sessionStorage.setItem("wendao-copied-app-store-url", value);
-        },
-      },
-    });
+    Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText: async () => { throw new Error("denied"); } } });
+    document.execCommand = () => false;
   });
+  await page.goto("/download.html?lang=zh");
+  const copy = page.getByRole("button", { name: "复制 App Store 链接" });
+  await expect(copy).toBeInViewport();
+  await copy.click();
+  await expect(page.getByRole("status")).toHaveText("请长按“打开 App Store”复制链接");
+  await page.getByRole("link", { name: "打开 App Store", exact: true }).click();
+  await expect(page.getByRole("status")).toHaveText("请点右上角 ···，在默认浏览器中打开");
+  await expect(page).toHaveURL(/download\.html/);
+  await expect(page.getByRole("region", { name: "在默认浏览器中打开" })).toBeVisible();
+  await context.close();
+});
 
-  await page.goto("/?chapter=64&lang=zh");
-  await page.getByRole("button", { name: "打开更多功能" }).click();
-  await page.getByRole("dialog", { name: "你的空间" }).getByRole("link", { name: /下载 App/ }).click();
-
-  await expect(page).toHaveURL(/127\.0\.0\.1/);
-  const guide = page.getByRole("dialog", { name: "在默认浏览器中打开" });
-  await expect(guide).toBeVisible();
-  await expect(guide).toContainText("选择“在默认浏览器中打开”");
-  await guide.getByRole("button", { name: "复制 App Store 链接" }).click();
-  await expect(guide.getByRole("status")).toHaveText("已复制，可粘贴到 Safari 打开");
-  await expect.poll(() => page.evaluate(() => window.sessionStorage.getItem("wendao-copied-app-store-url"))).toBe(
-    "https://apps.apple.com/us/app/wendao-daodejing/id6796945428",
-  );
-
-  await guide.getByRole("button", { name: "知道了" }).click();
-  await expect(guide).toHaveCount(0);
+test("download page retains a real App Store fallback without JavaScript", async ({ browser }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 320, height: 640 } });
+  const page = await context.newPage();
+  await page.goto("/download.html");
+  const storeLink = page.getByRole("link", { name: "打开 App Store", exact: true });
+  await expect(storeLink).toHaveAttribute("href", "https://apps.apple.com/cn/app/%E4%B8%89%E6%85%A2%E9%97%AE%E9%81%93-ai-%E9%81%93%E5%BE%B7%E7%BB%8F/id6796945428");
+  await expect(storeLink).toBeInViewport();
+  await expect(page.getByRole("link", { name: "返回阅读", exact: true })).toBeVisible();
   await context.close();
 });
 
