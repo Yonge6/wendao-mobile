@@ -163,3 +163,68 @@ for (const viewport of [
     await page.screenshot({ path: testInfo.outputPath("companion-history-layout.png") });
   });
 }
+
+test("adaptive conversation preserves its draft, history and single streaming request across window changes", async ({ page }) => {
+  await page.setViewportSize({ width: 1024, height: 900 });
+  await page.goto("/tests/companion-fixture.html?adaptive");
+  await expect(page.getByRole("region", { name: "我的问道", exact: true })).toBeVisible();
+  await expect(page.locator(".companion-conversation")).toContainText("A 的历史回应");
+  const input = page.getByLabel("此刻，你真正想问什么？");
+  await input.fill("我想接着聊，也想慢慢读");
+  for (const width of [799, 800, 390, 1024]) {
+    await page.setViewportSize({ width, height: 900 });
+    await expect(input).toHaveValue("我想接着聊，也想慢慢读");
+    await expect(page.locator(".companion-conversation article")).toHaveCount(2);
+    const box = (await page.locator(".companion-dialog").boundingBox())!;
+    expect(box.x).toBe(width >= 800 ? width / 2 : width <= 720 ? 0 : (width - Math.min(760, width - 36)) / 2);
+  }
+  await page.getByRole("button", { name: "发送问题" }).click();
+  await expect.poll(() => page.evaluate(() => (window as any).askRequests.length)).toBe(1);
+  await page.evaluate(() => (window as any).emitAnswer("delta", { text: "先把眼前这一件事看清。" }));
+  for (const [width, height] of [[390, 480], [820, 430], [1366, 1024], [744, 900]]) {
+    await page.setViewportSize({ width, height });
+    await expect(page.locator(".companion-conversation")).toContainText("先把眼前这一件事看清。");
+    const composer = (await page.locator(".companion-question-control").boundingBox())!;
+    expect(composer.y + composer.height).toBeLessThanOrEqual(height);
+    expect(composer.x + composer.width).toBeLessThanOrEqual(width);
+  }
+  await page.evaluate(() => { (window as any).emitAnswer("delta", { text: "不必急着把所有路都走完。" }); (window as any).emitAnswer("done", { threadId: "33333333-3333-4333-8333-333333333333" }); });
+  await expect(page.locator(".companion-conversation article").last()).toContainText("先把眼前这一件事看清。不必急着把所有路都走完。");
+  expect(await page.evaluate(() => (window as any).askRequests.length)).toBe(1);
+  await expect(page.locator(".companion-conversation article")).toHaveCount(4);
+});
+
+for (const language of ["zh", "en"]) {
+  test(`reader remains usable beside AI and preserves its passage after resizing: ${language}`, async ({ page }) => {
+    await page.setViewportSize({ width: 1200, height: 900 });
+    await page.goto(`/?chapter=8&lang=${language}`);
+    const keep = page.getByRole("button", { name: language === "zh" ? "免费保留这一章" : "Keep this chapter free", exact: false });
+    if (await keep.isVisible()) await keep.click();
+    await page.locator(".ai-composer").click();
+    await expect(page.locator(".companion-dialog")).toBeVisible();
+    const reader = page.getByTestId("mobile-scroll");
+    expect((await reader.boundingBox())!.width).toBe(600);
+    await page.getByRole("button", { name: language === "zh" ? "目录" : "Contents", exact: true }).click();
+    await expect(page.locator(".web-sheet.is-directory-sheet")).toBeVisible();
+    await page.locator('.directory-item[data-chapter-id="8"]').click();
+    await expect(page.locator(".web-sheet.is-directory-sheet")).toBeHidden();
+    await reader.evaluate((element) => { element.scrollTop = 1100; element.dispatchEvent(new Event("scroll")); });
+    const anchor = await reader.evaluate((element) => {
+      const edge = document.querySelector(".reading-header-fixed")!.getBoundingClientRect().bottom + 12;
+      const all = [...element.querySelectorAll(".chapter p, .chapter h1, .chapter h2, .chapter h3")];
+      const index = all.findIndex(item => item.getBoundingClientRect().bottom > edge);
+      return { index, offset: all[index].getBoundingClientRect().top - edge };
+    });
+    for (const width of [820, 390, 1024]) {
+      await page.setViewportSize({ width, height: 900 });
+      await expect.poll(() => reader.evaluate((element, anchor) => {
+        const edge = document.querySelector(".reading-header-fixed")!.getBoundingClientRect().bottom + 12;
+        const item = element.querySelectorAll(".chapter p, .chapter h1, .chapter h2, .chapter h3")[anchor.index];
+        return Math.abs(item.getBoundingClientRect().top - edge - anchor.offset);
+      }, anchor)).toBeLessThan(2);
+    }
+    await page.locator(".companion-dialog-header > button").click();
+    await expect(page.locator(".companion-dialog")).toBeHidden();
+    expect((await reader.boundingBox())!.width).toBe(720);
+  });
+}

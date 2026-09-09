@@ -12,7 +12,7 @@
 
 ## Promotional text
 
-Bring today’s questions to Laozi’s wisdom. Quiet AI dialogue grounded in your chapter, with memories you control. Today’s chapter and 10 chapters you choose are free.
+Read and reflect side by side on wider screens. Resize your window and continue the same conversation. Quiet AI dialogue inspired by Laozi, grounded in your chapter.
 
 ## Description
 
@@ -26,6 +26,8 @@ With a Wendao AI membership, you can:
 - Carry meaningful context across conversations while reviewing, editing, pausing, or clearing automatic memory;
 - Revisit recurring themes through a weekly reflection that surfaces clues without reducing your life to a summary;
 - Copy a response or create a share image with a chapter link and QR code. Save images directly to Photos and see a brief, clearly placed confirmation after saving or copying.
+
+Open Wendao AI on a wider screen to read and reflect side by side, with independent scrolling. Narrow the window to return to a single conversation view. Resizing and rotation preserve your reading passage, unsent question and response in progress.
 
 Free reading begins with what matters to you:
 
@@ -49,7 +51,10 @@ True to yourself. Flow with life.
 
 ## What's New in Version 1.8
 
-A quieter way to reflect with the Daodejing.
+More room to read and reflect.
+
+- New side-by-side layout on wider screens: read on the left and talk with Wendao AI on the right, with independent scrolling. Narrow windows return to a focused single view.
+- Improved resizing and rotation preserve your reading passage, conversation history, unsent question and response in progress.
 
 - Wendao AI now uses plain, thoughtful language, drawing on your chapter and occasionally quoting a relevant passage. Follow-up conversations feel more natural, without a checklist or exercise in every reply.
 - Save share images directly to Photos with one tap. System photo permission is still required the first time.

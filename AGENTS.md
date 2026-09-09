@@ -47,7 +47,7 @@ See `src/mobile/COMPONENTS.md` for the full component and gesture contract.
 
 ## Wendao Product Decisions
 
-- The public GitHub Pages build is a normal responsive H5 reading page, not a simulated phone or app preview. It fills the mobile browser naturally and becomes a restrained 720 px reading column on larger screens; do not show device bezels, a device picker, a mock status bar, or a simulated keyboard on the public surface.
+- The public GitHub Pages build is a normal responsive H5 reading page, not a simulated phone or app preview. It fills the mobile browser naturally and becomes a restrained 720 px reading column on larger screens; when AI is open at 800 CSS px or wider, show the reader on the left and the same persistent AI panel on the right, each capped at 720 px. Preserve the reading passage, draft, history, and in-flight response across resizing; use actual window width rather than device names or assumed fold APIs; do not show device bezels, a device picker, a mock status bar, or a simulated keyboard on the public surface.
 - Treat `最终方向/方案1最终精修-目录版.png` as the visual source of truth: mist-gold xuan paper, pale ink mountains, deep teal typography, and restrained antique-gold rules.
 - Keep the paper base seamless and render the ink-mountain art as one fixed, non-repeating, low-contrast viewport layer. Never repeat the combined paper-and-mountain bitmap vertically; that creates visible horizontal seams in long chapters.
 - Reading is the primary experience. Keep the order `原文 / Text` → `解释 / Meaning` → `与你有关 / For you`, with rich long-form scrolling and uninterrupted continuation into the next chapter.

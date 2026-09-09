@@ -33,6 +33,7 @@ import {
   SunIcon,
 } from "@radix-ui/react-icons";
 import { App as CapacitorApp } from "@capacitor/app";
+import { useReadingResizeAnchor } from "./useReadingResizeAnchor";
 import "@fontsource/noto-sans-sc/400.css";
 import "@fontsource/noto-sans-sc/500.css";
 import "@fontsource/noto-serif-sc/400.css";
@@ -733,17 +734,27 @@ type CompanionDialogProps = {
   chapterId: number;
   chapterTitle: string;
   onShareAnswer: (answer: string, sourceChapterId?: number) => void;
+  children?: ReactNode;
 };
 
-function CompanionDialog({
+export function CompanionDialog({
   open,
   onClose,
   language,
   chapterId,
   chapterTitle,
   onShareAnswer,
+  children,
 }: CompanionDialogProps) {
   const isZh = language === "zh";
+  const [wide, setWide] = useState(() => window.matchMedia("(min-width: 800px)").matches);
+  useEffect(() => {
+    const query = window.matchMedia("(min-width: 800px)");
+    const update = () => setWide(query.matches);
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
   const [hasOpened, setHasOpened] = useState(open);
   const [viewportBounds, setViewportBounds] = useState(() => ({
     height: typeof window === "undefined" ? 0 : window.visualViewport?.height ?? window.innerHeight,
@@ -796,8 +807,8 @@ function CompanionDialog({
       />
       <section
         className="companion-dialog"
-        role="dialog"
-        aria-modal="true"
+        role={wide ? "region" : "dialog"}
+        aria-modal={wide ? undefined : true}
         aria-labelledby="companion-dialog-title"
       >
         <header className="companion-dialog-header">
@@ -817,7 +828,7 @@ function CompanionDialog({
                 {isZh ? "正在展开你的问道…" : "Opening your Wendao…"}
               </div>
             )}>
-              <CompanionPanel language={language} chapterId={chapterId} onShareAnswer={onShareAnswer} onSignedOut={onClose} />
+              {children ?? <CompanionPanel language={language} chapterId={chapterId} onShareAnswer={onShareAnswer} onSignedOut={onClose} />}
             </Suspense>
           ) : null}
         </div>
@@ -1802,6 +1813,7 @@ function AdminConsole({ open, onClose, language }: AdminConsoleProps) {
 }
 
 export default function Prototype() {
+  useReadingResizeAnchor();
   const initialRequest = useRef(initialReadingRequest()).current;
   const webSupportEnabled = runtimeSurface() === "web";
   const [language, setLanguage] = useState<Language>(initialRequest.language);
@@ -2299,7 +2311,7 @@ export default function Prototype() {
   };
 
   return (
-    <>
+    <div className={`wendao-workspace${companionOpen ? " is-companion-open" : ""}`}>
       <header
         className={`reading-header reading-header-fixed ${isReadingScrolled ? "is-scrolled" : ""}`}
         aria-label={isZh ? "阅读工具" : "Reading tools"}
@@ -2778,6 +2790,6 @@ export default function Prototype() {
         }}
         language={language}
       />
-    </>
+    </div>
   );
 }
