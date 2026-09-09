@@ -3,7 +3,7 @@ import test from "node:test";
 
 import { COMPANION_MEMBERSHIP, COMPANION_PLANS } from "../src/companion/plans.ts";
 
-test("locks the approved monthly and annual prices", () => {
+test("locks the approved subscription and lifetime price configuration", () => {
   assert.deepEqual(COMPANION_PLANS.monthly, {
     id: "wendao_companion_monthly",
     cny: 68,
@@ -18,8 +18,8 @@ test("locks the approved monthly and annual prices", () => {
   });
   assert.deepEqual(COMPANION_PLANS.lifetime, {
     id: "wendao_reading_lifetime",
-    cny: 198,
-    usd: 39.99,
+    cny: 9.9,
+    usd: 7,
     interval: "lifetime",
   });
 });

@@ -1004,11 +1004,11 @@ test("opens account login as soon as the reading composer is clicked", async ({ 
   const composer = page.getByRole("button", { name: "打开我的问道并登录", exact: true });
   await expect(page.locator(".companion-dialog")).toBeHidden();
   await expect(page.getByText("AI 问道 · 登录后使用", { exact: true })).toBeVisible();
-  await expect(composer).toContainText("写下一个处境、矛盾或选择…");
+  await expect(composer).toContainText("此刻，有什么放不下的事？");
 
   await page.getByRole("button", { name: "切换到英文", exact: true }).click();
   await expect(page.getByText("Wendao AI · sign in to use", { exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Open My Wendao and sign in", exact: true })).toContainText("Describe a situation, tension, or choice…");
+  await expect(page.getByRole("button", { name: "Open My Wendao and sign in", exact: true })).toContainText("What is weighing on you today?");
   await page.getByRole("button", { name: "Switch to Chinese", exact: true }).click();
 
   await composer.click();
@@ -1083,7 +1083,7 @@ test("keeps the Companion composer compact and fixed while thinking and after an
           </div>
         </div>
         <div class="companion-compose-zone">
-          <form class="companion-question-form"><div class="companion-question-control"><textarea rows="2" placeholder="写下一个处境、矛盾或选择…"></textarea><button type="submit">↑</button></div></form>
+          <form class="companion-question-form"><div class="companion-question-control"><textarea rows="2" placeholder="此刻，有什么放不下的事？"></textarea><button type="submit">↑</button></div></form>
           <div class="companion-compose-meta"><p class="companion-response-status">正在结合本章与你的处境回应。</p><div class="companion-home-actions"><button class="companion-text-button" type="button">停止回答</button></div></div>
         </div>
       </section>`;

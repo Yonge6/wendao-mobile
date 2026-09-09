@@ -25,13 +25,30 @@ test("App Store names and subtitles lead with Wendao AI within Apple limits", ()
 });
 
 test("metadata presents chapter-grounded AI and discloses the reading limits", () => {
-  assert.match(english, /Not generic chat/);
+  assert.match(english, /Laozi’s wisdom/);
   assert.match(english, /Today’s chapter and 10 chapters you choose are free/);
   assert.match(english, /Unlock All Chapters Forever/);
-  assert.match(english, /classical foundation clear in the name/);
-  assert.match(chinese, /不是通用聊天/);
+  assert.match(english, /What's New in Version 1.8/);
+  assert.match(chinese, /借老子的智慧/);
   assert.match(chinese, /今日一章与自选 10 章免费/);
   assert.match(chinese, /永久解锁全部章节/);
-  assert.match(chinese, /更清楚地呈现它的经典根基/);
+  assert.match(chinese, /版本 1.8 更新说明/);
   assert.match(index, /三慢问道 AI · 以《道德经》回应真实处境/);
+});
+
+
+test("store copy stays within field limits and states AI and purchase boundaries", () => {
+  for (const [source, promo, description, keywords] of [
+    [english, "Promotional text", "Description", "Keywords"],
+    [chinese, "推广文本", "描述", "关键词"],
+  ]) {
+    const section = (heading) => source.split(`## ${heading}\n`)[1].split("\n## ")[0].trim();
+    assert.ok(section(promo).length <= 170);
+    assert.ok(section(description).length <= 4000);
+    assert.ok(section(keywords).replaceAll("`", "").length <= 100);
+  }
+  assert.match(english, /not the historical Laozi/);
+  assert.match(chinese, /不是历史上的老子/);
+  assert.match(english, /AI services are not included/);
+  assert.match(chinese, /此购买不含 AI 服务/);
 });

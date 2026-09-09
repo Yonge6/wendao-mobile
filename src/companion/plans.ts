@@ -13,8 +13,8 @@ export const COMPANION_PLANS = Object.freeze({
   }),
   lifetime: Object.freeze({
     id: "wendao_reading_lifetime",
-    cny: 198,
-    usd: 39.99,
+    cny: 9.9,
+    usd: 7,
     interval: "lifetime" as const,
   }),
 });

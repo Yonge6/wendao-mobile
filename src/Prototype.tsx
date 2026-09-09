@@ -1095,7 +1095,7 @@ function SideDrawer({
                   <span className="drawer-nav-icon"><ChatBubbleIcon /></span>
                   <span>
                     <strong>{isZh ? "AI 问道" : "Wendao AI"}</strong>
-                    <small>{isZh ? "以本章、持续对话与可控记忆回应" : "Grounded in the chapter, dialogue, and memory you control"}</small>
+                    <small>{isZh ? "借老子的智慧，聊眼前的困惑" : "Bring your questions to Laozi’s wisdom"}</small>
                   </span>
                   <ChevronRightIcon />
                 </button>
@@ -1389,11 +1389,11 @@ function SideDrawer({
           {view === "about" ? (
             <section className="drawer-prose">
               <span className="drawer-kicker">{isZh ? "真实自己，流动人生" : "True to yourself. Flow with life."}</span>
-              <h3>{isZh ? "读经典，也与一位有上下文的 AI 慢慢问。" : "Read the classic, then reflect with AI that knows the context."}</h3>
+              <h3>{isZh ? "读经典，借老子的智慧聊聊眼前。" : "Read the classic. Reflect with Laozi’s wisdom."}</h3>
               <p>
                 {isZh
-                  ? "三慢问道把完整 81 章阅读与 AI 问道放在同一条路径里。你可以把正在面对的处境、矛盾或选择带回本章；回应会结合原文、今译、本章主旨、持续对话与由你掌握的记忆，帮助你看清线索、辨认边界、落下一步，但不替你决定。"
-                  : "Wendao brings all 81 chapters and chapter-grounded AI reflection into one path. Bring a real situation, tension, or choice back to the chapter you are reading. The response draws on the original, line-by-line meaning, chapter theme, ongoing dialogue, and memory you control—helping you see patterns, boundaries, and a next step without deciding for you."}
+                  ? "三慢问道把完整 81 章阅读与 AI 问道放在同一条路径里。你可以把正在面对的处境、矛盾或选择带回本章；回应会结合原文、今译、本章主旨、持续对话与由你掌握的记忆，用简静白话陪你看清线索、辨认边界，偶尔引用贴切的原文，但不替你决定。它是借经典启发的 AI，不是老子本人。"
+                  : "Wendao brings all 81 chapters and chapter-grounded AI reflection into one path. Bring a real situation, tension, or choice back to the chapter you are reading. The response draws on the original, line-by-line meaning, chapter theme, ongoing dialogue, and memory you control—using plain, thoughtful language and an occasional relevant quotation to help you see patterns and boundaries without deciding for you. It is AI inspired by the classic, not the historical Laozi."}
               </p>
               <p>
                 {isZh
@@ -2596,7 +2596,7 @@ export default function Prototype() {
                     : (isZh ? "AI 问道 · 正在同步" : "Wendao AI · syncing")}
             </small>
             <span className="composer-placeholder">
-              {isZh ? "写下一个处境、矛盾或选择…" : "Describe a situation, tension, or choice…"}
+              {isZh ? "此刻，有什么放不下的事？" : "What is weighing on you today?"}
             </span>
           </div>
           <span className="composer-submit" aria-hidden="true">

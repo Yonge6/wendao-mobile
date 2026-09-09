@@ -12,20 +12,20 @@
 
 ## Promotional text
 
-Not generic chat. Wendao AI reflects with the chapter you are reading, your ongoing dialogue, and memories you control. Today’s chapter and 10 chapters you choose are free.
+Bring today’s questions to Laozi’s wisdom. Quiet AI dialogue grounded in your chapter, with memories you control. Today’s chapter and 10 chapters you choose are free.
 
 ## Description
 
 Bring what you are actually facing back to the chapter you are reading.
 
-Wendao brings the complete Daodejing and ongoing AI reflection into one quiet path. Wendao AI is not an answer machine that decides for you. It draws on the chapter’s original text, line-by-line meaning, central theme, your ongoing dialogue, and memories you control—first understanding the situation, then helping you notice patterns, name boundaries, and choose one grounded next step.
+Wendao brings the complete Daodejing and ongoing AI reflection into one quiet path. Wendao AI is not an answer machine that decides for you. It draws on the chapter’s original text, line-by-line meaning, central theme, your ongoing dialogue, and memories you control—responding in plain, thoughtful language, like a conversation with a perceptive elder. An occasional passage from the text helps you notice patterns and name boundaries. This is AI inspired by the classic, not the historical Laozi.
 
 With a Wendao AI membership, you can:
 
 - Ask unlimited questions grounded in the chapter you are reading, rather than receiving generic advice detached from the text;
 - Carry meaningful context across conversations while reviewing, editing, pausing, or clearing automatic memory;
 - Revisit recurring themes through a weekly reflection that surfaces clues without reducing your life to a summary;
-- Copy a response or create a share image with Wendao’s consistent QR code.
+- Copy a response or create a share image with a chapter link and QR code. Save images directly to Photos and see a brief, clearly placed confirmation after saving or copying.
 
 Free reading begins with what matters to you:
 
@@ -47,6 +47,11 @@ True to yourself. Flow with life.
 
 `Laozi,Taoism,philosophy,reflection,meditation,classics,pinyin,wisdom,life,journal`
 
-## What's New in Version 1.4
+## What's New in Version 1.8
 
-Wendao AI: Daodejing now makes its classical foundation clear in the name. It reflects with the Daodejing chapter you are reading, first understanding the situation you actually face and then offering one grounded response. Version 1.4 also updates the global App Store presentation while retaining today’s free chapter, 10 chapters you choose, all 81 chapters, Wendao AI, automatic memory, weekly reflection, and share-image saving.
+A quieter way to reflect with the Daodejing.
+
+- Wendao AI now uses plain, thoughtful language, drawing on your chapter and occasionally quoting a relevant passage. Follow-up conversations feel more natural, without a checklist or exercise in every reply.
+- Save share images directly to Photos with one tap. System photo permission is still required the first time.
+- Brief save and copy confirmations now appear higher in the share panel, where they are easier to notice.
+- A lower one-time price for “Unlock All Chapters Forever” gives you permanent access to all 81 chapters. AI services are not included.

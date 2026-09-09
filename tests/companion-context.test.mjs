@@ -155,3 +155,16 @@ test("validates question length and separates immediate safety risk", () => {
   assert.equal(classifySafetyRisk("我该怎么结束这个项目？"), "standard");
   assert.match(immediateSafetyResponse("zh"), /紧急|身边|求助/);
 });
+
+test("Laozi-inspired voice keeps identity, source and high-stakes boundaries in both languages", () => {
+  for (const locale of ["zh", "en"]) {
+    const messages = buildCompanionMessages({ question: "Help me reflect", locale,
+      chapter: chapterContextFromCollection(chapters, 64, locale), memories: [], highStakes: true });
+    const system = messages[0].content;
+    assert.match(system, locale === "zh" ? /不是老子本人/ : /not the historical Laozi/);
+    assert.match(system, locale === "zh" ? /只有本章上下文确实存在的原句/ : /Quote only source lines present in the supplied context/);
+    assert.match(system, locale === "zh" ? /不机械地每次布置练习/ : /Do not assign an exercise after every reply/);
+    assert.match(system, locale === "zh" ? /不能替代合格专业人士/ : /do not replace a qualified professional/);
+    assert.equal(messages.at(-1).content, "Help me reflect");
+  }
+});

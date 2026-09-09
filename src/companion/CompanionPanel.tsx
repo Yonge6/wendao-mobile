@@ -411,7 +411,7 @@ export function SignedInCompanion({
             <button type="button" disabled={asking} onClick={startNewConversation}>{isZh ? "新对话" : "New chat"}</button>
           </div>
         </div>
-        {messages.length === 0 && view === "conversation" && historyState === "ready" ? <h3>{isZh ? "从真正关心的地方，慢慢问。" : "Begin with what genuinely matters."}</h3> : null}
+        {messages.length === 0 && view === "conversation" && historyState === "ready" ? <h3>{isZh ? "借老子的智慧，聊眼前的困惑。" : "Bring today’s questions to Laozi’s wisdom."}</h3> : null}
       </header>
       <div className="companion-thread" ref={conversationRef} onScroll={(event) => {
         const element = event.currentTarget;
@@ -496,7 +496,7 @@ export function SignedInCompanion({
               <button type="button" key={suggestion} onClick={() => setQuestion(suggestion)}>{suggestion}</button>
             ))}
           </div>
-          <small>{isZh ? "回答会以本章原文、今译与主旨为依据。" : "Answers are grounded in the chapter text, translation, and central idea."}</small>
+          <small>{isZh ? "AI 借本章原文与解读，陪你慢慢想明白。" : "An AI conversation grounded in this chapter and its meaning."}</small>
         </div>
       ) : null}
       </>}
@@ -517,7 +517,7 @@ export function SignedInCompanion({
                 event.preventDefault();
                 void askQuestion(question);
               }}
-              placeholder={isZh ? "写下一个处境、矛盾或选择…" : "Describe a situation, tension, or choice…"}
+              placeholder={isZh ? "此刻，有什么放不下的事？" : "What is weighing on you today?"}
               disabled={asking || historyState !== "ready" || view === "history"}
             />
             <button type="submit" disabled={asking || !question.trim() || historyState !== "ready" || view === "history"} aria-label={isZh ? "发送问题" : "Send question"}>↑</button>

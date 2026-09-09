@@ -10,3 +10,5 @@ scripts/
 public/
 supabase/
 qa-*.png
+work/
+.env*
