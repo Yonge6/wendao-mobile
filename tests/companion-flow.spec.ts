@@ -229,3 +229,19 @@ for (const language of ["zh", "en"]) {
     expect((await reader.boundingBox())!.width).toBe(720);
   });
 }
+
+test("slow connection never claims the model is already composing", async ({ page }) => {
+  await page.goto("/tests/companion-fixture.html");
+  await expect(page.locator(".companion-conversation")).toBeVisible();
+  await page.clock.install();
+  await page.getByLabel("此刻，你真正想问什么？").fill("网络连接测试");
+  await page.getByRole("button", { name: "发送问题" }).click();
+  await expect(page.locator(".companion-thread")).toContainText("正在连接问道服务");
+  await page.clock.fastForward(19_000);
+  await expect(page.locator(".companion-compose-zone")).toContainText("尚未收到服务回应");
+  await expect(page.locator(".companion-thread")).not.toContainText("仍在认真整理");
+  await page.evaluate(() => (window as any).emitAnswer("meta", { phase: "answering" }));
+  await expect(page.locator(".companion-thread")).toContainText("正在组织回应");
+  await page.evaluate(() => { (window as any).emitAnswer("delta", { text: "已连接后的回答" }); (window as any).emitAnswer("done", {}); });
+  await expect(page.locator(".companion-thread")).toContainText("已连接后的回答");
+});

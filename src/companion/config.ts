@@ -27,16 +27,17 @@ function requiredValue(value: string | undefined, name: string): string {
 export function readCompanionPublicConfig(
   environment: PublicEnvironment,
 ): CompanionPublicConfig {
+  const configuredApiUrl = requiredUrl(environment.VITE_COMPANION_API_URL, "VITE_COMPANION_API_URL");
   return {
     supabaseUrl: requiredUrl(environment.VITE_SUPABASE_URL, "VITE_SUPABASE_URL"),
     supabaseAnonKey: requiredValue(
       environment.VITE_SUPABASE_ANON_KEY,
       "VITE_SUPABASE_ANON_KEY",
     ),
-    apiUrl: requiredUrl(
-      environment.VITE_COMPANION_API_URL,
-      "VITE_COMPANION_API_URL",
-    ),
+    // Older build environments still name Vercel's default domain, which is
+    // unreachable on the target mainland network. Keep traffic on our gateway.
+    apiUrl: configuredApiUrl === "https://wendao-companion-api.vercel.app"
+      ? "https://wendao.wonderelian.com"
+      : configuredApiUrl,
   };
 }
-

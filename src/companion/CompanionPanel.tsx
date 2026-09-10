@@ -112,7 +112,7 @@ export function SignedInCompanion({
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
   const [threadId, setThreadId] = useState<string | null>(null);
   const [asking, setAsking] = useState(false);
-  const [phase, setPhase] = useState<"idle" | "preparing" | "answering" | "slow" | "fallback">("idle");
+  const [phase, setPhase] = useState<"idle" | "connecting" | "connecting_slow" | "preparing" | "answering" | "slow" | "fallback">("idle");
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
   const [view, setView] = useState<"conversation" | "history" | "memory" | "weekly" | "account">("conversation");
   const [historyState, setHistoryState] = useState<"loading" | "ready" | "error">("loading");
@@ -278,14 +278,14 @@ export function SignedInCompanion({
     setAwayFromBottom(false);
     setQuestion("");
     setAsking(true);
-    setPhase("preparing");
+    setPhase("connecting");
     setMessages((current) => retryMessage ? current.map((message) => message.id === assistantId
       ? { ...message, status: "pending", failureNote: undefined } : message) : [
       ...current,
       { id, role: "user", content: nextQuestion, chapter_id: chapterId },
       { id: assistantId, role: "assistant", content: "", status: "pending", chapter_id: chapterId },
     ]);
-    slowTimerRef.current = window.setTimeout(() => setPhase((current) => current === "fallback" ? current : "slow"), 18_000);
+    slowTimerRef.current = window.setTimeout(() => setPhase((current) => current === "connecting" ? "connecting_slow" : current === "fallback" ? current : "slow"), 18_000);
     let replacementStarted = false;
     try {
       await streamCompanionAnswer({
@@ -465,7 +465,9 @@ export function SignedInCompanion({
             return (
               <article className={`is-${message.role}${isThinking ? " is-thinking" : ""}`} key={message.id}>
                 <span>{message.role === "user" ? (isZh ? "你" : "You") : (isZh ? "AI 问道" : "Wendao AI")}{message.chapter_id && message.chapter_id !== chapterId ? (isZh ? ` · 第 ${message.chapter_id} 章` : ` · Chapter ${message.chapter_id}`) : ""}</span>
-                <CompanionMessageContent text={message.content || message.failureNote || (phase === "slow" || phase === "fallback"
+                <CompanionMessageContent text={message.content || message.failureNote || (phase === "connecting" || phase === "connecting_slow"
+                  ? (isZh ? "正在连接问道服务…" : "Connecting to Wendao…")
+                  : phase === "slow" || phase === "fallback"
                   ? (isZh ? "仍在认真整理，这次会多用一点时间…" : "Still working carefully—this one needs a little longer…")
                   : phase === "answering"
                     ? (isZh ? "正在组织回应…" : "Composing a response…")
@@ -540,7 +542,11 @@ export function SignedInCompanion({
         <div className="companion-compose-meta">
           <p className="companion-response-status" role="status">
             {asking
-              ? (phase === "fallback"
+              ? (phase === "connecting_slow"
+                ? (isZh ? "连接比预期慢，尚未收到服务回应。你可以停止后重试。" : "The connection is slow; the service has not responded yet. You can stop and retry.")
+              : phase === "connecting"
+                ? (isZh ? "正在连接，请稍候。" : "Connecting, please wait.")
+              : phase === "fallback"
                 ? (isZh ? "正在换一条更稳定的回应路径。" : "Switching to a more reliable response path.")
               : phase === "slow" ? (isZh ? "这次整理需要更久，你可以继续等待或停止回答。" : "This response needs more time. You can wait or stop it.")
               : (isZh ? "正在结合本章与你的处境回应。" : "Responding with this chapter and your situation in view."))

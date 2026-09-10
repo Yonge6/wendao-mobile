@@ -7,7 +7,22 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        #if DEBUG
+        // Opt-in diagnostics for a tethered development launch. No account or
+        // question data is sent; release builds never include this probe.
+        if ProcessInfo.processInfo.environment["WENDAO_NETWORK_PROBE"] == "1" {
+            for address in ["https://wendao-companion-api.vercel.app/api/health", "https://wendao.wonderelian.com/api/health"] {
+                var request = URLRequest(url: URL(string: address)!)
+                request.timeoutInterval = 12
+                let started = Date()
+                let hostname = request.url!.host!
+                URLSession.shared.dataTask(with: request) { _, response, error in
+                    let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+                    print("WENDAO_NETWORK_PROBE host=\(hostname) status=\(status) elapsed=\(Date().timeIntervalSince(started)) error=\((error as NSError?)?.code ?? 0)")
+                }.resume()
+            }
+        }
+        #endif
         return true
     }
 
