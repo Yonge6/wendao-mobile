@@ -60,3 +60,4 @@ More room to read and reflect.
 - Save share images directly to Photos with one tap. System photo permission is still required the first time.
 - Brief save and copy confirmations now appear higher in the share panel, where they are easier to notice.
 - A lower one-time price for “Unlock All Chapters Forever” gives you permanent access to all 81 chapters. AI services are not included.
+- Fixed AI connection timeouts on some networks, improved streaming and cancellation on iOS, and made connection and response progress clearer.

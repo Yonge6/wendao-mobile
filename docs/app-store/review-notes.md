@@ -4,7 +4,7 @@
 
 Wendao AI is a bilingual Daodejing reading and chapter-grounded reflection app. Today’s recommended chapter is always free. A reader may deliberately keep 10 additional chapters free on the device; browsing Contents or search does not consume a choice. All 81 chapters are bundled for offline reading, subject to reading access.
 
-Version 1.8 (19) makes AI dialogue plain, unhurried and inspired by Laozi while clearly identifying it as AI. It removes the in-app confirmation before saving a share image directly to Photos, with the required system permission on first use. Brief save and copy feedback now appears higher in the share panel. The lifetime reading purchase has a lower localized price. New in build 19: opening AI at 800 CSS px or wider shows the reader and conversation side by side with independent scrolling. Narrower windows use the existing dialog. Resizing preserves the passage, draft, history and active response without restarting the session. Layout follows the current window width, without device-specific or fold-angle APIs.
+Version 1.8 (21) makes AI dialogue plain, unhurried and inspired by Laozi while clearly identifying it as AI. It removes the in-app confirmation before saving a share image directly to Photos, with the required system permission on first use. Brief save and copy feedback now appears higher in the share panel. The lifetime reading purchase has a lower localized price. New in build 19: opening AI at 800 CSS px or wider shows the reader and conversation side by side with independent scrolling. Narrower windows use the existing dialog. Resizing preserves the passage, draft, history and active response without restarting the session. Layout follows the current window width, without device-specific or fold-angle APIs.
 
 AI requires Apple or Google sign-in and an active monthly or annual App Store subscription, with no free trial. Either subscription unlocks all 81 chapters and unlimited AI questions, subject to rate and abuse safeguards. The separate non-consumable Unlock All Chapters Forever purchase grants permanent reading only, not AI, memory or weekly reflection. Purchases use StoreKit, localized prices and Restore Purchases. No external checkout or web-payment link is shown in iOS. Existing members retain their access.
 
@@ -15,6 +15,8 @@ Suggested review: 1. Read today’s free chapter offline. 2. Search Contents and
 Native Apple sign-in, Google account selection, separate confirm/cancel account actions, first-launch permission for the local 08:00 daily encounter notification, and small/medium daily widgets are retained. A fresh install starts in light mode. Only standard HTTPS encryption is used; ITSAppUsesNonExemptEncryption is false.
 
 Existing worldwide availability, including China mainland, is unchanged. The primary category is Lifestyle. The app includes bundled Daodejing content and does not claim a China mainland internet publishing permit. A previous submission removed China mainland after Guideline 2.1 requested publication authorization; later submissions requested reassessment. If additional authorization is required, please identify the exact document or availability change needed.
+
+Build 21 fixes AI connection timeouts with an owned HTTPS gateway, restores incremental WebKit streaming and cancellation, and distinguishes connecting from generating. Verified a complete answer on a physical iPhone and production H5.
 
 ## 中文备份
 
