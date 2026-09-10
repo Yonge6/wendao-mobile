@@ -47,3 +47,36 @@ test("browser stream parser handles event boundaries split across chunks", async
     ["done", { threadId: "thread-1" }],
   ]);
 });
+
+test("native conversation delivers text before completion and forwards cancellation to WebKit", async () => {
+  const originalFetch = globalThis.fetch;
+  const originalWindow = globalThis.window;
+  const abort = new AbortController();
+  const encoder = new TextEncoder();
+  let stream;
+  let requestSignal;
+  let received;
+  let finished = false;
+  const firstText = new Promise((resolve) => { received = resolve; });
+  try {
+    globalThis.fetch = async () => { throw new Error("Buffered native HTTP must not handle SSE"); };
+    globalThis.window = { CapacitorWebFetch: async (_url, init) => {
+      requestSignal = init.signal;
+      return new Response(new ReadableStream({ start(controller) {
+        stream = controller;
+        init.signal.addEventListener("abort", () => controller.error(init.signal.reason));
+      } }));
+    } };
+    const result = streamCompanionAnswer({ apiUrl: "https://test.invalid", accessToken: "test", requestId: "native", chapterId: 31, locale: "zh", question: "祝福", signal: abort.signal, handlers: { delta: ({ text }) => received(text) } }).finally(() => { finished = true; });
+    // Attach rejection before abort so the test never creates an unhandled promise.
+    const settled = result.then(() => null, (error) => error);
+    await new Promise((resolve) => setImmediate(resolve));
+    assert.ok(stream, "SSE must use the original WebKit fetch, not the buffering bridge");
+    stream.enqueue(encoder.encode('event: delta\ndata: {"text":"老师，节日快乐。"}\n\n'));
+    assert.equal(await firstText, "老师，节日快乐。");
+    assert.equal(finished, false);
+    abort.abort();
+    assert.equal(requestSignal.aborted, true);
+    assert.equal((await settled).name, "AbortError");
+  } finally { globalThis.fetch = originalFetch; globalThis.window = originalWindow; }
+});

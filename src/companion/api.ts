@@ -9,6 +9,21 @@ type CompanionEventHandlers = {
   [Kind in keyof CompanionEventMap]?: (data: CompanionEventMap[Kind]) => void;
 };
 
+function fetchEventStream(url: string, init: RequestInit) {
+  // Capacitor's patched POST fetch buffers URLSession's entire response and
+  // drops AbortSignal. SSE must use WebKit fetch; the API explicitly allows
+  // capacitor://localhost with the same bearer authentication as the H5.
+  const webFetch = typeof window !== "undefined"
+    ? (window as Window & { CapacitorWebFetch?: typeof fetch }).CapacitorWebFetch
+    : undefined;
+  const signal = init.signal
+    ? AbortSignal.any([init.signal, AbortSignal.timeout(75_000)])
+    : AbortSignal.timeout(75_000);
+  return webFetch
+    ? webFetch.call(window, url, { ...init, signal })
+    : fetch(url, { ...init, signal });
+}
+
 export class CompanionApiError extends Error {
   code: string;
   status: number;
@@ -77,7 +92,7 @@ export async function streamCompanionAnswer({
   allowReleasedRetry?: boolean;
 }) {
   let completed = false;
-  const response = await fetch(`${apiUrl}/api/companion/respond`, {
+  const response = await fetchEventStream(`${apiUrl}/api/companion/respond`, {
     method: "POST",
     headers: {
       authorization: `Bearer ${accessToken}`,
@@ -101,6 +116,11 @@ export async function streamCompanionAnswer({
   if (!response.body) throw new Error("Wendao Companion is temporarily unavailable");
   await readCompanionEvents(response.body, {
     ...handlers,
+    error: (payload) => {
+      const error = new CompanionApiError(payload.code || "ai_unavailable", payload.message || "AI provider unavailable");
+      handlers.error?.(payload);
+      throw error;
+    },
     done: (payload) => {
       completed = true;
       handlers.done?.(payload);
@@ -201,7 +221,7 @@ export async function generateWeeklyReflection({
   handlers: CompanionEventHandlers;
 }) {
   let completed = false;
-  const response = await fetch(`${apiUrl}/api/companion/weekly-reflection`, {
+  const response = await fetchEventStream(`${apiUrl}/api/companion/weekly-reflection`, {
     method: "POST",
     headers: { authorization: `Bearer ${accessToken}`, "content-type": "application/json" },
     body: JSON.stringify({ locale }),

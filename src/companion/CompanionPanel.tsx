@@ -4,7 +4,7 @@ import type { Session, SupabaseClient } from "@supabase/supabase-js";
 import CompanionAuth from "./CompanionAuth";
 import SubscriptionPanel from "./SubscriptionPanel";
 import { companionClient, companionPublicConfig } from "./client";
-import { streamCompanionAnswer } from "./api";
+import { CompanionApiError, streamCompanionAnswer } from "./api";
 import { createStripePortal } from "./api";
 import MemoryPanel from "./MemoryPanel";
 import WeeklyReflectionPanel from "./WeeklyReflectionPanel";
@@ -40,6 +40,17 @@ type CompanionState = {
 
 function friendlyCompanionError(error: unknown, isZh: boolean) {
   const message = error instanceof Error ? error.message : "";
+  if (error instanceof CompanionApiError) {
+    if (["invalid_session", "sign_in_required"].includes(error.code)) {
+      return isZh ? "登录状态已过期，请重新登录后继续。问题已经保留。" : "Your session has expired. Sign in again to continue; your question is preserved.";
+    }
+    if (error.code === "subscription_required") {
+      return isZh ? "会员状态暂未生效，请在问道设置中确认会员。问题已经保留。" : "Your membership is not active. Check membership in settings; your question is preserved.";
+    }
+    if (error.code === "request_in_progress") {
+      return isZh ? "上次提问还在处理，请稍后重试，或在最近对话中查看回答。" : "Your previous question is still processing. Retry shortly or check recent conversations.";
+    }
+  }
   if (/timed out|timeout/i.test(message)) {
     return isZh
       ? "这次整理比预期更久，回答没有完整送达。问题已经保留，可以直接重试。"
@@ -308,13 +319,16 @@ export function SignedInCompanion({
             )));
             if (typeof payload.threadId === "string") setThreadId(payload.threadId);
           },
-          error: ({ message }) => {
-            throw new Error(message || (isZh ? "回答暂时中断，请稍后再试。" : "The answer was interrupted. Please try again."));
-          },
         },
       });
     } catch (nextError) {
       const stopped = controller.signal.aborted;
+      if (!stopped) console.warn("Wendao answer failed", {
+        requestId: requestContext.requestId,
+        code: nextError instanceof CompanionApiError ? nextError.code : "transport_error",
+        status: nextError instanceof CompanionApiError ? nextError.status : 0,
+        name: nextError instanceof Error ? nextError.name : "unknown",
+      });
       const failureMessage = stopped
         ? (isZh ? "回答已停止。你可以调整问题，也可以原样重试。" : "The response was stopped. Edit your question or retry it as written.")
         : friendlyCompanionError(nextError, isZh);
