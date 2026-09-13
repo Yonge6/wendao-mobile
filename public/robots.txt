@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /__growth/event
+Sitemap: https://wendao.wonderelian.com/sitemap.xml

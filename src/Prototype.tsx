@@ -1171,6 +1171,16 @@ function SideDrawer({
                     </button>
                   </div>
                 ) : null}
+                {surface !== "ios" ? (
+                  <a href="/start/">
+                    <span className="drawer-nav-icon"><InfoCircledIcon /></span>
+                    <span>
+                      <strong>{isZh ? "从一件小事开始" : "Start with a small moment"}</strong>
+                      <small>{isZh ? "关系、选择与用力过度，先读一段" : "Short reflections on everyday situations · Chinese"}</small>
+                    </span>
+                    <ChevronRightIcon />
+                  </a>
+                ) : null}
                 <button type="button" onClick={() => onViewChange("about")}>
                   <span className="drawer-nav-icon"><InfoCircledIcon /></span>
                   <span>

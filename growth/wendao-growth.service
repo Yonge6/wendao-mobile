@@ -1,0 +1,22 @@
+[Unit]
+Description=Wendao anonymous editorial event collector
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 /opt/wendao-growth/collector.py
+DynamicUser=yes
+StateDirectory=wendao-growth
+StateDirectoryMode=0700
+UMask=0077
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+MemoryMax=96M
+CPUQuota=10%
+RestrictAddressFamilies=AF_INET AF_UNIX
+
+[Install]
+WantedBy=multi-user.target
