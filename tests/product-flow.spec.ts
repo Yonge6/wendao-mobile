@@ -979,7 +979,7 @@ test("keeps verified chapter life-manual guidance personal and separate from tod
 
   const chapter = page.locator('.chapter-current[data-chapter-id="21"]');
   const manual = chapter.locator('[data-share-section="manual"]');
-  const practice = chapter.locator(".practice-card");
+  const practice = chapter.locator(".related-section .practice-card");
   await expect(manual).toContainText("生产者、5/1人生角色");
   await expect(manual).toContainText("方向比一时的技巧更重要");
   await expect(manual).toContainText("等待回应");

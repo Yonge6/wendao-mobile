@@ -75,7 +75,7 @@ test("conversation image sharing reuses the chapter poster and canonical QR flow
 
   assert.match(panel, /onShareAnswer\?\.\(message\.content, message\.chapter_id \?\? chapterId\)/);
   assert.match(prototype, /setShareChapterId\(sourceChapterId\)/);
-  assert.match(prototype, /title=\{companionShare/);
+  assert.match(prototype, /title=\{sharedLifeStory[\s\S]*?: companionShare/);
   assert.match(sharePanel, /buildCompanionShareCardContent/);
   assert.match(shareCard, /shareChapterUrl\(chapter\.id, "inspiration", language\)/);
   assert.match(shareCard, /const hasSecondary = Boolean\(content\.secondary\.trim\(\)\)/);

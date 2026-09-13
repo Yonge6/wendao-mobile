@@ -12,9 +12,12 @@
 
 ## Promotional text
 
-Read Laozi with pinyin and line-by-line meaning. Today’s chapter + 10 chosen chapters are free. Reflect on life with chapter-grounded AI, available with membership.
+87 Chinese essays bring all 81 chapters into daily life, with image and link sharing. Today’s chapter + 10 chosen chapters are free. AI requires membership.
 
 ## Description
+
+Tao in everyday life:
+Explore 87 essays in Chinese covering all 81 chapters, with recognizable situations, source quotations and practical reflections. Read section 04 after each chapter’s insights or browse the collection in More. Share this layer creates a complete essay image with an article QR code; copy its link from the share panel. These essays are currently in Chinese, while the main Daodejing reading experience is bilingual.
 
 Bring what you are actually facing back to the chapter you are reading.
 
@@ -49,15 +52,14 @@ True to yourself. Flow with life.
 
 `Laozi,Taoism,philosophy,reflection,meditation,classics,pinyin,wisdom,life,journal`
 
-## What's New in Version 1.8
+## What's New in Version 1.9
 
-More room to read and reflect.
+Bring each chapter into everyday life.
 
-- New side-by-side layout on wider screens: read on the left and talk with Wendao AI on the right, with independent scrolling. Narrow windows return to a focused single view.
-- Improved resizing and rotation preserve your reading passage, conversation history, unsent question and response in progress.
+- New Tao in everyday life: 87 essays in Chinese covering all 81 Daodejing chapters, exploring relationships, work, choices and everyday concerns.
+- Read section 04 after each chapter’s insights, continuing naturally from the text and meaning into a practical reflection.
+- Browse the full essay collection in More, then return to its related chapter.
+- Share this layer creates a complete essay image with its source passage, practice and article QR code. The share panel also lets you copy the article link.
+- Refined typography, reading rhythm and consistent sharing controls throughout the chapter.
 
-- Wendao AI now uses plain, thoughtful language, drawing on your chapter and occasionally quoting a relevant passage. Follow-up conversations feel more natural, without a checklist or exercise in every reply.
-- Save share images directly to Photos with one tap. System photo permission is still required the first time.
-- Brief save and copy confirmations now appear higher in the share panel, where they are easier to notice.
-- A lower one-time price for “Unlock All Chapters Forever” gives you permanent access to all 81 chapters. AI services are not included.
-- Fixed AI connection timeouts on some networks, improved streaming and cancellation on iOS, and made connection and response progress clearer.
+The new essays are currently in Chinese; the main Daodejing reading experience remains available in Chinese and English.
