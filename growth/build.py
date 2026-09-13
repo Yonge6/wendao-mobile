@@ -1,5 +1,6 @@
 """Build public editorial pages. No model calls or private product data."""
 import html
+import hashlib
 import json
 from pathlib import Path
 
@@ -8,6 +9,8 @@ PUBLIC = ROOT / 'public'
 ITEMS = json.loads((ROOT / 'growth/copy.json').read_text())
 ORIGIN = 'https://wendao.wonderelian.com'
 esc = html.escape
+SCRIPT_VERSION = hashlib.sha256((PUBLIC/'growth/reading.js').read_bytes()).hexdigest()[:12]
+STYLE_VERSION = hashlib.sha256((PUBLIC/'growth/editorial.css').read_bytes()).hexdigest()[:12]
 
 def shell(title, description, path, body, slug='start'):
     return f'''<!doctype html>
@@ -16,7 +19,7 @@ def shell(title, description, path, body, slug='start'):
 <link rel="canonical" href="{ORIGIN}{path}"><meta property="og:title" content="{esc(title)} · 三慢问道">
 <meta property="og:description" content="{esc(description)}"><meta property="og:type" content="article">
 <meta property="og:url" content="{ORIGIN}{path}"><meta name="theme-color" content="#f7f1e6">
-<link rel="stylesheet" href="/growth/editorial.css?v=20260913"><script src="/growth/reading.js?v=20260913" defer></script>
+<link rel="stylesheet" href="/growth/editorial.css?v={STYLE_VERSION}"><script src="/growth/reading.js?v={SCRIPT_VERSION}" defer></script>
 </head><body data-page="{slug}"><a class="skip" href="#main">跳到正文</a>
 <header><a class="brand" href="/start/">三慢问道<span>WENDAO</span></a><a href="/?lang=zh" data-action="chapter_click">读今日一章 ↗</a></header>
 <main id="main">{body}</main>
