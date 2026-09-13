@@ -1,5 +1,6 @@
 import tempfile
 import json
+import re
 import unittest
 import uuid
 from pathlib import Path
@@ -12,12 +13,18 @@ class CollectorTests(unittest.TestCase):
     def test_every_published_story_can_record_reading(self):
         stories = json.loads(Path(__file__).with_name('copy.json').read_text())
         self.assertEqual(PAGES, {'start'} | {story['slug'] for story in stories})
+        client = (Path(__file__).resolve().parents[1] / 'public/growth/reading.js').read_text()
+        client_pages = json.loads(re.search(r'if \(!([\[].*?[\]])\.includes\(page\)\)', client).group(1))
+        self.assertEqual(PAGES, set(client_pages))
         for story in stories:
             data = event()
             data['page'] = story['slug']
             self.assertEqual(validate(data)['page'], story['slug'])
             data.update(event='chapter_click', target=str(story['chapter']))
             self.assertEqual(validate(data)['target'], str(story['chapter']))
+        for target in ['0', '82', 'private-chat']:
+            data.update(target=target)
+            with self.assertRaises(ValueError): validate(data)
 
     def test_private_fields_rejected(self):
         for field in ['question','email','birthDate']:
