@@ -10,7 +10,7 @@ import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-PAGES = {'start', 'explaining', 'finishing', 'comparing', 'boundaries', 'choosing', 'finishing-carefully'}
+PAGES = {'comparing', 'less-supervision', 'saying-no', 'explaining', 'letting-go-of-cost', 'disagree-gently', 'reversible-decision', 'reading-a-difficult-line', 'waiting-for-reply', 'finishing-carefully', 'without-an-answer', 'enough-for-today', 'repair-after-mistake', 'first-small-step', 'beginner-again', 'boundaries', 'choosing', 'help-without-taking-over', 'start', 'room-to-rest', 'finishing'}
 EVENTS = {'view', 'engaged', 'chapter_click', 'store_click'}
 UUID = re.compile(r'^[a-f0-9-]{36}$')
 CAMPAIGN_KEYS = {'utm_source', 'utm_medium', 'utm_campaign', 'utm_content'}
@@ -21,7 +21,7 @@ def validate(data):
     for key in ('event_id', 'visitor', 'session'):
         if not isinstance(data[key],str) or not UUID.fullmatch(data[key]): raise ValueError('invalid_id')
     if data['page'] not in PAGES or data['event'] not in EVENTS: raise ValueError('invalid_event')
-    if data['target'] not in {'', 'daily', '8', '22', '33', '64'}: raise ValueError('invalid_target')
+    if data['target'] not in {'', '29', '15', '22', '9', '64', '11', 'daily', '79', '8', '33', '1', '17', '48', '63', '71'}: raise ValueError('invalid_target')
     if type(data['test']) is not bool: raise ValueError('invalid_test')
     campaign=data['campaign']
     if not isinstance(campaign,dict) or not set(campaign) <= CAMPAIGN_KEYS: raise ValueError('invalid_campaign')

@@ -1331,7 +1331,7 @@ function SideDrawer({
                   </button>
                 ))}
               </div>
-              <p className="drawer-story-note">{isZh ? "无需登录，随时慢读。" : "Open to everyone. No sign-in needed."}</p>
+              <p className="drawer-story-note">{isZh ? `共 ${lifeStories.length} 篇 · 无需登录，随时慢读。` : `${lifeStories.length} essays · No sign-in needed.`}</p>
             </section>
           ) : null}
 

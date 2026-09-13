@@ -1,7 +1,7 @@
 (() => {
   'use strict';
   const page = document.body.dataset.page;
-  if (!['start', 'explaining', 'finishing', 'comparing', 'boundaries', 'choosing', 'finishing-carefully'].includes(page)) return;
+  if (!["start", "explaining", "finishing", "comparing", "boundaries", "choosing", "finishing-carefully", "saying-no", "waiting-for-reply", "help-without-taking-over", "disagree-gently", "room-to-rest", "enough-for-today", "first-small-step", "reversible-decision", "letting-go-of-cost", "without-an-answer", "beginner-again", "less-supervision", "repair-after-mistake", "reading-a-difficult-line"].includes(page)) return;
   const safeGet = (key, store = localStorage) => { try { return store.getItem(key); } catch { return null; } };
   const safeSet = (key, value, store = localStorage) => { try { store.setItem(key, value); } catch {} };
   const uid = () => crypto.randomUUID();

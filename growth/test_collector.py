@@ -16,6 +16,8 @@ class CollectorTests(unittest.TestCase):
             data = event()
             data['page'] = story['slug']
             self.assertEqual(validate(data)['page'], story['slug'])
+            data.update(event='chapter_click', target=str(story['chapter']))
+            self.assertEqual(validate(data)['target'], str(story['chapter']))
 
     def test_private_fields_rejected(self):
         for field in ['question','email','birthDate']:
