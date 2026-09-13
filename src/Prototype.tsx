@@ -26,6 +26,8 @@ import {
   HamburgerMenuIcon,
   InfoCircledIcon,
   LockClosedIcon,
+  ImageIcon,
+  Link2Icon,
   MagnifyingGlassIcon,
   MoonIcon,
   PersonIcon,
@@ -54,7 +56,8 @@ import {
   type DailyNotificationState,
 } from "./dailyNotifications";
 import type { ShareCardKind } from "./shareCard";
-import { initializeNativeShell, nativeImpact, runtimeSurface, syncNativeTheme } from "./native";
+import { buildLifeStoryShareCardContent, lifeStoryUrl } from "./lifeStoryShare";
+import { initializeNativeShell, nativeImpact, runtimeSurface, syncNativeTheme, shareLink } from "./native";
 import AppStoreDownloadLink from "./companion/AppStoreDownloadLink";
 import { WENDAO_APP_STORE_REVIEW_URL } from "./companion/plans";
 import { loadStoreKitEntitlements, reviewStoreKit, STOREKIT_PRODUCTS } from "./companion/storekit";
@@ -958,15 +961,41 @@ function SideDrawer({
   const drawerScrollRef = useRef<HTMLDivElement>(null);
   const [storySlug, setStorySlug] = useState(lifeStories[0]?.slug);
   const activeStory = lifeStories.find((story) => story.slug === storySlug) ?? lifeStories[0];
+  const [storyShareOpen, setStoryShareOpen] = useState(false);
+  const [storyFeedback, setStoryFeedback] = useState<{ message: string } | null>(null);
+  const storyCard = useMemo(() => activeStory ? buildLifeStoryShareCardContent(activeStory) : undefined, [activeStory]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!storyFeedback) return;
+    const timer = window.setTimeout(() => setStoryFeedback(null), 2400);
+    return () => window.clearTimeout(timer);
+  }, [storyFeedback]);
+
+  useEffect(() => {
+    setStoryFeedback(null);
+    setStoryShareOpen(false);
+  }, [open, view, storySlug]);
+
+  const shareStoryLink = async () => {
+    if (!activeStory) return;
+    const outcome = await shareLink(activeStory.title, activeStory.teaser, lifeStoryUrl(activeStory));
+    if (outcome === "cancelled") return;
+    setStoryFeedback({ message: outcome === "shared"
+      ? (isZh ? "已打开系统分享" : "Share sheet opened")
+      : outcome === "copied"
+        ? (isZh ? "文章链接已复制" : "Article link copied")
+        : (isZh ? "暂时无法分享链接，请稍后重试" : "Link sharing is unavailable. Try again.") });
+  };
+
+
+  useEffect(() => {
+    if (!open || storyShareOpen) return;
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
     };
     document.addEventListener("keydown", closeOnEscape);
     return () => document.removeEventListener("keydown", closeOnEscape);
-  }, [onClose, open]);
+  }, [onClose, open, storyShareOpen]);
 
   useEffect(() => {
     if (!open) return;
@@ -1058,7 +1087,7 @@ function SideDrawer({
         aria-label={isZh ? "关闭菜单" : "Close menu"}
         onClick={onClose}
       />
-      <aside className="side-drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title">
+      <aside inert={storyShareOpen} className="side-drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title">
         <header className="drawer-header">
           {view !== "home" ? (
             <button
@@ -1084,6 +1113,9 @@ function SideDrawer({
           </button>
         </header>
 
+        <div className="drawer-story-feedback" role="status" aria-live="polite" aria-atomic="true">
+          {storyFeedback ? <p className="share-action-feedback">{storyFeedback.message}</p> : null}
+        </div>
         <div className="drawer-scroll" ref={drawerScrollRef}>
           {view === "home" ? (
             <>
@@ -1308,6 +1340,10 @@ function SideDrawer({
               <span className="drawer-kicker">{activeStory.theme} · 慢读约 3 分钟</span>
               <h3>{activeStory.title}</h3>
               <p className="drawer-story-note">三慢问道创作记录</p>
+              <div className="drawer-story-share-actions">
+                <button type="button" onClick={() => void shareStoryLink()}><Link2Icon />{isZh ? "分享链接" : "Share link"}</button>
+                <button type="button" onClick={() => setStoryShareOpen(true)}><ImageIcon />{isZh ? "分享图片" : "Share image"}</button>
+              </div>
               {activeStory.paragraphs.map((paragraph, index) => <p key={index}>{paragraph}</p>)}
               <blockquote>
                 <p>{activeStory.quote}</p>
@@ -1593,6 +1629,14 @@ function SideDrawer({
         </div>
 
       </aside>
+      <WebSheet open={storyShareOpen} onOpenChange={setStoryShareOpen}
+        eyebrow={isZh ? "生活里的道" : "Tao in everyday life"}
+        title={isZh ? "分享这篇文章" : "Share this essay"} variant="share">
+        {storyShareOpen && storyCard ? <Suspense fallback={<p className="share-loading">{isZh ? "正在准备完整海报…" : "Preparing the complete poster…"}</p>}>
+          <ShareCardPanel chapter={chapters.find((chapter) => chapter.id === activeStory.chapter)!}
+            language={language} customContent={storyCard} profileReady={false} onCreateManual={() => {}} />
+        </Suspense> : null}
+      </WebSheet>
     </div>
   );
 }

@@ -13,6 +13,7 @@ import {
   renderShareCardDataUrl,
   SHARE_CARD_KINDS,
   shareKindLabel,
+  type ShareCardContent,
   type ShareCardKind,
   type ShareLanguage,
 } from "./shareCard";
@@ -21,6 +22,7 @@ type ShareCardPanelProps = {
   chapter: Chapter;
   language: ShareLanguage;
   manualText?: string;
+  customContent?: ShareCardContent;
   profileReady: boolean;
   initialKind?: ShareCardKind;
   companionShare?: { answer: string } | null;
@@ -32,6 +34,7 @@ export default function ShareCardPanel({
   chapter,
   language,
   manualText,
+  customContent,
   profileReady,
   initialKind = "verse",
   companionShare,
@@ -48,12 +51,12 @@ export default function ShareCardPanel({
   }, []);
   const [saving, setSaving] = useState(false);
   const previewScrollRef = useRef<HTMLDivElement>(null);
-  const needsManual = !companionShare && kind === "manual" && !profileReady;
+  const needsManual = !customContent && !companionShare && kind === "manual" && !profileReady;
   const content = useMemo(
-    () => companionShare
+    () => customContent ?? (companionShare
       ? buildCompanionShareCardContent(chapter, language, companionShare.answer)
-      : buildShareCardContent(chapter, language, kind, manualText),
-    [chapter, companionShare, kind, language, manualText],
+      : buildShareCardContent(chapter, language, kind, manualText)),
+    [chapter, companionShare, customContent, kind, language, manualText],
   );
   const pinyinDescription = useMemo(() => (
     [...(content.primaryPinyin ?? []), ...(content.secondaryPinyin ?? [])]
@@ -105,7 +108,7 @@ export default function ShareCardPanel({
     const outcome = await shareCardImage(
       imageUrl,
       content.filename,
-      isZh ? `三慢问道 · 第${chapter.id}章` : `Wendao · Chapter ${chapter.id}`,
+      customContent ? content.chapterTitle : (isZh ? `三慢问道 · 第${chapter.id}章` : `Wendao · Chapter ${chapter.id}`),
       content.shareText,
       content.url,
     );
@@ -157,15 +160,15 @@ export default function ShareCardPanel({
 
   const shareExactLink = async () => {
     const outcome = await shareLink(
-      isZh ? `三慢问道 · 第${chapter.id}章` : `Wendao · Chapter ${chapter.id}`,
-      isZh ? "读一章《道德经》，照见此刻的自己。" : "Read one chapter. Meet yourself anew.",
+      customContent ? content.chapterTitle : (isZh ? `三慢问道 · 第${chapter.id}章` : `Wendao · Chapter ${chapter.id}`),
+      customContent ? content.label : (isZh ? "读一章《道德经》，照见此刻的自己。" : "Read one chapter. Meet yourself anew."),
       content.url,
     );
     if (outcome !== "cancelled") {
       showFeedback(outcome === "shared"
         ? (isZh ? "已打开系统分享" : "Share sheet opened")
         : outcome === "copied"
-          ? (isZh ? "章节链接已复制" : "Chapter link copied")
+          ? (isZh ? (customContent ? "文章链接已复制" : "章节链接已复制") : (customContent ? "Article link copied" : "Chapter link copied"))
           : (isZh ? "暂时无法分享链接" : "Link sharing is unavailable"));
     }
     onAction?.(`link_${outcome}`, kind);
@@ -176,7 +179,7 @@ export default function ShareCardPanel({
       <div className="share-feedback-layer" role="status" aria-live="polite" aria-atomic="true">
         {feedback ? <p className="share-action-feedback">{feedback.message}</p> : null}
       </div>
-      {!companionShare ? <div className="share-kind-tabs" role="tablist" aria-label={isZh ? "分享卡类型" : "Share card type"}>
+      {!customContent && !companionShare ? <div className="share-kind-tabs" role="tablist" aria-label={isZh ? "分享卡类型" : "Share card type"}>
         {SHARE_CARD_KINDS.map((option) => {
           return (
             <button

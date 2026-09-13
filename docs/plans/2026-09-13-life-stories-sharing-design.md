@@ -1,0 +1,3 @@
+# Life-story sharing
+
+Add link and image actions below each drawer essay title. Share the existing canonical public article, not the chapter or app homepage. Reuse ShareCardPanel via a content override so article images contain the full authored text, attributed excerpt, practice and exact article QR. Keep normal chapter tabs and membership behavior unchanged. Place the image sheet above the still-mounted drawer and return to its scroll position. Show brief success feedback only after successful actions; cancel is quiet. Verify actual copy target, article landing page, full image rendering/download and return to reading on mobile and desktop before atomic H5 publication.
