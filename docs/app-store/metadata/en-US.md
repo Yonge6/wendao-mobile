@@ -12,7 +12,7 @@
 
 ## Promotional text
 
-Read and reflect side by side on wider screens. Bring life’s questions to Laozi’s wisdom. Today’s chapter and 10 chapters you choose are free.
+Read Laozi with pinyin and line-by-line meaning. Today’s chapter + 10 chosen chapters are free. Reflect on life with chapter-grounded AI, available with membership.
 
 ## Description
 
