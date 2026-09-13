@@ -21,6 +21,7 @@ import {
   ChevronRightIcon,
   DownloadIcon,
   BellIcon,
+  ReaderIcon,
   EnvelopeClosedIcon,
   HamburgerMenuIcon,
   InfoCircledIcon,
@@ -41,6 +42,7 @@ import "@fontsource/noto-serif-sc/600.css";
 import type { HumanDesignReadingChart } from "./humanDesignReading";
 import { chapters, type Chapter, type RelatedItem } from "./data/chapters";
 import { dailyChapterId, localDateKey } from "./dailyEncounter";
+import lifeStories from "../growth/copy.json";
 import { normalizeSearch, searchChapters, searchExcerpt, type SearchMatch } from "./chapterSearch";
 import {
   DAILY_NOTIFICATION_TIME_LABEL,
@@ -74,7 +76,7 @@ const LifeManualReading = lazy(() => import("./LifeManualReading"));
 type Language = "zh" | "en";
 type Theme = "light" | "dark";
 type ReadingSize = "small" | "medium" | "large";
-type DrawerView = "home" | "profile" | "profile-detail" | "about" | "contact";
+type DrawerView = "home" | "profile" | "profile-detail" | "about" | "contact" | "stories" | "story";
 type ChapterEntrySource = "daily" | "directory" | "chance" | "link";
 
 type LifeProfile = {
@@ -909,6 +911,7 @@ type SideDrawerProps = {
   chart: ChartSnapshot | null;
   onContactClick: (target: string) => void;
   onWorkClick: (target: string) => void;
+  onStoryChapterOpen: (chapterId: number) => void;
   onVideoChannelOpen: () => void;
   showSupport: boolean;
   onSupportOpen: () => void;
@@ -938,6 +941,7 @@ function SideDrawer({
   chart,
   onContactClick,
   onWorkClick,
+  onStoryChapterOpen,
   onVideoChannelOpen,
   showSupport,
   onSupportOpen,
@@ -952,6 +956,8 @@ function SideDrawer({
   const profileComplete = Boolean(chart?.chartHash);
   const [profileEditing, setProfileEditing] = useState(false);
   const drawerScrollRef = useRef<HTMLDivElement>(null);
+  const [storySlug, setStorySlug] = useState(lifeStories[0]?.slug);
+  const activeStory = lifeStories.find((story) => story.slug === storySlug) ?? lifeStories[0];
 
   useEffect(() => {
     if (!open) return;
@@ -977,6 +983,8 @@ function SideDrawer({
 
   const headerTitle = view === "home"
     ? (isZh ? "你的空间" : "Your space")
+    : view === "stories" || view === "story"
+      ? (isZh ? "生活里的道" : "Tao in everyday life")
     : view === "profile"
       ? (isZh ? "人生说明书" : "Life manual")
       : view === "profile-detail"
@@ -1057,7 +1065,7 @@ function SideDrawer({
               type="button"
               className="drawer-icon-button"
               aria-label={isZh ? "返回" : "Back"}
-              onClick={() => onViewChange(view === "profile-detail" ? "profile" : "home")}
+              onClick={() => onViewChange(view === "profile-detail" ? "profile" : view === "story" ? "stories" : "home")}
             >
               <ArrowLeftIcon />
             </button>
@@ -1171,16 +1179,14 @@ function SideDrawer({
                     </button>
                   </div>
                 ) : null}
-                {surface !== "ios" ? (
-                  <a href="/start/">
-                    <span className="drawer-nav-icon"><InfoCircledIcon /></span>
-                    <span>
-                      <strong>{isZh ? "从一件小事开始" : "Start with a small moment"}</strong>
-                      <small>{isZh ? "关系、选择与用力过度，先读一段" : "Short reflections on everyday situations · Chinese"}</small>
-                    </span>
-                    <ChevronRightIcon />
-                  </a>
-                ) : null}
+                <button type="button" onClick={() => onViewChange("stories")}>
+                  <span className="drawer-nav-icon"><ReaderIcon /></span>
+                  <span>
+                    <strong>{isZh ? "生活里的道" : "Tao in everyday life"}</strong>
+                    <small>{isZh ? "从一件小事，读懂一句经典" : "Small moments, timeless words · Chinese essays"}</small>
+                  </span>
+                  <ChevronRightIcon />
+                </button>
                 <button type="button" onClick={() => onViewChange("about")}>
                   <span className="drawer-nav-icon"><InfoCircledIcon /></span>
                   <span>
@@ -1270,6 +1276,52 @@ function SideDrawer({
               </section>
 
             </>
+          ) : null}
+
+          {view === "stories" ? (
+            <section className="drawer-stories" aria-label={isZh ? "生活里的道文章列表" : "Everyday reflections"}>
+              <p className="drawer-stories-intro">{isZh
+                ? "带着此刻的处境，读一段，停一停。这里收录三慢问道的生活随笔，慢慢更新。"
+                : "Read, pause, and bring a small moment of life to the Daodejing. These essays are currently in Chinese."}</p>
+              <div className="drawer-story-list">
+                {lifeStories.map((story, index) => (
+                  <button className="drawer-story-card" type="button" key={story.slug} onClick={() => {
+                    setStorySlug(story.slug);
+                    onViewChange("story");
+                  }}>
+                    <span className="drawer-story-number" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
+                    <span className="drawer-story-copy" lang="zh-CN">
+                      <small>{story.theme} · 第 {story.chapter} 章</small>
+                      <strong>{story.title}</strong>
+                      <span>{story.teaser}</span>
+                    </span>
+                    <ChevronRightIcon aria-hidden="true" />
+                  </button>
+                ))}
+              </div>
+              <p className="drawer-story-note">{isZh ? "无需登录，随时慢读。" : "Open to everyone. No sign-in needed."}</p>
+            </section>
+          ) : null}
+
+          {view === "story" && activeStory ? (
+            <article className="drawer-story-detail" lang="zh-CN">
+              <span className="drawer-kicker">{activeStory.theme} · 慢读约 3 分钟</span>
+              <h3>{activeStory.title}</h3>
+              <p className="drawer-story-note">三慢问道创作记录</p>
+              {activeStory.paragraphs.map((paragraph, index) => <p key={index}>{paragraph}</p>)}
+              <blockquote>
+                <p>{activeStory.quote}</p>
+                <cite>《道德经》今本第 {activeStory.chapter} 章<br />帛书乙本底本校读 · 节选</cite>
+              </blockquote>
+              <section className="drawer-story-practice">
+                <span className="drawer-kicker">留给今天的一点空间</span>
+                <p>{activeStory.practice}</p>
+              </section>
+              <button className="drawer-primary drawer-story-continue" type="button" onClick={() => onStoryChapterOpen(activeStory.chapter)}>
+                {isZh ? `继续读第 ${activeStory.chapter} 章` : `Read chapter ${activeStory.chapter}`}<ArrowRightIcon />
+              </button>
+              <p className="drawer-story-note">AI 辅助编辑，引文经产品校读库核对。生活解读是当代观察，不是古文逐字翻译。</p>
+            </article>
           ) : null}
 
           {view === "profile" ? (
@@ -2157,18 +2209,18 @@ export default function Prototype() {
     setIsOpeningNextChapter(false);
   };
 
-  const selectChapter = (id: number, match?: SearchMatch) => {
+  const selectChapter = (id: number, match?: SearchMatch, source: ChapterEntrySource = "directory") => {
     resetChapterOpening();
     setSearchTarget(match ? { chapterId: id, match } : null);
     if (match) setLanguage(match.language);
     nativeImpact("light");
     setChapterId(id);
-    setChapterEntrySource("directory");
+    setChapterEntrySource(source);
     setVisibleChapterCount(1);
     setDirectoryOpen(false);
     setDirectoryQuery("");
     setDirectoryFocusRequested(false);
-    trackEvent("chapter_view", { source: "directory" }, id);
+    trackEvent("chapter_view", { source }, id);
     scrollReadingToTop();
   };
 
@@ -2762,6 +2814,10 @@ export default function Prototype() {
         chart={chart}
         onContactClick={(target) => trackEvent("contact_click", { target })}
         onWorkClick={(target) => trackEvent("related_product_click", { target })}
+        onStoryChapterOpen={(id) => {
+          setDrawerOpen(false);
+          selectChapter(id, undefined, "link");
+        }}
         onVideoChannelOpen={() => {
           setVideoChannelOpen(true);
           trackEvent("contact_click", { target: "视频号" });

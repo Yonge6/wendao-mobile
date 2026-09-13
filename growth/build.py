@@ -23,18 +23,18 @@ def shell(title, description, path, body, slug='start'):
 </head><body data-page="{slug}"><a class="skip" href="#main">跳到正文</a>
 <header><a class="brand" href="/start/">三慢问道<span>WENDAO</span></a><a href="/?lang=zh" data-action="chapter_click">读今日一章 ↗</a></header>
 <main id="main">{body}</main>
-<footer><p>真实自己，流动人生。</p><nav><a href="/start/">从一件小事开始</a><a href="/privacy.html">隐私说明</a><button id="analytics-choice" type="button" aria-pressed="false">关闭匿名阅读统计</button></nav>
+<footer><p>真实自己，流动人生。</p><nav><a href="/start/">生活里的道</a><a href="/privacy.html">隐私说明</a><button id="analytics-choice" type="button" aria-pressed="false">关闭匿名阅读统计</button></nav>
 <small>三慢问道创作记录 · AI 辅助编辑，引文经产品校读库核对。<br>生活解读是当代观察，不是古文逐字翻译。</small></footer></body></html>'''
 
 cards = ''.join(f'''<a class="story" href="/situations/{i['slug']}/"><span class="number">0{n+1}</span><div><span class="eyebrow">{i['theme']}</span><h2>{i['title']}</h2><p>{i['teaser']}</p></div><span class="arrow" aria-hidden="true">↗</span></a>''' for n,i in enumerate(ITEMS))
-start = f'''<section class="opening"><span class="eyebrow">把《道德经》读进真实生活</span><h1>从一件小事<br>开始，慢慢看清。</h1><p class="intro">不必先读懂整部经典。<br>带着此刻的处境，读一段，停一停。</p><span class="rule"></span><p class="small">选一个与你有关的片刻 · 无需登录即可阅读</p></section><section aria-label="生活情境">{cards}</section><section class="quiet"><h2>读一章，也是在认识自己。</h2><p>三慢问道提供帛书乙本底本校读、逐句今译与生活启发。今日推荐章节免费，另可主动保留 10 章。</p><a class="button" href="/?lang=zh" data-action="chapter_click">读今日一章 <span>→</span></a><p class="small">完整章节买断与 AI 问道会员可按需选择。<br>AI 服务需会员；章节买断不含 AI。</p></section>'''
+start = f'''<section class="opening"><span class="eyebrow">把《道德经》读进真实生活</span><h1>生活里的道</h1><p class="intro">从一件小事，读懂一句经典。<br>带着此刻的处境，读一段，停一停。</p><span class="rule"></span><p class="small">选一个与你有关的片刻 · 无需登录即可阅读</p></section><section aria-label="生活情境">{cards}</section><section class="quiet"><h2>读一章，也是在认识自己。</h2><p>三慢问道提供帛书乙本底本校读、逐句今译与生活启发。今日推荐章节免费，另可主动保留 10 章。</p><a class="button" href="/?lang=zh" data-action="chapter_click">读今日一章 <span>→</span></a><p class="small">完整章节买断与 AI 问道会员可按需选择。<br>AI 服务需会员；章节买断不含 AI。</p></section>'''
 (PUBLIC/'start').mkdir(exist_ok=True)
-(PUBLIC/'start/index.html').write_text(shell('从一件小事开始', '关系、选择、用力过度时，读一段《道德经》的生活解读。无需登录，先从与你有关的片刻开始。', '/start/', start))
+(PUBLIC/'start/index.html').write_text(shell('生活里的道', '关系、选择、用力过度时，读一段《道德经》的生活解读。无需登录，先从与你有关的片刻开始。', '/start/', start))
 for i in ITEMS:
     cid=i['chapter']; slug=i['slug']
     # Source excerpt is separate from original contemporary interpretation.
     paragraphs=''.join(f'<p>{esc(p)}</p>' for p in i['paragraphs'])
-    body=f'''<a class="back" href="/start/">← 所有片刻</a><div class="article-head"><span class="eyebrow">{i['theme']} · 慢读约 3 分钟</span><h1>{i['title']}</h1><p class="byline">三慢问道创作记录 · 2026 年 9 月 13 日</p></div>
+    body=f'''<a class="back" href="/start/">← 生活里的道</a><div class="article-head"><span class="eyebrow">{i['theme']} · 慢读约 3 分钟</span><h1>{i['title']}</h1><p class="byline">三慢问道创作记录 · 2026 年 9 月 13 日</p></div>
 <article id="reading-body">{paragraphs}<blockquote><p>{i['quote']}</p><cite>《道德经》今本第 {cid} 章<br>帛书乙本底本校读 · 节选</cite></blockquote><section class="practice"><span class="eyebrow">留给今天的一点空间</span><p>{esc(i['practice'])}</p></section><span id="reading-end" aria-hidden="true"></span></article>
 <section class="quiet"><h2>把这一刻，带回第 {cid} 章。</h2><p>继续看完整校读正文、逐句今译和本章的生活启发。</p><a class="button" data-action="chapter_click" href="/?chapter={cid}&lang=zh">继续读第 {cid} 章 <span>→</span></a><p class="small">今日推荐免费。其他章节可在剩余名额内主动保留，总计 10 章；名额用尽后仍可读今日推荐。</p><a class="download" data-action="store_click" href="/download.html?chapter={cid}&lang=zh">下载 App，方便每天回来 ↗</a><p class="small">AI 问道为会员服务，章节买断不含 AI。<br>实际价格以 App Store 显示为准。</p></section>'''
     out=PUBLIC/'situations'/slug;out.mkdir(parents=True,exist_ok=True)

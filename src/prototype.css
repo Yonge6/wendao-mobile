@@ -3547,6 +3547,117 @@ textarea {
   white-space: nowrap;
 }
 
+.drawer-stories-intro {
+  margin: 0 0 24px;
+  color: var(--ink-soft);
+  font-size: 15px;
+  line-height: 1.9;
+}
+
+.drawer-story-card {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) 16px;
+  gap: 12px;
+  width: 100%;
+  padding: 24px 0;
+  border: 0;
+  border-top: 1px solid color-mix(in srgb, var(--gold) 28%, transparent);
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.drawer-story-number {
+  color: var(--gold);
+  font-size: 13px;
+  padding-top: 3px;
+}
+
+.drawer-story-copy {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.drawer-story-copy small {
+  color: var(--ink-soft);
+  font-family: var(--sans);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.drawer-story-copy strong {
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1.65;
+  text-wrap: balance;
+}
+
+.drawer-story-copy > span {
+  color: var(--ink-soft);
+  font-size: 14px;
+  line-height: 1.9;
+}
+
+.drawer-story-card > svg {
+  margin-top: 32px;
+}
+
+.drawer-story-card:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 4px;
+}
+
+.drawer-story-detail h3 {
+  margin: 16px 0;
+  font-size: 27px;
+  font-weight: 400;
+  line-height: 1.65;
+  text-wrap: balance;
+}
+
+.drawer-story-detail p {
+  margin: 24px 0;
+  font-size: max(17px, var(--reading-body-size));
+  line-height: 2;
+}
+
+.drawer-story-detail blockquote {
+  margin: 32px 0;
+  padding-left: 18px;
+  border-left: 2px solid var(--gold);
+}
+
+.drawer-story-detail blockquote p {
+  font-size: max(20px, var(--reading-note-size));
+}
+
+.drawer-story-detail cite {
+  color: var(--ink-soft);
+  font-size: 12px;
+  font-style: normal;
+  line-height: 1.9;
+}
+
+.drawer-story-practice {
+  padding-top: 24px;
+  border-top: 1px solid color-mix(in srgb, var(--gold) 28%, transparent);
+}
+
+.drawer-story-continue {
+  width: 100%;
+}
+
+.drawer-story-note,
+.drawer-story-detail .drawer-story-note {
+  margin: 20px 0;
+  color: var(--ink-soft);
+  font-family: var(--sans);
+  font-size: 12px;
+  line-height: 1.9;
+}
+
 .drawer-prose p {
   margin: 17px 0 0;
   color: var(--ink-soft);
