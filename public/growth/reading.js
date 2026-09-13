@@ -14,7 +14,8 @@
   const session = safeGet('wendao-growth-session', sessionStorage) || uid();
   safeSet('wendao-growth-session', session, sessionStorage);
   const params = new URLSearchParams(location.search);
-  const test = params.get('ops_test') === '1';
+  if (params.get('ops_test') === '1') safeSet('wendao-growth-test', '1', sessionStorage);
+  const test = safeGet('wendao-growth-test', sessionStorage) === '1';
   const allowed = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content'];
   let campaign = {};
   try { campaign = JSON.parse(safeGet('wendao-growth-campaign', sessionStorage)) || {}; } catch {}
