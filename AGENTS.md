@@ -47,6 +47,8 @@ See `src/mobile/COMPONENTS.md` for the full component and gesture contract.
 
 ## Wendao Product Decisions
 
+- Keep inline `04 生活里的道` visually continuous with sections 02 and 03: share their gold heading and reading-body typography, paragraph rhythm, practice card, and quiet bottom share actions. The rail supplies the section label, so do not repeat it as a large content heading or reuse drawer-detail typography and pill buttons in the chapter body. Preserve full essays and both link/image sharing.
+
 - The public GitHub Pages build is a normal responsive H5 reading page, not a simulated phone or app preview. It fills the mobile browser naturally and becomes a restrained 720 px reading column on larger screens; when AI is open at 800 CSS px or wider, show the reader on the left and the same persistent AI panel on the right, each capped at 720 px. Preserve the reading passage, draft, history, and in-flight response across resizing; use actual window width rather than device names or assumed fold APIs; do not show device bezels, a device picker, a mock status bar, or a simulated keyboard on the public surface.
 - Treat `最终方向/方案1最终精修-目录版.png` as the visual source of truth: mist-gold xuan paper, pale ink mountains, deep teal typography, and restrained antique-gold rules.
 - Keep the paper base seamless and render the ink-mountain art as one fixed, non-repeating, low-contrast viewport layer. Never repeat the combined paper-and-mountain bitmap vertically; that creates visible horizontal seams in long chapters.

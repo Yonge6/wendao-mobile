@@ -2687,22 +2687,21 @@ export default function Prototype() {
                       <span className="rail-line rail-fill" />
                     </aside>
                     <div className="section-copy">
-                      <h2 className="life-stories-heading">{isZh ? "生活里的道" : "Tao in everyday life"}</h2>
-                      {!isZh ? <p className="drawer-story-note">Essays in Chinese · Reflections on this chapter</p> : null}
+                      {!isZh ? <p className="chapter-story-note">Essays in Chinese · Reflections on this chapter</p> : null}
                       {lifeStories.filter(story => story.chapter === chapter.id).map(story => (
-                        <article className="chapter-life-story drawer-story-detail" lang="zh-CN" key={story.slug} data-story-slug={story.slug}>
-                          <p className="drawer-story-note">{story.theme} · 第 {chapter.id} 章</p>
-                          <h3>{story.title}</h3>
-                          <div className="drawer-story-share-actions" lang={isZh ? "zh-CN" : "en"}>
-                            <button type="button" onClick={() => shareReadingStoryLink(story)}><Link2Icon />{isZh ? "分享链接" : "Share link"}</button>
-                            <button type="button" onClick={() => openStoryShare(story)}><ImageIcon />{isZh ? "分享图片" : "Share image"}</button>
+                        <article className="chapter-life-story" lang="zh-CN" key={story.slug} data-story-slug={story.slug}>
+                          <h2>{story.title}</h2>
+                          <p className="chapter-story-note chapter-story-meta">{story.theme} · 第 {chapter.id} 章</p>
+                          <div className="chapter-life-story-body">{story.paragraphs.map((paragraph, index) => <p key={index}>{paragraph}</p>)}</div>
+                          <blockquote className="chapter-story-quote"><p>{story.quote}</p><cite>《道德经》今本第 {chapter.id} 章 · 帛书乙本底本校读节选</cite></blockquote>
+                          <div className="practice-card"><span className="practice-kicker">留给今天的一点空间</span><p>{story.practice}</p></div>
+                          <div className="chapter-story-share-actions" lang={isZh ? "zh-CN" : "en"}>
+                            <button className="section-share-action" type="button" onClick={() => shareReadingStoryLink(story)}><Link2Icon /><span>{isZh ? "分享链接" : "Share link"}</span></button>
+                            <button className="section-share-action" type="button" onClick={() => openStoryShare(story)}><ImageIcon /><span>{isZh ? "分享图片" : "Share image"}</span></button>
                           </div>
-                          {story.paragraphs.map((paragraph, index) => <p key={index}>{paragraph}</p>)}
-                          <blockquote><p>{story.quote}</p><cite>《道德经》今本第 {chapter.id} 章 · 帛书乙本底本校读节选</cite></blockquote>
-                          <div className="drawer-story-practice"><span className="practice-kicker">留给今天的一点空间</span><p>{story.practice}</p></div>
                         </article>
                       ))}
-                      <p className="drawer-story-note" lang="zh-CN">AI 辅助编辑，引文经产品校读库核对。生活解读是当代观察，不是古文逐字翻译；〔〕内为校补字。</p>
+                      <p className="chapter-story-note" lang="zh-CN">AI 辅助编辑，引文经产品校读库核对。生活解读是当代观察，不是古文逐字翻译；〔〕内为校补字。</p>
                     </div>
                   </section>
                 </div>

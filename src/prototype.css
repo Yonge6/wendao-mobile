@@ -566,7 +566,8 @@ textarea {
 }
 
 .explanation-section p,
-.related-item p {
+.related-item p,
+.chapter-life-story-body p {
   color: var(--ink);
   font-size: var(--reading-body-size);
   line-height: 2;
@@ -666,7 +667,8 @@ textarea {
   margin-bottom: 21px;
 }
 
-.related-item h2 {
+.related-item h2,
+.chapter-life-story h2 {
   margin: 0 0 4px;
   color: var(--gold);
   font-size: 16px;
@@ -3617,10 +3619,46 @@ textarea {
   text-wrap: balance;
 }
 
-.life-stories-section { margin-top: 48px; }
-.life-stories-heading { margin: 0 0 24px; font-size: 24px; font-weight: 400; line-height: 1.6; }
-.chapter-life-story + .chapter-life-story { margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--gold-light); }
+.life-stories-section { margin-top: 28px; }
+.chapter-life-story + .chapter-life-story { margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--gold-light); }
 .chapter-life-story { overflow-wrap: anywhere; }
+.chapter-life-story-body p { margin: 0 0 16px; }
+.chapter-story-note {
+  margin: 20px 0 0;
+  color: var(--ink-soft);
+  font-family: var(--sans);
+  font-size: var(--reading-note-size);
+  line-height: 1.75;
+  letter-spacing: 0.025em;
+}
+.chapter-story-meta { margin: 8px 0 16px; }
+.life-stories-section > .section-copy > .chapter-story-note:first-child { margin: 0 0 17px; }
+.chapter-story-quote {
+  margin: 22px 0;
+  padding: 0 0 0 15px;
+  border-left: 1px solid color-mix(in srgb, var(--gold) 70%, transparent);
+}
+.chapter-story-quote p {
+  margin: 0 0 8px;
+  color: var(--ink-soft);
+  font-size: var(--reading-body-size);
+  line-height: 2;
+  letter-spacing: 0.045em;
+}
+.chapter-story-quote cite {
+  color: var(--ink-soft);
+  font-family: var(--sans);
+  font-size: var(--reading-note-size);
+  font-style: normal;
+  line-height: 1.75;
+}
+.chapter-story-share-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  column-gap: 20px;
+}
+.chapter-story-share-actions .section-share-action { margin-left: 0; }
 .reading-story-feedback {
   position: fixed;
   z-index: 90;
