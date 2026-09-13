@@ -1,7 +1,7 @@
 (() => {
   'use strict';
   const page = document.body.dataset.page;
-  if (!['start', 'explaining', 'finishing', 'comparing'].includes(page)) return;
+  if (!['start', 'explaining', 'finishing', 'comparing', 'boundaries', 'choosing', 'finishing-carefully'].includes(page)) return;
   const safeGet = (key, store = localStorage) => { try { return store.getItem(key); } catch { return null; } };
   const safeSet = (key, value, store = localStorage) => { try { store.setItem(key, value); } catch {} };
   const uid = () => crypto.randomUUID();

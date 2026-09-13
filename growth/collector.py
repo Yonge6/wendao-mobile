@@ -10,7 +10,7 @@ import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-PAGES = {'start', 'explaining', 'finishing', 'comparing'}
+PAGES = {'start', 'explaining', 'finishing', 'comparing', 'boundaries', 'choosing', 'finishing-carefully'}
 EVENTS = {'view', 'engaged', 'chapter_click', 'store_click'}
 UUID = re.compile(r'^[a-f0-9-]{36}$')
 CAMPAIGN_KEYS = {'utm_source', 'utm_medium', 'utm_campaign', 'utm_content'}

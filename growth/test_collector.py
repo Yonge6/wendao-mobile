@@ -1,13 +1,22 @@
 import tempfile
+import json
 import unittest
 import uuid
 from pathlib import Path
-from collector import connect, save, summary, validate
+from collector import PAGES, connect, save, summary, validate
 
 def event(visitor=None,test=False):
     return dict(event_id=str(uuid.uuid4()),visitor=visitor or str(uuid.uuid4()),session=str(uuid.uuid4()),page='explaining',event='engaged',target='',campaign={},test=test)
 
 class CollectorTests(unittest.TestCase):
+    def test_every_published_story_can_record_reading(self):
+        stories = json.loads(Path(__file__).with_name('copy.json').read_text())
+        self.assertEqual(PAGES, {'start'} | {story['slug'] for story in stories})
+        for story in stories:
+            data = event()
+            data['page'] = story['slug']
+            self.assertEqual(validate(data)['page'], story['slug'])
+
     def test_private_fields_rejected(self):
         for field in ['question','email','birthDate']:
             data=event();data[field]='private'
