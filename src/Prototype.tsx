@@ -56,7 +56,7 @@ import {
   type DailyNotificationState,
 } from "./dailyNotifications";
 import type { ShareCardKind } from "./shareCard";
-import { buildLifeStoryShareCardContent, lifeStoryUrl } from "./lifeStoryShare";
+import { buildLifeStoryShareCardContent, lifeStoryUrl, type LifeStory } from "./lifeStoryShare";
 import { initializeNativeShell, nativeImpact, runtimeSurface, syncNativeTheme, shareLink } from "./native";
 import AppStoreDownloadLink from "./companion/AppStoreDownloadLink";
 import { WENDAO_APP_STORE_REVIEW_URL } from "./companion/plans";
@@ -1930,6 +1930,14 @@ export default function Prototype() {
   const [directoryQuery, setDirectoryQuery] = useState("");
   const [directoryFocusRequested, setDirectoryFocusRequested] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [sharedLifeStory, setSharedLifeStory] = useState<LifeStory | null>(null);
+  const [readingShareFeedback, setReadingShareFeedback] = useState<{ message: string } | null>(null);
+  const sharedStoryCard = useMemo(() => sharedLifeStory ? buildLifeStoryShareCardContent(sharedLifeStory) : undefined, [sharedLifeStory]);
+  useEffect(() => {
+    if (!readingShareFeedback) return;
+    const timer = window.setTimeout(() => setReadingShareFeedback(null), 2400);
+    return () => window.clearTimeout(timer);
+  }, [readingShareFeedback]);
   const [shareChapterId, setShareChapterId] = useState(chapterId);
   const [shareInitialKind, setShareInitialKind] = useState<ShareCardKind>("verse");
   const [companionShare, setCompanionShare] = useState<{ answer: string } | null>(null);
@@ -2400,6 +2408,7 @@ export default function Prototype() {
   };
 
   const openShare = (kind: ShareCardKind, targetChapterId: number) => {
+    setSharedLifeStory(null);
     setCompanionShare(null);
     setShareReturnsToCompanion(false);
     setShareChapterId(targetChapterId);
@@ -2408,6 +2417,7 @@ export default function Prototype() {
   };
 
   const openCompanionShare = (answer: string, sourceChapterId = chapterId) => {
+    setSharedLifeStory(null);
     setCompanionShare({ answer });
     setShareReturnsToCompanion(true);
     setShareChapterId(sourceChapterId);
@@ -2416,8 +2426,28 @@ export default function Prototype() {
     trackEvent("companion_answer_share", { source: "conversation" });
   };
 
+  const openStoryShare = (story: LifeStory) => {
+    setReadingShareFeedback(null);
+    setSharedLifeStory(story);
+    setCompanionShare(null);
+    setShareReturnsToCompanion(false);
+    setShareChapterId(story.chapter);
+    setShareOpen(true);
+  };
+
+  const shareReadingStoryLink = async (story: LifeStory) => {
+    const outcome = await shareLink(story.title, story.teaser, lifeStoryUrl(story));
+    if (outcome === "cancelled") return;
+    setReadingShareFeedback({ message: outcome === "shared"
+      ? (isZh ? "已打开系统分享" : "Share sheet opened")
+      : outcome === "copied"
+        ? (isZh ? "文章链接已复制" : "Article link copied")
+        : (isZh ? "暂时无法分享链接，请稍后重试" : "Link sharing is unavailable. Try again.") });
+  };
+
   return (
     <div className={`wendao-workspace${companionOpen ? " is-companion-open" : ""}`}>
+      {readingShareFeedback ? <div className="reading-story-feedback" role="status" aria-live="polite">{readingShareFeedback.message}</div> : null}
       <header
         className={`reading-header reading-header-fixed ${isReadingScrolled ? "is-scrolled" : ""}`}
         aria-label={isZh ? "阅读工具" : "Reading tools"}
@@ -2466,7 +2496,7 @@ export default function Prototype() {
         </button>
       </header>
 
-      <div className="app-screen" data-testid="mobile-scroll">
+      <div className="app-screen" data-testid="mobile-scroll" inert={drawerOpen || directoryOpen || shareOpen} aria-hidden={drawerOpen || directoryOpen || shareOpen || undefined}>
         <main
           className="reading-shell"
           data-testid="reading-screen"
@@ -2651,6 +2681,30 @@ export default function Prototype() {
                       </button>
                     </div>
                   </section>
+                  <section className="section-layout life-stories-section" aria-label={isZh ? "生活里的道" : "Tao in everyday life"} data-share-section="stories">
+                    <aside className="section-marker" aria-hidden="true">
+                      <span className="rail-label"><span>04</span><small>{isZh ? <>生活<br />里的道</> : <>EVERYDAY<br />TAO</>}</small></span>
+                      <span className="rail-line rail-fill" />
+                    </aside>
+                    <div className="section-copy">
+                      <h2 className="life-stories-heading">{isZh ? "生活里的道" : "Tao in everyday life"}</h2>
+                      {!isZh ? <p className="drawer-story-note">Essays in Chinese · Reflections on this chapter</p> : null}
+                      {lifeStories.filter(story => story.chapter === chapter.id).map(story => (
+                        <article className="chapter-life-story drawer-story-detail" lang="zh-CN" key={story.slug} data-story-slug={story.slug}>
+                          <p className="drawer-story-note">{story.theme} · 第 {chapter.id} 章</p>
+                          <h3>{story.title}</h3>
+                          <div className="drawer-story-share-actions" lang={isZh ? "zh-CN" : "en"}>
+                            <button type="button" onClick={() => shareReadingStoryLink(story)}><Link2Icon />{isZh ? "分享链接" : "Share link"}</button>
+                            <button type="button" onClick={() => openStoryShare(story)}><ImageIcon />{isZh ? "分享图片" : "Share image"}</button>
+                          </div>
+                          {story.paragraphs.map((paragraph, index) => <p key={index}>{paragraph}</p>)}
+                          <blockquote><p>{story.quote}</p><cite>《道德经》今本第 {chapter.id} 章 · 帛书乙本底本校读节选</cite></blockquote>
+                          <div className="drawer-story-practice"><span className="practice-kicker">留给今天的一点空间</span><p>{story.practice}</p></div>
+                        </article>
+                      ))}
+                      <p className="drawer-story-note" lang="zh-CN">AI 辅助编辑，引文经产品校读库核对。生活解读是当代观察，不是古文逐字翻译；〔〕内为校补字。</p>
+                    </div>
+                  </section>
                 </div>
               </article>
             );
@@ -2809,7 +2863,9 @@ export default function Prototype() {
           }
         }}
         eyebrow={isZh ? `《道德经》今本第 ${shareChapter.id} 章` : `Daodejing · Received Chapter ${shareChapter.id}`}
-        title={companionShare
+        title={sharedLifeStory
+          ? (isZh ? "分享这篇文章" : "Share this essay")
+          : companionShare
           ? (isZh ? "分享这段回应" : "Share this response")
           : (isZh ? "分享这一章" : "Share this chapter")}
         variant="share"
@@ -2823,6 +2879,7 @@ export default function Prototype() {
               profileReady={profileReady}
               initialKind={shareInitialKind}
               companionShare={companionShare}
+              customContent={sharedStoryCard}
               onCreateManual={() => {
                 setShareOpen(false);
                 setDrawerView("profile");
