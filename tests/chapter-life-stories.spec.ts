@@ -16,8 +16,8 @@ for (let chapter = 1; chapter <= 81; chapter++) {
       const essay = section.locator(`[data-story-slug="${story.slug}"]`);
       await expect(essay.getByRole('heading', { name: story.title })).toHaveCount(1);
       for (const text of [...story.paragraphs, story.quote, story.practice]) await expect(essay).toContainText(text);
-      await expect(essay.getByRole('button', { name: '分享链接', exact: true })).toHaveCount(1);
-      await expect(essay.getByRole('button', { name: '分享图片', exact: true })).toHaveCount(1);
+      await expect(essay.getByRole('button', { name: '分享链接', exact: true })).toHaveCount(0);
+      await expect(essay.getByRole('button', { name: '分享这一层', exact: true })).toHaveCount(1);
     }
   });
 }
@@ -37,18 +37,16 @@ for (const lang of ['zh', 'en']) {
     if (lang === 'en') await expect(section).toContainText('Essays in Chinese');
     const story = stories.filter(s => s.chapter === 8)[1];
     const essay = section.locator(`[data-story-slug="${story.slug}"]`);
-    await essay.getByRole('button', { name: lang === 'zh' ? '分享链接' : 'Share link', exact: true }).click();
-    await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(`https://wendao.wonderelian.com/situations/${story.slug}/`);
-    const toast = page.locator('.reading-story-feedback');
-    await expect(toast).toContainText(lang === 'zh' ? '文章链接已复制' : 'Article link copied');
-    expect((await toast.boundingBox())!.y).toBeLessThan(200);
-    await essay.getByRole('button', { name: lang === 'zh' ? '分享图片' : 'Share image', exact: true }).click();
+    await expect(essay.getByRole('button')).toHaveCount(1);
+    await essay.getByRole('button', { name: lang === 'zh' ? '分享这一层' : 'Share this layer', exact: true }).click();
     const scroll = await page.getByTestId('mobile-scroll').evaluate(e => e.scrollTop);
     const sheet = page.getByRole('dialog', { name: lang === 'zh' ? '分享这篇文章' : 'Share this essay' });
     await expect(sheet.locator('.share-card-preview img')).toBeVisible({ timeout: 15000 });
     const label = await sheet.locator('figure').getAttribute('aria-label');
     for (const text of [...story.paragraphs, story.practice, story.quote]) expect(label).toContain(text);
     await expect(page.locator('.ai-composer')).toHaveCount(0);
+    await sheet.getByRole('button', { name: lang === 'zh' ? '分享链接' : 'Share link', exact: true }).click();
+    await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(`https://wendao.wonderelian.com/situations/${story.slug}/`);
     await page.keyboard.press('Escape');
     await expect(sheet).toHaveCount(0);
     expect(await page.getByTestId('mobile-scroll').evaluate(e => e.scrollTop)).toBe(scroll);

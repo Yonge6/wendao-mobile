@@ -3652,31 +3652,6 @@ textarea {
   font-style: normal;
   line-height: 1.75;
 }
-.chapter-story-share-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  column-gap: 20px;
-}
-.chapter-story-share-actions .section-share-action { margin-left: 0; }
-.reading-story-feedback {
-  position: fixed;
-  z-index: 90;
-  top: calc(var(--safe-top, 0px) + 96px);
-  left: 50%;
-  transform: translateX(-50%);
-  width: max-content;
-  max-width: calc(100% - 40px);
-  padding: 12px 20px;
-  border: 1px solid var(--gold);
-  border-radius: 14px;
-  color: var(--paper);
-  background: var(--ink);
-  font: 14px/1.6 var(--sans);
-  text-align: center;
-  pointer-events: none;
-}
-
 .drawer-story-detail p {
   margin: 24px 0;
   font-size: max(17px, var(--reading-body-size));

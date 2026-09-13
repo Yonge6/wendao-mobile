@@ -1931,13 +1931,7 @@ export default function Prototype() {
   const [directoryFocusRequested, setDirectoryFocusRequested] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [sharedLifeStory, setSharedLifeStory] = useState<LifeStory | null>(null);
-  const [readingShareFeedback, setReadingShareFeedback] = useState<{ message: string } | null>(null);
   const sharedStoryCard = useMemo(() => sharedLifeStory ? buildLifeStoryShareCardContent(sharedLifeStory) : undefined, [sharedLifeStory]);
-  useEffect(() => {
-    if (!readingShareFeedback) return;
-    const timer = window.setTimeout(() => setReadingShareFeedback(null), 2400);
-    return () => window.clearTimeout(timer);
-  }, [readingShareFeedback]);
   const [shareChapterId, setShareChapterId] = useState(chapterId);
   const [shareInitialKind, setShareInitialKind] = useState<ShareCardKind>("verse");
   const [companionShare, setCompanionShare] = useState<{ answer: string } | null>(null);
@@ -2427,7 +2421,6 @@ export default function Prototype() {
   };
 
   const openStoryShare = (story: LifeStory) => {
-    setReadingShareFeedback(null);
     setSharedLifeStory(story);
     setCompanionShare(null);
     setShareReturnsToCompanion(false);
@@ -2435,19 +2428,8 @@ export default function Prototype() {
     setShareOpen(true);
   };
 
-  const shareReadingStoryLink = async (story: LifeStory) => {
-    const outcome = await shareLink(story.title, story.teaser, lifeStoryUrl(story));
-    if (outcome === "cancelled") return;
-    setReadingShareFeedback({ message: outcome === "shared"
-      ? (isZh ? "已打开系统分享" : "Share sheet opened")
-      : outcome === "copied"
-        ? (isZh ? "文章链接已复制" : "Article link copied")
-        : (isZh ? "暂时无法分享链接，请稍后重试" : "Link sharing is unavailable. Try again.") });
-  };
-
   return (
     <div className={`wendao-workspace${companionOpen ? " is-companion-open" : ""}`}>
-      {readingShareFeedback ? <div className="reading-story-feedback" role="status" aria-live="polite">{readingShareFeedback.message}</div> : null}
       <header
         className={`reading-header reading-header-fixed ${isReadingScrolled ? "is-scrolled" : ""}`}
         aria-label={isZh ? "阅读工具" : "Reading tools"}
@@ -2695,10 +2677,9 @@ export default function Prototype() {
                           <div className="chapter-life-story-body">{story.paragraphs.map((paragraph, index) => <p key={index}>{paragraph}</p>)}</div>
                           <blockquote className="chapter-story-quote"><p>{story.quote}</p><cite>《道德经》今本第 {chapter.id} 章 · 帛书乙本底本校读节选</cite></blockquote>
                           <div className="practice-card"><span className="practice-kicker">留给今天的一点空间</span><p>{story.practice}</p></div>
-                          <div className="chapter-story-share-actions" lang={isZh ? "zh-CN" : "en"}>
-                            <button className="section-share-action" type="button" onClick={() => shareReadingStoryLink(story)}><Link2Icon /><span>{isZh ? "分享链接" : "Share link"}</span></button>
-                            <button className="section-share-action" type="button" onClick={() => openStoryShare(story)}><ImageIcon /><span>{isZh ? "分享图片" : "Share image"}</span></button>
-                          </div>
+                          <button className="section-share-action" type="button" onClick={() => openStoryShare(story)}>
+                            <Share1Icon /><span>{isZh ? "分享这一层" : "Share this layer"}</span>
+                          </button>
                         </article>
                       ))}
                       <p className="chapter-story-note" lang="zh-CN">AI 辅助编辑，引文经产品校读库核对。生活解读是当代观察，不是古文逐字翻译；〔〕内为校补字。</p>

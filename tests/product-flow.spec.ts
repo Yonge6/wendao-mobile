@@ -449,7 +449,7 @@ test("keeps text selection for copying without creating a share-selection mode",
 test("offers a full-poster share action at the end of every reading layer", async ({ page }) => {
   await page.goto("/?chapter=8&lang=zh");
   const chapter = page.locator('.chapter-current[data-chapter-id="8"]');
-  await expect(chapter.locator(".section-share-action")).toHaveCount(3);
+  await expect(chapter.locator(".original-section .section-share-action, .explanation-section .section-share-action, .related-section .section-share-action")).toHaveCount(3);
   await chapter.locator(".explanation-section .section-share-action").click();
   await expect(page.getByRole("tab", { name: "解读" })).toHaveAttribute("aria-selected", "true");
   const meaningLabel = await page.locator(".share-card-preview").getAttribute("aria-label");
