@@ -52,16 +52,8 @@ True to yourself. Flow with life.
 
 `Laozi,Taoism,philosophy,reflection,meditation,classics,pinyin,wisdom,life,journal`
 
-## What's New in Version 1.9
+## What's New in Version 1.9.1
 
-Bring each chapter into everyday life.
-
-- New Tao in everyday life: 87 essays in Chinese covering all 81 Daodejing chapters, exploring relationships, work, choices and everyday concerns.
-- Read section 04 after each chapter’s insights, continuing naturally from the text and meaning into a practical reflection.
-- Browse the full essay collection in More, then return to its related chapter.
-- Share this layer creates a complete essay image with its source passage, practice and article QR code. The share panel also lets you copy the article link.
-- Refined typography, reading rhythm and consistent sharing controls throughout the chapter.
-- Improved text contrast for daily practices and essay reflections in night mode.
-- Fixed image sharing so chapter, essay and AI response posters are shared as images, with links kept in the separate Share link action.
-
-The new essays are currently in Chinese; the main Daodejing reading experience remains available in Chinese and English.
+- Improved text contrast for daily practices and essay reflections in night mode, including their small headings.
+- Fixed image sharing so chapter, essay and AI response posters are shared as complete images. Each poster retains its reading QR code.
+- Share link remains a separate action. Saving images and copying text continue to show clear, brief feedback.
