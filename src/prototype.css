@@ -719,6 +719,7 @@ textarea {
 
 .practice-kicker {
   display: block;
+  color: var(--gold);
   margin-bottom: 8px;
   font-family: var(--sans);
   font-size: 9px;
@@ -728,6 +729,7 @@ textarea {
 
 .practice-card p {
   margin: 0;
+  color: var(--ink);
   font-size: var(--reading-body-size);
   line-height: 1.85;
   letter-spacing: 0.06em;
@@ -4611,9 +4613,12 @@ textarea {
   background: rgba(222, 235, 230, 0.045);
 }
 
-:root[data-theme="dark"] .directory-item.is-current,
-:root[data-theme="dark"] .practice-card {
+:root[data-theme="dark"] .directory-item.is-current {
   background-color: rgba(222, 235, 230, 0.025);
+}
+
+:root[data-theme="dark"] .practice-card {
+  background-color: var(--card-surface);
 }
 
 :root[data-theme="dark"] .app-screen,

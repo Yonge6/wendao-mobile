@@ -109,8 +109,6 @@ export default function ShareCardPanel({
       imageUrl,
       content.filename,
       customContent ? content.chapterTitle : (isZh ? `三慢问道 · 第${chapter.id}章` : `Wendao · Chapter ${chapter.id}`),
-      content.shareText,
-      content.url,
     );
     if (outcome !== "cancelled") {
       showFeedback(outcome === "shared"

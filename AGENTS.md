@@ -47,6 +47,9 @@ See `src/mobile/COMPONENTS.md` for the full component and gesture contract.
 
 ## Wendao Product Decisions
 
+- Share image must send only the generated PNG file to the native or browser share sheet, without an accompanying URL or text item. The poster already carries its canonical QR. Keep Share link separate; unsupported browser file sharing falls back to downloading the image, never to sharing a link (approved 2026-09-15).
+- Both chapter practice cards (今日一练 and 留给今天的一点空间) must set their own theme-aware body and label colors so generic runtime paragraph styles cannot make night-mode text unreadable (approved 2026-09-15).
+
 - Keep inline `04 生活里的道` visually continuous with sections 02 and 03: share their gold heading and reading-body typography, paragraph rhythm, practice card, and quiet bottom share actions. The rail supplies the section label, so do not repeat it as a large content heading or reuse drawer-detail typography and pill buttons in the chapter body. Preserve full essays. Each inline essay ends with one `分享这一层 / Share this layer` action using the same Share icon and styling as earlier sections; it opens the existing complete essay share panel. Do not show separate inline Share link or Share image buttons (approved 2026-09-13).
 
 - The public GitHub Pages build is a normal responsive H5 reading page, not a simulated phone or app preview. It fills the mobile browser naturally and becomes a restrained 720 px reading column on larger screens; when AI is open at 800 CSS px or wider, show the reader on the left and the same persistent AI panel on the right, each capped at 720 px. Preserve the reading passage, draft, history, and in-flight response across resizing; use actual window width rather than device names or assumed fold APIs; do not show device bezels, a device picker, a mock status bar, or a simulated keyboard on the public surface.

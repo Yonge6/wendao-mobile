@@ -68,18 +68,16 @@ function downloadDataUrl(dataUrl: string, filename: string) {
   anchor.click();
 }
 
-async function dataUrlFile(dataUrl: string, filename: string) {
-  const response = await fetch(dataUrl);
-  const blob = await response.blob();
-  return new File([blob], filename, { type: "image/png" });
+function dataUrlFile(dataUrl: string, filename: string) {
+  // Decode synchronously so Web Share stays in the original tap's user activation.
+  const bytes = Uint8Array.from(atob(dataUrl.split(",")[1] ?? ""), (character) => character.charCodeAt(0));
+  return new File([bytes], filename, { type: "image/png" });
 }
 
 export async function shareCardImage(
   dataUrl: string,
   filename: string,
   title: string,
-  text: string,
-  url: string,
 ): Promise<ShareOutcome> {
   try {
     if (Capacitor.isNativePlatform()) {
@@ -87,16 +85,17 @@ export async function shareCardImage(
       await Filesystem.writeFile({ path: filename, data: base64, directory: Directory.Cache });
       const { uri } = await Filesystem.getUri({ path: filename, directory: Directory.Cache });
       try {
-        await Share.share({ title, text, url, files: [uri], dialogTitle: title });
+        // A single image item prevents targets from preferring the accompanying URL.
+        await Share.share({ files: [uri], dialogTitle: title });
       } finally {
         await Filesystem.deleteFile({ path: filename, directory: Directory.Cache }).catch(() => undefined);
       }
       return "shared";
     }
 
-    const file = await dataUrlFile(dataUrl, filename);
+    const file = dataUrlFile(dataUrl, filename);
     if (navigator.share && navigator.canShare?.({ files: [file] })) {
-      await navigator.share({ title, text, url, files: [file] });
+      await navigator.share({ files: [file] });
       return "shared";
     }
 

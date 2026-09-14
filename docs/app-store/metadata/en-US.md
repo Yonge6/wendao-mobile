@@ -61,5 +61,7 @@ Bring each chapter into everyday life.
 - Browse the full essay collection in More, then return to its related chapter.
 - Share this layer creates a complete essay image with its source passage, practice and article QR code. The share panel also lets you copy the article link.
 - Refined typography, reading rhythm and consistent sharing controls throughout the chapter.
+- Improved text contrast for daily practices and essay reflections in night mode.
+- Fixed image sharing so chapter, essay and AI response posters are shared as images, with links kept in the separate Share link action.
 
 The new essays are currently in Chinese; the main Daodejing reading experience remains available in Chinese and English.
