@@ -18,7 +18,14 @@ Upload succeeded at 2026-09-15 07:25 China time. Xcode reported that the uploade
 
 Archive: ~/Library/Developer/Xcode/Archives/2026-09-15/Wendao AI 1.9.1 (23).xcarchive.
 
-App Store Connect web login expired. Creating the 1.9.1 store version, saving metadata/screenshots, selecting the processed build and submitting for review require login to resume. These actions are not complete.
+Submitted successfully on 2026-09-15 at 11:34 China time after login resumed. Apple confirmed Waiting for Review for iOS App 1.9.1 (23).
+
+- Build ID: c037e3e9-7c7c-45c2-b78d-ceeb47221de2
+- Submission ID: 7003a8f8-ff7a-4217-b257-4f4370dfee6f
+- Review: https://appstoreconnect.apple.com/apps/6796945428/distribution/reviewsubmissions/details/7003a8f8-ff7a-4217-b257-4f4370dfee6f
+- Automatic release after approval, immediate availability to all users, existing ratings retained.
+- Chinese and English promotional text, descriptions, What's New and review notes were reread after saving and matched the local final copy by length and hash.
+- Four night screenshots were confirmed as loaded Apple-hosted mzstatic images. iPhone retains 10 images per locale, with the old save/share shot replaced by the night screenshot; iPad has six per locale. The Chinese iPad upload stalled and was reuploaded under 11-night-practice-zh.jpg; its successful server-hosted image was verified before submission.
 
 ## Validation and assets
 
@@ -28,6 +35,6 @@ App Store Connect web login expired. Creating the 1.9.1 store version, saving me
 - Practice body and label contrast against the final card surface is at least 4.5:1.
 - Runtime protection and 81-chapter / Silk B integrity gates passed in ios:sync; 914 client files synced.
 - Four actual shared-UI night screenshots are under screenshots/night-1.9.1/{iphone,ipad}/{zh-Hans,en-US}/11-night-practice.jpg. iPhone: 1320x2868; iPad: 2064x2752; JPEG without alpha. They use native iOS navigation mode and contain no fabricated UI/text. They are shared-client captures, not physical-device screenshots.
-- Localized What's New and reviewer notes include the fixes. Existing descriptions continue to explain the 87 Chinese essays and reading/AI purchase boundaries accurately. Suggested gallery placement: replace the old save/share screenshot on iPhone; append the night screenshot on iPad, retaining the 1.9 essay images.
+- Localized What's New and reviewer notes include the fixes. Existing descriptions continue to explain the 87 Chinese essays and reading/AI purchase boundaries accurately. Gallery placement: replaced the old save/share screenshot on iPhone and appended the night screenshot on iPad, retaining the 1.9 essay images.
 
 Logs and readbacks: work/release-1.9-23/ and work/deploy-b8d6a8d/.
