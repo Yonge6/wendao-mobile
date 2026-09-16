@@ -34,3 +34,13 @@ Build 24 finished processing and was selected for version 1.9.2 (build ID b2f61b
 Clicking Add for Review repeatedly opens a blank "协议更新" (Agreement Update) dialog. Reopening through the signed-in Developer Account App link produced the same result. The Business UI reports both free and paid agreements valid; Developer Account reports the current Program License Agreement accepted on 2026-08-29. Read-only responses from the page's own contractMessages and agreementsStatus resources also reported no messages and both agreements InEffect. No agreement was accepted or bypassed. Version remains Prepare for Submission, not Waiting for Review.
 
 Evidence: work/promotion-20260916/apple-agreement-block.png. The physical phone became user-controlled and iPhone Mirroring disconnected, so no additional checkout result is claimed.
+
+## Submitted — 2026-09-16 10:45 China time
+
+After the user confirmed the agreement issue was handled, resumed the same browser space and reloaded. Apple accepted version 1.9.2 (24) and displayed "已提交 1 个项目" and "等待审核". The earlier agreement blocker is resolved. Automatic release after approval remains selected.
+
+Submission: b41de2d1-b83a-4d2c-a4c5-2e669340282b
+Review URL: https://appstoreconnect.apple.com/apps/6796945428/distribution/reviewsubmissions/details/b41de2d1-b83a-4d2c-a4c5-2e669340282b
+Evidence: work/promotion-20260916/submitted.txt.
+
+This confirms review submission, not approval, public availability, or an eligible production checkout on the user's phone.
