@@ -31,13 +31,43 @@ public class WendaoStoreKitPlugin: CAPPlugin, CAPBridgedPlugin {
         Task {
             do {
                 let products = try await Product.products(for: productIdentifiers)
-                let values = products.sorted { $0.id < $1.id }.map { product in
-                    [
+                var values: [[String: Any]] = []
+                for product in products.sorted(by: { $0.id < $1.id }) {
+                    var value: [String: Any] = [
                         "id": product.id,
                         "displayName": product.displayName,
                         "description": product.description,
                         "displayPrice": product.displayPrice,
                     ]
+                    if let subscription = product.subscription {
+                        let eligible = await subscription.isEligibleForIntroOffer
+                        value["introOfferEligible"] = eligible
+                        if let offer = subscription.introductoryOffer {
+                            let unit: String
+                            switch offer.period.unit {
+                            case .day: unit = "day"
+                            case .week: unit = "week"
+                            case .month: unit = "month"
+                            case .year: unit = "year"
+                            @unknown default: unit = "unknown"
+                            }
+                            let mode: String
+                            switch offer.paymentMode {
+                            case .payUpFront: mode = "payUpFront"
+                            case .payAsYouGo: mode = "payAsYouGo"
+                            case .freeTrial: mode = "freeTrial"
+                            default: mode = "unknown"
+                            }
+                            value["introductoryOffer"] = [
+                                "displayPrice": offer.displayPrice,
+                                "periodUnit": unit,
+                                "periodValue": offer.period.value,
+                                "periodCount": offer.periodCount,
+                                "paymentMode": mode,
+                            ]
+                        }
+                    }
+                    values.append(value)
                 }
                 call.resolve(["products": values])
             } catch {

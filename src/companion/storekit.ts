@@ -14,6 +14,14 @@ export type StoreKitProduct = {
   displayName: string;
   description: string;
   displayPrice: string;
+  introOfferEligible?: boolean;
+  introductoryOffer?: {
+    displayPrice: string;
+    periodUnit: "day" | "week" | "month" | "year" | "unknown";
+    periodValue: number;
+    periodCount: number;
+    paymentMode: "payUpFront" | "payAsYouGo" | "freeTrial" | "unknown";
+  };
 };
 
 type StoreKitPlugin = {
