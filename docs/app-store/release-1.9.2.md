@@ -26,3 +26,11 @@ An unused monthly offer-code definition was created while investigating a fallba
 ## What's New — en-US
 
 Improved subscription pricing: eligible introductory offers now show their price, full offer period and standard renewal price. You can also refresh App Store prices before choosing a plan.
+
+## Submission blocker — live readback
+
+Build 24 finished processing and was selected for version 1.9.2 (build ID b2f61ba0-a58a-41db-8f04-66f6cd1d1413, version ID 8940b123-ee17-47bf-be34-edd3e29d5628). Both localized What's New fields and reviewer notes were saved and reread. Automatic release after approval, immediate release to all users and existing ratings are retained.
+
+Clicking Add for Review repeatedly opens a blank "协议更新" (Agreement Update) dialog. Reopening through the signed-in Developer Account App link produced the same result. The Business UI reports both free and paid agreements valid; Developer Account reports the current Program License Agreement accepted on 2026-08-29. Read-only responses from the page's own contractMessages and agreementsStatus resources also reported no messages and both agreements InEffect. No agreement was accepted or bypassed. Version remains Prepare for Submission, not Waiting for Review.
+
+Evidence: work/promotion-20260916/apple-agreement-block.png. The physical phone became user-controlled and iPhone Mirroring disconnected, so no additional checkout result is claimed.
