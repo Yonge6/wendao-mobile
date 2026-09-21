@@ -355,6 +355,7 @@ test("opens the complete original-text poster and shares an exact chapter link",
   const payload = await page.evaluate(() => JSON.parse(window.sessionStorage.getItem("wendao-test-share") || "{}"));
   expect(payload.url).toBe(exactUrl);
   expect(payload.title).toMatch(/^三慢问道 · 第\d+章$/);
+  expect(payload.text).toBeUndefined();
 });
 
 test("saves immediately and shows brief save and copy feedback above the controls", async ({ page }) => {

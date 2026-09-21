@@ -48,6 +48,7 @@ See `src/mobile/COMPONENTS.md` for the full component and gesture contract.
 ## Wendao Product Decisions
 
 - Share image must send only the generated PNG file to the native or browser share sheet, without an accompanying URL or text item. The poster already carries its canonical QR. Keep Share link separate; unsupported browser file sharing falls back to downloading the image, never to sharing a link (approved 2026-09-15).
+- Share link must send the canonical URL as the only share item. Keep descriptive copy out of the native and browser share payload so the system Copy action always copies the link itself (approved 2026-09-21).
 - Both chapter practice cards (今日一练 and 留给今天的一点空间) must set their own theme-aware body and label colors so generic runtime paragraph styles cannot make night-mode text unreadable (approved 2026-09-15).
 
 - Keep inline `04 生活里的道` visually continuous with sections 02 and 03: share their gold heading and reading-body typography, paragraph rhythm, practice card, and quiet bottom share actions. The rail supplies the section label, so do not repeat it as a large content heading or reuse drawer-detail typography and pill buttons in the chapter body. Preserve full essays. Each inline essay ends with one `分享这一层 / Share this layer` action using the same Share icon and styling as earlier sections; it opens the existing complete essay share panel. Do not show separate inline Share link or Share image buttons (approved 2026-09-13).

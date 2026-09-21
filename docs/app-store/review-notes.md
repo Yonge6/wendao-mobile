@@ -1,10 +1,10 @@
-# App Review Notes · Version 1.9.2 (24)
+# App Review Notes · Version 1.9.3 (25)
 
 Wendao AI combines bilingual Daodejing reading and chapter-grounded reflection. Today's chapter is always free; readers may deliberately keep 10 additional chapters free on the device. Contents and search do not consume a choice. All 81 chapters are bundled for offline reading, subject to reading access.
 
 Retained from approved 1.9: Tao in everyday life contains 87 authored, AI-assisted and editorially reviewed essays in Chinese covering all 81 chapters. They are bundled in the app and available in More and as section 04 after each chapter's insights. English navigation explicitly labels these essays as Chinese. Each essay includes a source quotation, everyday reflection and practice. It is contemporary commentary, not a new translation of the classic. Share this layer opens a complete essay poster with its source, practice and canonical article QR. The share panel supports image saving and copying an article link. These are reading links, not purchase or external checkout links.
 
-NEW IN 1.9.2: Build 24 reads introductory offer terms and eligibility from StoreKit. Eligible users see the localized discounted price, full offer period and standard renewal price together. Others see standard pricing. Prices can be refreshed. Apple determines eligibility and confirms the final purchase; no eligibility override or test membership is included. Prior night-mode and PNG-only sharing fixes are retained.
+NEW IN 1.9.3: Build 25 fixes Share link so the system Copy action receives the canonical URL itself rather than descriptive text. This applies to chapter cards and Tao in everyday life essays. Image sharing remains PNG-only. The eligible introductory-offer display, night-mode contrast and direct Photos saving from prior approved versions are retained.
 
 Suggested review:
 1. Read today's free chapter, then scroll past section 03 to section 04 and open Share this layer. Save its image to Photos (system permission required on first use) or copy its article link. Close the panel and confirm the reading position remains.

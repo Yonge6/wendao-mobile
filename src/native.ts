@@ -41,14 +41,16 @@ export function nativeImpact(style: "light" | "medium" = "light"): void {
   void Haptics.impact({ style: style === "medium" ? ImpactStyle.Medium : ImpactStyle.Light });
 }
 
-export async function shareLink(title: string, text: string, url: string): Promise<ShareOutcome> {
+export async function shareLink(title: string, url: string): Promise<ShareOutcome> {
   try {
     if (Capacitor.isNativePlatform()) {
-      await Share.share({ title, text, url, dialogTitle: title });
+      // Keep the URL as the only shared item. On iOS, including descriptive
+      // text makes the system Copy action prefer that text over the link.
+      await Share.share({ title, url, dialogTitle: title });
       return "shared";
     }
     if (navigator.share) {
-      await navigator.share({ title, text, url });
+      await navigator.share({ title, url });
       return "shared";
     }
     if (navigator.clipboard?.writeText) {

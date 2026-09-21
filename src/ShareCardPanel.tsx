@@ -159,7 +159,6 @@ export default function ShareCardPanel({
   const shareExactLink = async () => {
     const outcome = await shareLink(
       customContent ? content.chapterTitle : (isZh ? `三慢问道 · 第${chapter.id}章` : `Wendao · Chapter ${chapter.id}`),
-      customContent ? content.label : (isZh ? "读一章《道德经》，照见此刻的自己。" : "Read one chapter. Meet yourself anew."),
       content.url,
     );
     if (outcome !== "cancelled") {

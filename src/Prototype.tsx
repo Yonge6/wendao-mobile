@@ -978,7 +978,7 @@ function SideDrawer({
 
   const shareStoryLink = async () => {
     if (!activeStory) return;
-    const outcome = await shareLink(activeStory.title, activeStory.teaser, lifeStoryUrl(activeStory));
+    const outcome = await shareLink(activeStory.title, lifeStoryUrl(activeStory));
     if (outcome === "cancelled") return;
     setStoryFeedback({ message: outcome === "shared"
       ? (isZh ? "已打开系统分享" : "Share sheet opened")
