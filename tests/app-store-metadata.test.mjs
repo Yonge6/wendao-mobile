@@ -28,11 +28,11 @@ test("metadata presents chapter-grounded AI and discloses the reading limits", (
   assert.match(english, /87 essays in Chinese covering all 81 chapters/);
   assert.match(english, /Today’s recommended chapter is always free/);
   assert.match(english, /Unlock All Chapters Forever/);
-  assert.match(english, /What's New in Version 1\.9\.1/);
+  assert.match(english, /What's New in Version 1\.9\.3/);
   assert.match(chinese, /87 篇中文生活短文覆盖全部 81 章/);
   assert.match(chinese, /今日推荐章节始终免费/);
   assert.match(chinese, /永久解锁全部章节/);
-  assert.match(chinese, /版本 1\.9\.1 更新说明/);
+  assert.match(chinese, /版本 1\.9\.3 更新说明/);
   assert.match(index, /三慢问道 · 道德经帛书校读、拼音今译与 AI 问道/);
 });
 

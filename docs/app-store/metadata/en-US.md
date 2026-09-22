@@ -52,8 +52,8 @@ True to yourself. Flow with life.
 
 `Laozi,Taoism,philosophy,reflection,meditation,classics,pinyin,wisdom,life,journal`
 
-## What's New in Version 1.9.1
+## What's New in Version 1.9.3
 
-- Improved text contrast for daily practices and essay reflections in night mode, including their small headings.
-- Fixed image sharing so chapter, essay and AI response posters are shared as complete images. Each poster retains its reading QR code.
-- Share link remains a separate action. Saving images and copying text continue to show clear, brief feedback.
+- Sign in for 3 free Wendao AI questions each day; members remain unlimited.
+- Membership now uses fixed standard pricing with no limited-time introductory offer. Monthly, annual, and lifetime products show their App Store prices directly.
+- Share Link now copies the correct chapter or essay URL through the system Copy action.

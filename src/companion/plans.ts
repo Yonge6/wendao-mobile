@@ -1,20 +1,20 @@
 export const COMPANION_PLANS = Object.freeze({
   monthly: Object.freeze({
     id: "wendao_companion_monthly",
-    cny: 68,
-    usd: 19.99,
+    cny: 19.9,
+    usd: 9.99,
     interval: "month" as const,
   }),
   annual: Object.freeze({
     id: "wendao_companion_annual",
-    cny: 698,
-    usd: 199.99,
+    cny: 159,
+    usd: 89.99,
     interval: "year" as const,
   }),
   lifetime: Object.freeze({
     id: "wendao_reading_lifetime",
-    cny: 9.9,
-    usd: 7,
+    cny: 19.9,
+    usd: 9.99,
     interval: "lifetime" as const,
   }),
 });

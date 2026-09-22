@@ -2,8 +2,6 @@ import { Capacitor } from "@capacitor/core";
 import type { Session } from "@supabase/supabase-js";
 import { useCallback, useEffect, useState } from "react";
 
-import { subscriptionOffer } from "./subscriptionOffer";
-
 import AppStoreDownloadLink from "./AppStoreDownloadLink";
 import { companionPublicConfig } from "./client";
 import {
@@ -131,14 +129,7 @@ export default function SubscriptionPanel({ language, session, onSignOut, onMemb
   const priceLabel = (plan: "monthly" | "annual" | "lifetime") => nativePrice(plan)
     ?? (loadingProducts ? (isZh ? "读取中…" : "Loading…") : (isZh ? "暂不可用" : "Unavailable"));
 
-  const offerFor = (plan: "monthly" | "annual") => subscriptionOffer(
-    nativeProducts.find((product) => product.id === STOREKIT_PRODUCTS[plan]), language,
-  );
   const renewalLabel = (plan: "monthly" | "annual") => `${priceLabel(plan)}/${isZh ? (plan === "annual" ? "年" : "月") : (plan === "annual" ? "year" : "month")}`;
-  const offerTerms = (plan: "monthly" | "annual") => {
-    const offer = offerFor(plan);
-    return offer ? `${offer.terms}${isZh ? `，之后 ${renewalLabel(plan)}自动续费。` : `, then ${renewalLabel(plan)}, automatically renewed.`}` : null;
-  };
 
   const checkMembership = async () => {
     if (checkingMembership) return;
@@ -206,8 +197,8 @@ export default function SubscriptionPanel({ language, session, onSignOut, onMemb
           onClick={() => setSelectedPlan("annual")}
         >
           <span>{isZh ? "推荐" : "Recommended"}</span>
-          <strong>{`${isZh ? "年付" : "Annual"} ${offerFor("annual")?.price ?? priceLabel("annual")}`}</strong>
-          <small>{offerTerms("annual") ?? (isZh ? "持续记录、自动记忆与每周回看；按年自动续费" : "Unlimited questions, memory, and weekly reflection; renewed annually")}</small>
+          <strong>{`${isZh ? "年付" : "Annual"} ${priceLabel("annual")}`}</strong>
+          <small>{isZh ? "持续记录、自动记忆与每周回看；按年自动续费" : "Unlimited questions, memory, and weekly reflection; renewed annually"}</small>
         </button>
         <button
           className={selectedPlan === "monthly" ? "is-selected" : ""}
@@ -216,8 +207,8 @@ export default function SubscriptionPanel({ language, session, onSignOut, onMemb
           disabled={busyPlan !== null || (native && !nativePrice("monthly"))}
           onClick={() => setSelectedPlan("monthly")}
         >
-          <strong>{`${isZh ? "月付" : "Monthly"} ${offerFor("monthly")?.price ?? priceLabel("monthly")}`}</strong>
-          <small>{offerTerms("monthly") ?? (isZh ? "按月保持灵活；按月自动续费" : "Unlimited questions, renewed monthly")}</small>
+          <strong>{`${isZh ? "月付" : "Monthly"} ${priceLabel("monthly")}`}</strong>
+          <small>{isZh ? "按月保持灵活；按月自动续费" : "Unlimited questions, renewed monthly"}</small>
         </button>
         <button
           className={`is-lifetime ${selectedPlan === "lifetime" ? "is-selected" : ""}`}
@@ -246,9 +237,9 @@ export default function SubscriptionPanel({ language, session, onSignOut, onMemb
       <p className="companion-plan-note">
         {selectedPlan === "lifetime"
           ? (isZh ? "一次购买，永久恢复；不自动续费。" : "One purchase, restorable forever, with no renewal.")
-          : (offerTerms(selectedPlan) ?? (isZh ? `按 ${renewalLabel(selectedPlan)}自动续费，直至取消。` : `${renewalLabel(selectedPlan)}, automatically renewed until cancelled.`))}
+          : (isZh ? `按 ${renewalLabel(selectedPlan)}自动续费，直至取消。` : `${renewalLabel(selectedPlan)}, automatically renewed until cancelled.`)}
       </p>
-      <p className="companion-plan-note">{isZh ? "订阅将通过 App Store 安全完成。优惠资格和最终价格以 Apple 确认页为准。" : "Your subscription is securely handled by the App Store. Apple confirms eligibility and the final price."}</p>
+      <p className="companion-plan-note">{isZh ? "订阅将通过 App Store 安全完成，最终价格以 Apple 确认页为准。" : "Your subscription is securely handled by the App Store. Apple confirms the final price."}</p>
       <p className="companion-plan-legal">
         {isZh ? "继续即表示你同意" : "By continuing, you agree to the"}{" "}
         <a href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/" target="_blank" rel="noreferrer">
