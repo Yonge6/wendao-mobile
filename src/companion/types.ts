@@ -19,13 +19,15 @@ export type CompanionUsage = {
 
 export type CompanionAccessReason =
   | "active"
+  | "daily_free"
   | "signed_out"
-  | "subscription_required";
+  | "daily_free_limit_reached";
 
 export type CompanionAccess = {
   allowed: boolean;
   reason: CompanionAccessReason;
   unlimited: boolean;
+  remainingQuestions?: number;
 };
 
 export type MemoryKind =

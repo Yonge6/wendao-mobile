@@ -17,8 +17,8 @@ test("requires login before checking subscription state", () => {
   );
 });
 
-test("requires an active or grace-period entitlement", () => {
-  assert.equal(
+test("signed-in non-members receive three free questions per day", () => {
+  assert.deepEqual(
     getCompanionAccess(
       {
         isSignedIn: true,
@@ -26,11 +26,16 @@ test("requires an active or grace-period entitlement", () => {
           status: "expired",
           expiresAt: "2026-08-18T12:00:00.000Z",
         },
-        usage: null,
+        usage: { usedQuestions: 1 },
       },
       NOW,
-    ).reason,
-    "subscription_required",
+    ),
+    { allowed: true, reason: "daily_free", unlimited: false, remainingQuestions: 2 },
+  );
+
+  assert.deepEqual(
+    getCompanionAccess({ isSignedIn: true, entitlement: null, usage: { usedQuestions: 3 } }, NOW),
+    { allowed: false, reason: "daily_free_limit_reached", unlimited: false, remainingQuestions: 0 },
   );
 
   assert.equal(

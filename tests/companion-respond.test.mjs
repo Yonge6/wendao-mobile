@@ -17,7 +17,7 @@ test("distinguishes a released reservation from an in-progress request before an
     const response = await handleCompanionRequest(request("项目怎么收尾？"), {
       environment,
       authenticate: async () => ({ id: userId }),
-      store: { reserveQuestion: async () => ({ state, questionsThisMonth: 0 }) },
+      store: { reserveQuestion: async () => ({ state, unlimited: false, remainingFreeQuestions: 3, questionsToday: 0 }) },
     });
     assert.equal(response.status, 409);
     assert.equal((await response.json()).error.code, code);
@@ -64,7 +64,7 @@ test("extracts only visible content from DeepSeek SSE", async () => {
 test("streams a grounded answer and saves it after reserving usage", async () => {
   const actions = [];
   const store = {
-    reserveQuestion: async () => ({ state: "reserved", questionsThisMonth: 61 }),
+    reserveQuestion: async () => ({ state: "reserved", unlimited: false, remainingFreeQuestions: 2, questionsToday: 1 }),
     getContext: async () => ({ memoryEnabled: true, memories: [], lifeManual: null }),
     getRecentMessages: async () => [],
     finishExchange: async (exchange) => {
@@ -95,8 +95,9 @@ test("streams a grounded answer and saves it after reserving usage", async () =>
   assert.match(stream, /event: delta/);
   assert.match(stream, /先检查交接/);
   assert.match(stream, /event: done/);
-  assert.match(stream, /"unlimited":true/);
-  assert.match(stream, /"questionsThisMonth":61/);
+  assert.match(stream, /"unlimited":false/);
+  assert.match(stream, /"remainingFreeQuestions":2/);
+  assert.match(stream, /"questionsToday":1/);
   assert.match(modelMessages[0].content, /慎终如始/);
   assert.equal(actions[0].answer, "先检查交接，再完成退出。");
   assert.equal(actions[1].memories[0].summary, "正在收尾一个项目");
@@ -111,7 +112,7 @@ test("opens the response stream before the visible model finishes connecting", a
       environment,
       authenticate: async () => ({ id: userId }),
       store: {
-        reserveQuestion: async () => ({ state: "reserved", questionsThisMonth: 1 }),
+        reserveQuestion: async () => ({ state: "reserved", unlimited: true, remainingFreeQuestions: null, questionsToday: 1 }),
         getContext: async () => ({ memoryEnabled: false, memories: [], lifeManual: null }),
         getRecentMessages: async () => [],
         finishExchange: async () => ({ threadId: "33333333-3333-4333-8333-333333333333", answerMessageId: "44444444-4444-4444-8444-444444444444" }),
@@ -141,7 +142,7 @@ test("falls back when the visible model stream stalls before sending answer text
     environment,
     authenticate: async () => ({ id: userId }),
     store: {
-      reserveQuestion: async () => ({ state: "reserved", questionsThisMonth: 2 }),
+      reserveQuestion: async () => ({ state: "reserved", unlimited: true, remainingFreeQuestions: null, questionsToday: 2 }),
       getContext: async () => ({ memoryEnabled: false, memories: [], lifeManual: null }),
       getRecentMessages: async () => [],
       finishExchange: async () => ({
@@ -190,7 +191,7 @@ test("replays a saved answer without calling the model", async () => {
     environment,
     authenticate: async () => ({ id: userId }),
     store: {
-      reserveQuestion: async () => ({ state: "succeeded", questionsThisMonth: 61 }),
+      reserveQuestion: async () => ({ state: "succeeded", unlimited: false, remainingFreeQuestions: 2, questionsToday: 1 }),
       getCompletedExchange: async () => ({
         answer: "已保存的回答",
         threadId: "33333333-3333-4333-8333-333333333333",

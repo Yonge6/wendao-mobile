@@ -4,12 +4,12 @@ function isoDate(date) {
   return date.toISOString().slice(0, 10);
 }
 
-export function calendarMonthPeriod(now = new Date()) {
+export function calendarDayPeriod(now = new Date()) {
   if (!(now instanceof Date) || Number.isNaN(now.getTime())) {
     throw new TypeError("now must be a valid Date");
   }
-  const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
-  const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
+  const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  const end = new Date(start.getTime() + 86_400_000);
   return { start: isoDate(start), end: isoDate(end) };
 }
 
@@ -17,6 +17,9 @@ function publicStoreError(response, payload) {
   const message = String(payload?.message ?? "");
   if (message.includes("subscription_required")) {
     return new HttpError(402, "subscription_required", "Wendao Companion is required");
+  }
+  if (message.includes("daily_free_limit_reached")) {
+    return new HttpError(402, "daily_free_limit_reached", "Today's free questions have been used");
   }
   if (message.includes("rate_limited")) {
     return new HttpError(429, "rate_limited", "Please wait a moment before asking again");
@@ -86,8 +89,8 @@ export function createCompanionStore(environment, dependencies = {}) {
 
   return Object.freeze({
     async reserveQuestion(userId, requestId, now = new Date(), signal) {
-      const period = calendarMonthPeriod(now);
-      const rows = await rpc("reserve_wendao_question_unlimited", {
+      const period = calendarDayPeriod(now);
+      const rows = await rpc("reserve_wendao_question_daily_free", {
         p_user_id: userId,
         p_request_id: requestId,
         p_period_start: period.start,
@@ -99,7 +102,11 @@ export function createCompanionStore(environment, dependencies = {}) {
       }
       return {
         state: reservation.reservation_state,
-        questionsThisMonth: Number(reservation.questions_this_month),
+        unlimited: Boolean(reservation.is_unlimited),
+        remainingFreeQuestions: reservation.remaining_free_questions === null
+          ? null
+          : Number(reservation.remaining_free_questions),
+        questionsToday: Number(reservation.questions_today),
       };
     },
 

@@ -11,8 +11,8 @@
 | USD base | `US$19.99` | `US$199.99` |
 | Apple ID | `com.yonge6.wendao.companion.monthly` | `com.yonge6.wendao.companion.annual` |
 
-- No free trial, introductory free period, or free AI messages.
-- Active membership includes unlimited questions. Server concurrency and burst controls are abuse safeguards, not a monthly limit.
+- Signed-in non-members receive 3 free AI questions per UTC day. Failed answers release their reservation; completed request replays do not charge twice.
+- Active membership includes unlimited questions. Server concurrency and burst controls are abuse safeguards, not a monthly or daily limit.
 - Configure Stripe multi-currency prices with the exact CNY amounts and USD base. Other currencies use Stripe localization from USD.
 - Configure both StoreKit products in one auto-renewable subscription group. Set the US storefront base prices above, set the China storefront prices explicitly, and let App Store storefront localization handle other regions.
 

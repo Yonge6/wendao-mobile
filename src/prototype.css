@@ -2207,6 +2207,7 @@ textarea {
 .companion-loading,
 .companion-auth,
 .companion-subscription,
+.companion-membership-view,
 .companion-home,
 .companion-account-panel {
   color: var(--ink);
@@ -2235,10 +2236,46 @@ textarea {
 
 .companion-auth,
 .companion-subscription,
+.companion-membership-view,
 .companion-account-panel {
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+.companion-membership-view {
+  display: flex;
+  max-height: 100%;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+}
+
+.companion-membership-view > .companion-subscription {
+  overflow: visible;
+}
+
+.companion-free-usage {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 12px;
+  border: 1px solid color-mix(in srgb, var(--gold) 24%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--gold) 6%, transparent);
+  color: var(--ink-soft);
+  font: 11px/1.45 var(--sans);
+}
+
+.companion-free-usage button {
+  flex: 0 0 auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--gold);
+  cursor: pointer;
+  font: 500 11px/1.45 var(--sans);
 }
 
 .companion-auth,

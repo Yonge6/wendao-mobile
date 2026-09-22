@@ -31,10 +31,12 @@ export function getCompanionAccess(
   }
 
   if (!hasCurrentEntitlement(input.entitlement, now)) {
+    const remainingQuestions = Math.max(0, 3 - (input.usage?.usedQuestions ?? 0));
     return {
-      allowed: false,
-      reason: "subscription_required",
+      allowed: remainingQuestions > 0,
+      reason: remainingQuestions > 0 ? "daily_free" : "daily_free_limit_reached",
       unlimited: false,
+      remainingQuestions,
     };
   }
   return { allowed: true, reason: "active", unlimited: true };

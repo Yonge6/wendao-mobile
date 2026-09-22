@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { readCompanionEnvironment } from "../api/_lib/env.mjs";
-import { calendarMonthPeriod, createCompanionStore } from "../api/_lib/store.mjs";
+import { calendarDayPeriod, createCompanionStore } from "../api/_lib/store.mjs";
 
 const environment = {
   supabaseUrl: "https://project.supabase.co",
@@ -22,19 +22,19 @@ test("companion environment does not require a monthly allowance", () => {
   assert.equal("monthlyQuestionAllowance" in readCompanionEnvironment(base), false);
 });
 
-test("calendar month usage observation uses UTC boundaries", () => {
-  assert.deepEqual(calendarMonthPeriod(new Date("2026-12-31T23:59:59Z")), {
-    start: "2026-12-01",
+test("daily free usage uses UTC day boundaries", () => {
+  assert.deepEqual(calendarDayPeriod(new Date("2026-12-31T23:59:59Z")), {
+    start: "2026-12-31",
     end: "2027-01-01",
   });
 });
 
-test("usage reservation uses the unlimited server-only RPC", async () => {
+test("usage reservation uses the daily-free server-only RPC", async () => {
   const calls = [];
   const store = createCompanionStore(environment, {
     fetchImpl: async (url, init) => {
       calls.push({ url, init });
-      return Response.json([{ reservation_state: "reserved", questions_this_month: 61 }]);
+      return Response.json([{ reservation_state: "reserved", is_unlimited: false, remaining_free_questions: 2, questions_today: 1 }]);
     },
   });
 
@@ -43,14 +43,14 @@ test("usage reservation uses the unlimited server-only RPC", async () => {
     "22222222-2222-4222-8222-222222222222",
     new Date("2026-08-19T12:00:00Z"),
   );
-  assert.deepEqual(result, { state: "reserved", questionsThisMonth: 61 });
-  assert.equal(calls[0].url, "https://project.supabase.co/rest/v1/rpc/reserve_wendao_question_unlimited");
+  assert.deepEqual(result, { state: "reserved", unlimited: false, remainingFreeQuestions: 2, questionsToday: 1 });
+  assert.equal(calls[0].url, "https://project.supabase.co/rest/v1/rpc/reserve_wendao_question_daily_free");
   assert.equal(calls[0].init.headers.apikey, "server-only-service-key");
   assert.deepEqual(JSON.parse(calls[0].init.body), {
     p_user_id: "11111111-1111-4111-8111-111111111111",
     p_request_id: "22222222-2222-4222-8222-222222222222",
-    p_period_start: "2026-08-01",
-    p_period_end: "2026-09-01",
+    p_period_start: "2026-08-19",
+    p_period_end: "2026-08-20",
   });
 });
 

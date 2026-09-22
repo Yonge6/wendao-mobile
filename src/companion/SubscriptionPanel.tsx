@@ -196,7 +196,7 @@ export default function SubscriptionPanel({ language, session, onSignOut, onMemb
     <section className="companion-subscription" aria-labelledby="companion-subscription-title">
       <span className="drawer-kicker">{isZh ? "AI 问道会员" : "Wendao AI membership"}</span>
       <h3 id="companion-subscription-title">{isZh ? "选择一段同行的时间" : "Choose how long we travel together"}</h3>
-      <p>{isZh ? "今日一章与自选 10 章免费。订阅解锁完整阅读与 AI；也可一次买断全部章节。" : "Today’s chapter and 10 chapters you choose are free. Subscribe for full reading plus AI, or unlock every chapter once and keep them forever."}</p>
+      <p>{isZh ? "登录后每天可免费问道 3 条。订阅解锁 81 章、不限次数 AI、自动记忆与每周回看；也可一次买断全部章节。" : "After signing in, you can ask 3 free questions each day. Subscribe for all 81 chapters, unlimited AI, automatic memory, and weekly reflection, or unlock every chapter once and keep it forever."}</p>
       <div className="companion-plans" aria-label={isZh ? "订阅方案" : "Subscription plans"}>
         <button
           className={`is-featured ${selectedPlan === "annual" ? "is-selected" : ""}`}

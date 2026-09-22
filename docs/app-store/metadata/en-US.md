@@ -12,7 +12,7 @@
 
 ## Promotional text
 
-87 Chinese essays bring all 81 chapters into daily life, with image and link sharing. Today’s chapter + 10 chosen chapters are free. AI requires membership.
+87 Chinese essays bring Laozi into daily life. Sign in for 3 free AI questions each day; members are unlimited. Today’s chapter + 10 chosen chapters are free.
 
 ## Description
 
@@ -40,7 +40,7 @@ Free reading begins with what matters to you:
 - Contents, full-text search, chance selection, continuous reading, day and night modes, and adjustable text size;
 - An optional Life Manual that adds type, strategy, authority, profile, and definition as lenses for self-observation.
 
-For complete reading, choose a monthly or annual App Store membership to unlock all 81 chapters plus Wendao AI, automatic memory, and weekly reflection. You may instead make a one-time “Unlock All Chapters Forever” purchase for permanent reading access with no renewal; AI services are not included. Wendao AI requires Apple or Google sign-in and has no free trial. Members may ask unlimited questions during an active subscription, subject to reasonable concurrency, rate, and automated-abuse safeguards. You can manage memories, export data, restore purchases, and delete your account in the app.
+For complete reading, choose a monthly or annual App Store membership to unlock all 81 chapters plus unlimited Wendao AI, automatic memory, and weekly reflection. You may instead make a one-time “Unlock All Chapters Forever” purchase for permanent reading access with no renewal; AI services are not included. Wendao AI requires Apple or Google sign-in. Non-members may ask 3 free questions each day; members may ask unlimited questions during an active subscription, subject to reasonable concurrency, rate, and automated-abuse safeguards. You can manage memories, export data, restore purchases, and delete your account in the app.
 
 AI responses support reflection. They are not medical, psychological, legal, financial, or deterministic advice, and they do not replace your decisions.
 

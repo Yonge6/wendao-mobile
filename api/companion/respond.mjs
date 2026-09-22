@@ -158,8 +158,9 @@ export async function handleCompanionRequest(request, dependencies = {}) {
         requestId: payload.requestId,
         threadId: completed.threadId,
         answerMessageId: completed.answerMessageId,
-        unlimited: true,
-        questionsThisMonth: reservation.questionsThisMonth,
+        unlimited: reservation.unlimited,
+        remainingFreeQuestions: reservation.remainingFreeQuestions,
+        questionsToday: reservation.questionsToday,
         replayed: true,
       }, headers);
     }
@@ -191,8 +192,9 @@ export async function handleCompanionRequest(request, dependencies = {}) {
       start(controller) {
         controller.enqueue(sseEvent("meta", {
           requestId: payload.requestId,
-          unlimited: true,
-          questionsThisMonth: reservation.questionsThisMonth,
+          unlimited: reservation.unlimited,
+          remainingFreeQuestions: reservation.remainingFreeQuestions,
+          questionsToday: reservation.questionsToday,
           phase: "preparing",
         }));
         void (async () => {
@@ -263,8 +265,9 @@ export async function handleCompanionRequest(request, dependencies = {}) {
             controller.enqueue(sseEvent("done", {
               requestId: payload.requestId,
               ...saved,
-              unlimited: true,
-              questionsThisMonth: reservation.questionsThisMonth,
+              unlimited: reservation.unlimited,
+              remainingFreeQuestions: reservation.remainingFreeQuestions,
+              questionsToday: reservation.questionsToday,
             }));
           } catch (error) {
             await store.releaseQuestion(user.id, payload.requestId).catch(() => undefined);

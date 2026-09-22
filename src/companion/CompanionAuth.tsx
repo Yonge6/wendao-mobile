@@ -107,8 +107,8 @@ export default function CompanionAuth({ language, children }: CompanionAuthProps
       </div>
       <p className="companion-disclosure">
         {isZh
-          ? "AI 问道是付费服务，没有免费问答。回应以当前章节、持续对话与可控记忆为依据，由 DeepSeek 在中国处理；自动记忆只保留与你的长期思考真正相关的摘要，你可以随时查看、修改、暂停或清除。"
-          : "Wendao AI is a paid service with no free questions. Responses are grounded in the current chapter, ongoing dialogue, and memory you control, and are processed by DeepSeek in China. Automatic memory keeps only summaries relevant to your longer journey; you can review, edit, pause, or clear them at any time."}
+          ? "登录后每天可免费问道 3 条，会员可不限次数对话。回应以当前章节、持续对话与可控记忆为依据，由 DeepSeek 在中国处理；自动记忆只保留与你的长期思考真正相关的摘要，你可以随时查看、修改、暂停或清除。"
+          : "After signing in, you can ask 3 free questions each day; members have unlimited conversations. Responses are grounded in the current chapter, ongoing dialogue, and memory you control, and are processed by DeepSeek in China. Automatic memory keeps only summaries relevant to your longer journey; you can review, edit, pause, or clear them at any time."}
       </p>
       {error ? (
         <p className="form-message is-error">

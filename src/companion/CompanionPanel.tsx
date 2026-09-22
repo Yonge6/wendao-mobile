@@ -36,6 +36,7 @@ type ConversationMessage = {
 
 type CompanionState = {
   entitlement: { status: string; source: string; expires_at: string | null } | null;
+  remainingFreeQuestions: number;
 };
 
 function friendlyCompanionError(error: unknown, isZh: boolean) {
@@ -46,6 +47,9 @@ function friendlyCompanionError(error: unknown, isZh: boolean) {
     }
     if (error.code === "subscription_required") {
       return isZh ? "会员状态暂未生效，请在问道设置中确认会员。问题已经保留。" : "Your membership is not active. Check membership in settings; your question is preserved.";
+    }
+    if (error.code === "daily_free_limit_reached") {
+      return isZh ? "今天的 3 条免费问道已经用完。订阅会员后可以继续不限次数对话。" : "You have used today’s 3 free questions. Join as a member to continue with unlimited conversations.";
     }
     if (error.code === "request_in_progress") {
       return isZh ? "上次提问还在处理，请稍后重试，或在最近对话中查看回答。" : "Your previous question is still processing. Retry shortly or check recent conversations.";
@@ -114,7 +118,7 @@ export function SignedInCompanion({
   const [asking, setAsking] = useState(false);
   const [phase, setPhase] = useState<"idle" | "connecting" | "connecting_slow" | "preparing" | "answering" | "slow" | "fallback">("idle");
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
-  const [view, setView] = useState<"conversation" | "history" | "memory" | "weekly" | "account">("conversation");
+  const [view, setView] = useState<"conversation" | "history" | "memory" | "weekly" | "account" | "subscription">("conversation");
   const [historyState, setHistoryState] = useState<"loading" | "ready" | "error">("loading");
   const [threads, setThreads] = useState<CompanionThread[]>([]);
   const [awayFromBottom, setAwayFromBottom] = useState(false);
@@ -215,17 +219,19 @@ export function SignedInCompanion({
   const refresh = useCallback(async () => {
     if (!client) return;
     setAccessError("");
-    const entitlementResult = await client
-      .from("wendao_entitlements")
-      .select("status,source,expires_at")
-      .eq("user_id", session.user.id)
-      .maybeSingle();
+    const today = new Date().toISOString().slice(0, 10);
+    const [entitlementResult, usageResult] = await Promise.all([
+      client.from("wendao_entitlements").select("status,source,expires_at").eq("user_id", session.user.id).maybeSingle(),
+      client.from("wendao_usage_periods").select("question_allowance,used_questions").eq("user_id", session.user.id).eq("period_start", today).maybeSingle(),
+    ]);
     if (entitlementResult.error) {
       setAccessError(entitlementResult.error.message);
       return;
     }
+    const used = Number(usageResult.data?.used_questions ?? 0);
     setState({
       entitlement: entitlementResult.data,
+      remainingFreeQuestions: Math.max(0, 3 - used),
     });
   }, [client, session.user.id]);
 
@@ -244,6 +250,7 @@ export function SignedInCompanion({
   if (!state) {
     return <div className="companion-loading" role="status">{isZh ? "正在打开你的问道…" : "Opening your Wendao…"}</div>;
   }
+  const isMember = membershipEntitlementIsActive(state.entitlement);
   if (view === "account") {
     return (
       <AccountPanel
@@ -255,8 +262,11 @@ export function SignedInCompanion({
       />
     );
   }
-  if (!membershipEntitlementIsActive(state.entitlement)) {
-    return <SubscriptionPanel language={language} session={session} onSignOut={() => onSignOut("sign-out")} onMembershipChanged={refresh} onOpenAccount={() => setView("account")} />;
+  if (view === "subscription") {
+    return <section className="companion-membership-view">
+      <button className="companion-text-button" type="button" onClick={() => setView("conversation")}>{isZh ? "← 返回问道" : "← Back to Wendao"}</button>
+      <SubscriptionPanel language={language} session={session} onSignOut={() => onSignOut("sign-out")} onMembershipChanged={refresh} onOpenAccount={() => setView("account")} />
+    </section>;
   }
 
   if (view === "memory") {
@@ -300,6 +310,9 @@ export function SignedInCompanion({
         signal: controller.signal,
         handlers: {
           meta: (payload) => {
+            if (typeof payload.remainingFreeQuestions === "number") {
+              setState((current) => current ? { ...current, remainingFreeQuestions: payload.remainingFreeQuestions as number } : current);
+            }
             if (payload.phase === "preparing") setPhase("preparing");
             else if (payload.phase === "fallback") setPhase("fallback");
             else setPhase("answering");
@@ -314,6 +327,9 @@ export function SignedInCompanion({
             )));
           },
           done: (payload) => {
+            if (typeof payload.remainingFreeQuestions === "number") {
+              setState((current) => current ? { ...current, remainingFreeQuestions: payload.remainingFreeQuestions as number } : current);
+            }
             setMessages((current) => current.map((message) => (
               message.id === assistantId ? { ...message, status: undefined, retry: undefined, retryQuestion: undefined, failureNote: undefined } : message
             )));
@@ -332,6 +348,9 @@ export function SignedInCompanion({
       const failureMessage = stopped
         ? (isZh ? "回答已停止。你可以调整问题，也可以原样重试。" : "The response was stopped. Edit your question or retry it as written.")
         : friendlyCompanionError(nextError, isZh);
+      if (nextError instanceof CompanionApiError && nextError.code === "daily_free_limit_reached") {
+        setState((current) => current ? { ...current, remainingFreeQuestions: 0 } : current);
+      }
       setMessages((current) => current.map((message) => (
         message.id === assistantId
           ? { ...message, status: "error", failureNote: failureMessage, retryQuestion: nextQuestion, retry: requestContext }
@@ -393,11 +412,14 @@ export function SignedInCompanion({
         </button>
         {settingsOpen ? (
           <div className="companion-settings-menu" role="menu" aria-label={isZh ? "问道设置" : "Wendao settings"}>
-            {([
+            {(isMember ? ([
               ["weekly", isZh ? "本周回看" : "Weekly reflection", isZh ? "看见最近留下的线索" : "Notice the threads from this week"],
               ["memory", isZh ? "记忆" : "Memory", isZh ? "查看与管理自动记忆" : "Review and manage automatic memory"],
               ["account", isZh ? "账号" : "Account", isZh ? "会员、数据与退出登录" : "Membership, data, and sign out"],
-            ] as const).map(([nextView, title, description]) => (
+            ] as const) : ([
+              ["subscription", isZh ? "开通会员" : "Join membership", isZh ? "不限次数问道与完整阅读" : "Unlimited Wendao AI and complete reading"],
+              ["account", isZh ? "账号" : "Account", isZh ? "数据与退出登录" : "Data and sign out"],
+            ] as const)).map(([nextView, title, description]) => (
               <button
                 type="button"
                 role="menuitem"
@@ -425,6 +447,10 @@ export function SignedInCompanion({
             <button type="button" disabled={asking} onClick={startNewConversation}>{isZh ? "新对话" : "New chat"}</button>
           </div>
         </div>
+        {!isMember ? <div className="companion-free-usage" role="status">
+          <span>{isZh ? `今日免费问道还剩 ${state.remainingFreeQuestions} 条` : `${state.remainingFreeQuestions} free questions left today`}</span>
+          <button type="button" onClick={() => setView("subscription")}>{isZh ? "会员不限次数" : "Unlimited with membership"}</button>
+        </div> : null}
         {messages.length === 0 && view === "conversation" && historyState === "ready" ? <h3>{isZh ? "借老子的智慧，聊眼前的困惑。" : "Bring today’s questions to Laozi’s wisdom."}</h3> : null}
       </header>
       <div className="companion-thread" ref={conversationRef} onScroll={(event) => {
@@ -534,9 +560,9 @@ export function SignedInCompanion({
                 void askQuestion(question);
               }}
               placeholder={isZh ? "此刻，有什么放不下的事？" : "What is weighing on you today?"}
-              disabled={asking || historyState !== "ready" || view === "history"}
+              disabled={asking || historyState !== "ready" || view === "history" || (!isMember && state.remainingFreeQuestions === 0)}
             />
-            <button type="submit" disabled={asking || !question.trim() || historyState !== "ready" || view === "history"} aria-label={isZh ? "发送问题" : "Send question"}>↑</button>
+            <button type="submit" disabled={asking || !question.trim() || historyState !== "ready" || view === "history" || (!isMember && state.remainingFreeQuestions === 0)} aria-label={isZh ? "发送问题" : "Send question"}>↑</button>
           </div>
         </form>
         <div className="companion-compose-meta">
@@ -550,13 +576,16 @@ export function SignedInCompanion({
                 ? (isZh ? "正在换一条更稳定的回应路径。" : "Switching to a more reliable response path.")
               : phase === "slow" ? (isZh ? "这次整理需要更久，你可以继续等待或停止回答。" : "This response needs more time. You can wait or stop it.")
               : (isZh ? "正在结合本章与你的处境回应。" : "Responding with this chapter and your situation in view."))
-              : (isZh ? "写下具体处境，我会先理解，再结合本章与记忆回应。" : "Describe one concrete situation. I will understand first, then respond with this chapter and your memories in view.")}
+              : !isMember && state.remainingFreeQuestions === 0
+                ? (isZh ? "今日免费问道已用完，开通会员即可继续不限次数对话。" : "Today’s free questions are used. Join as a member to continue without limits.")
+                : (isZh ? "写下具体处境，我会先理解，再结合本章与记忆回应。" : "Describe one concrete situation. I will understand first, then respond with this chapter and your memories in view.")}
           </p>
           <div className="companion-home-actions">
             {(!Capacitor.isNativePlatform() && state.entitlement?.source === "stripe")
               || (Capacitor.getPlatform() === "ios" && state.entitlement?.source === "apple") ? (
                 <button className="companion-text-button" type="button" onClick={() => void manageMembership()}>{isZh ? "管理会员" : "Manage membership"}</button>
               ) : null}
+            {!isMember ? <button className="companion-text-button" type="button" onClick={() => setView("subscription")}>{isZh ? "开通会员" : "Join membership"}</button> : null}
             {asking ? <button className="companion-text-button" type="button" onClick={() => abortRef.current?.abort()}>{isZh ? "停止回答" : "Stop response"}</button> : null}
             {accessError ? <span className="companion-error" role="alert">{isZh ? "会员信息暂时未能刷新，当前会话仍可继续。" : "Membership details could not refresh; this conversation can continue."}</span> : null}
           </div>
