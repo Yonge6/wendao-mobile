@@ -17,6 +17,12 @@ for (let chapter = 1; chapter <= 81; chapter++) {
     for (const story of expected) {
       const essay = section.locator(`[data-story-slug="${story.slug}"]`);
       await expect(essay.getByRole('heading', { name: story.title })).toHaveCount(story.comic ? 0 : 1);
+      if (story.comic) {
+        const image = essay.locator('.life-story-comic img');
+        await image.scrollIntoViewIfNeeded();
+        await expect.poll(() => image.evaluate((node: HTMLImageElement) => [node.naturalWidth, node.naturalHeight])).toEqual([story.comic.width, story.comic.height]);
+        await expect(essay.locator('.life-story-comic-style a')).toHaveAttribute('href', story.comic.style.url);
+      }
       for (const text of [...story.paragraphs, story.quote, story.practice]) await expect(essay).toContainText(text);
       await expect(essay.getByRole('button', { name: '分享链接', exact: true })).toHaveCount(0);
       await expect(essay.getByRole('button', { name: '分享这一层', exact: true })).toHaveCount(1);
