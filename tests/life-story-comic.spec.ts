@@ -52,7 +52,7 @@ test('comic is also available in the drawer and its canonical public article', a
   const comic = page.locator('.drawer-story-detail .life-story-comic img');
   await comic.scrollIntoViewIfNeeded();
   await expect(comic).toBeVisible();
-  await expect(page.locator('.drawer-story-detail')).toContainText('12-panel comic in Chinese');
+  await expect(page.locator('.drawer-story-detail')).toContainText('Image style: Art Nouveau');
   await page.goto(`/situations/${slug}/index.html`);
   await expect(page.locator('#reading-body img')).toBeVisible();
   await expect(page.locator('#reading-body details')).not.toHaveAttribute('open', '');

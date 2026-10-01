@@ -24,7 +24,6 @@ export default function LifeStoryContent({ story, language, drawer = false, onOp
           alt={story.comic.alt} loading="lazy" decoding="async" draggable={false} />
       </button>
       <figcaption>
-        {isZh ? "12 格生活小故事 · 点图放大，可保存分享" : "12-panel comic in Chinese · Tap to enlarge, save or share"}
         {story.comic.style ? <span className="life-story-comic-style">
           <a href={story.comic.style.url} target="_blank" rel="noopener noreferrer"
             aria-label={isZh ? `在 Style Atlas 查看${story.comic.style.name}` : `Explore ${story.comic.style.nameEn} on Style Atlas`}>
