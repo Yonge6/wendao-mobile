@@ -4,13 +4,15 @@ import type { LifeStory } from '../src/lifeStoryShare';
 const stories: LifeStory[] = JSON.parse(readFileSync(new URL('../growth/copy.json', import.meta.url), 'utf8'));
 
 for (let chapter = 1; chapter <= 81; chapter++) {
-  test(`chapter ${chapter} includes all matching essays after its inspiration`, async ({ page }) => {
+  test(`chapter ${chapter} includes its primary comic or matching essays after its inspiration`, async ({ page }) => {
     await page.addInitScript(cid => localStorage.setItem('wendao-free-chapters-v1', JSON.stringify([cid])), chapter);
     await page.goto(`/?chapter=${chapter}&lang=zh&acceptance=1`);
     const article = page.locator('.chapter-current');
     const section = article.locator('.related-section + .life-stories-section');
     await expect(section.locator('.rail-label > span')).toHaveText('04');
-    const expected = stories.filter(s => s.chapter === chapter);
+    const matching = stories.filter(s => s.chapter === chapter);
+    const comics = matching.filter(s => s.comic);
+    const expected = comics.length ? comics : matching;
     await expect(section.locator('.chapter-life-story')).toHaveCount(expected.length);
     for (const story of expected) {
       const essay = section.locator(`[data-story-slug="${story.slug}"]`);
@@ -23,7 +25,7 @@ for (let chapter = 1; chapter <= 81; chapter++) {
 }
 
 for (const lang of ['zh', 'en']) {
-  test(`reader shares a second essay, restores scroll and resets chapter sharing: ${lang}`, async ({ page, context }) => {
+  test(`reader shares the chapter story, restores scroll and resets chapter sharing: ${lang}`, async ({ page, context }) => {
     test.setTimeout(45000);
     await page.setViewportSize({ width: lang === 'zh' ? 390 : 1100, height: 844 });
     await context.grantPermissions(['clipboard-read', 'clipboard-write']);
@@ -35,9 +37,10 @@ for (const lang of ['zh', 'en']) {
     await page.goto(`/?chapter=8&lang=${lang}&acceptance=1`);
     const section = page.locator('.chapter-current .life-stories-section');
     if (lang === 'en') await expect(section).toContainText('Essays in Chinese');
-    const story = stories.filter(s => s.chapter === 8)[1];
+    const matching = stories.filter(s => s.chapter === 8);
+    const story = matching.find(s => s.comic) ?? matching[0];
     const essay = section.locator(`[data-story-slug="${story.slug}"]`);
-    await expect(essay.getByRole('button')).toHaveCount(1);
+    await expect(essay.getByRole('button', { name: lang === 'zh' ? '分享这一层' : 'Share this layer', exact: true })).toHaveCount(1);
     await essay.getByRole('button', { name: lang === 'zh' ? '分享这一层' : 'Share this layer', exact: true }).click();
     const scroll = await page.getByTestId('mobile-scroll').evaluate(e => e.scrollTop);
     const sheet = page.getByRole('dialog', { name: lang === 'zh' ? '分享这篇文章' : 'Share this essay' });

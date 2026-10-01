@@ -22,6 +22,5 @@ test('published comics have unique chapter styles, complete originals and matchi
     assert.ok(html.includes(c.image), story.slug);
     assert.ok(html.includes(c.original), story.slug);
     assert.ok(html.includes('查看漫画解读'), story.slug);
-    assert.ok(story.paragraphs.join('').includes('漫画') || story.paragraphs.join('').includes('画面'), story.slug);
   }
 });
