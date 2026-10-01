@@ -28,7 +28,7 @@ export default function LifeStoryContent({ story, language, drawer = false, onOp
         {story.comic.style ? <span className="life-story-comic-style">
           <a href={story.comic.style.url} target="_blank" rel="noopener noreferrer"
             aria-label={isZh ? `在 Style Atlas 查看${story.comic.style.name}` : `Explore ${story.comic.style.nameEn} on Style Atlas`}>
-            {isZh ? "艺术风格：" : "Art style: "}{isZh ? story.comic.style.name : story.comic.style.nameEn} <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.25" aria-hidden="true"><path d="M5 3H3v10h10v-2M8 3h5v5M7 9l6-6" /></svg>
+            {isZh ? "图片风格：" : "Image style: "}{isZh ? story.comic.style.name : story.comic.style.nameEn} <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.25" aria-hidden="true"><path d="M5 3H3v10h10v-2M8 3h5v5M7 9l6-6" /></svg>
           </a>
         </span> : null}
       </figcaption>
