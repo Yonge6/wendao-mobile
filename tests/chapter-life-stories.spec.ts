@@ -14,7 +14,7 @@ for (let chapter = 1; chapter <= 81; chapter++) {
     await expect(section.locator('.chapter-life-story')).toHaveCount(expected.length);
     for (const story of expected) {
       const essay = section.locator(`[data-story-slug="${story.slug}"]`);
-      await expect(essay.getByRole('heading', { name: story.title })).toHaveCount(1);
+      await expect(essay.getByRole('heading', { name: story.title })).toHaveCount(story.comic ? 0 : 1);
       for (const text of [...story.paragraphs, story.quote, story.practice]) await expect(essay).toContainText(text);
       await expect(essay.getByRole('button', { name: '分享链接', exact: true })).toHaveCount(0);
       await expect(essay.getByRole('button', { name: '分享这一层', exact: true })).toHaveCount(1);

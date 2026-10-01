@@ -12,3 +12,9 @@ Keep the existing canonical situation URL and show the same comic there, with th
 - Mobile day/night reading, zoom and sideways scroll, exact PNG download, drawer and canonical article, English navigation, and existing chapter sharing passed browser checks. Runtime integrity and the production build passed.
 - Previous production remains at `/srv/wonderelian/backups/wendao-before-922d6d9-20261001`. The deploy streamed the CI artifact to a separate staging directory before an atomic exchange.
 - Existing App Store binary was not changed.
+
+## Follow-up corrections
+
+The inline comic omits its duplicate outer title and chapter metadata. The collapsed reflection now explains Xiaolin's box, coriander interruption, three-minute talk, and the final notebook/plant details before connecting them to chapter 32. A single art-style line opens the verified Art Nouveau detail with an external-link icon; its URL is not displayed. The new `chapter-32-art-nouveau-qr` assets preserve the original 12 panels and logo combination, with a smaller logo on the left and a vertically centered H5 QR on the right, without a QR caption. The QR resolves to the canonical public story. The old assets remain for existing links.
+
+The QR was decoded from the finished full-size PNG with Apple's Vision framework. Day/night mobile comic reading and exact PNG sharing, drawer/canonical article checks, type checking, content integrity and protected-runtime checks passed.

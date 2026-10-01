@@ -10,7 +10,10 @@ export type LifeStory = {
   paragraphs: string[];
   quote: string;
   practice: string;
-  comic?: { title: string; image: string; original: string; width: number; height: number; alt: string };
+  comic?: {
+    title: string; image: string; original: string; width: number; height: number; alt: string;
+    style?: { name: string; nameEn: string; url: string };
+  };
 };
 
 export function lifeStoryUrl(story: LifeStory) {

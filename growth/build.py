@@ -42,7 +42,10 @@ for i in ITEMS:
 <section class="quiet"><h2>把这一刻，带回第 {cid} 章。</h2><p>继续看完整校读正文、逐句今译和本章的生活启发。</p><a class="button" data-action="chapter_click" href="/?chapter={cid}&lang=zh">继续读第 {cid} 章 <span>→</span></a><p class="small">今日推荐免费。其他章节可在剩余名额内主动保留，总计 10 章；名额用尽后仍可读今日推荐。</p><a class="download" data-action="store_click" href="/download.html?chapter={cid}&lang=zh">下载 App，方便每天回来 ↗</a><p class="small">AI 问道为会员服务，章节买断不含 AI。<br>实际价格以 App Store 显示为准。</p></section>'''
     if comic := i.get('comic'):
         comic_markup = f'''<figure style="margin:0 0 24px"><a href="{esc(comic['original'])}" target="_blank" rel="noopener" aria-label="放大阅读漫画"><img src="{esc(comic['image'])}" width="{comic['width']}" height="{comic['height']}" alt="{esc(comic['alt'])}" style="display:block;width:100%;height:auto" fetchpriority="high"></a><figcaption class="small">12 格生活小故事 · 点图放大</figcaption></figure><p><a class="button" href="{esc(comic['original'])}" download="wendao-story-{esc(slug)}.png">保存完整漫画 ↓</a></p>'''
-        body = body.replace('<article id="reading-body">', '<article id="reading-body">' + comic_markup + '<details><summary style="cursor:pointer;margin:24px 0">查看文字解读</summary>', 1)
+        if style := comic.get('style'):
+            credit = f'<span style="display:block;margin-top:10px"><a href="{esc(style["url"])}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:6px;padding:6px 0">艺术风格：{esc(style["name"])} <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.25" aria-hidden="true"><path d="M5 3H3v10h10v-2M8 3h5v5M7 9l6-6"/></svg></a></span>'
+            comic_markup = comic_markup.replace('</figcaption>', credit + '</figcaption>', 1)
+        body = body.replace('<article id="reading-body">', '<article id="reading-body">' + comic_markup + '<details><summary style="cursor:pointer;margin:24px 0">查看漫画解读</summary>', 1)
         body = body.replace('<span id="reading-end"', '</details><span id="reading-end"', 1)
     out=PUBLIC/'situations'/slug;out.mkdir(parents=True,exist_ok=True)
     body += related(i, ITEMS)

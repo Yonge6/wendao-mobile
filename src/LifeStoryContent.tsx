@@ -23,8 +23,16 @@ export default function LifeStoryContent({ story, language, drawer = false, onOp
         <img src={story.comic.image} width={story.comic.width} height={story.comic.height}
           alt={story.comic.alt} loading="lazy" decoding="async" draggable={false} />
       </button>
-      <figcaption>{isZh ? "12 格生活小故事 · 点图放大，可保存分享" : "12-panel comic in Chinese · Tap to enlarge, save or share"}</figcaption>
+      <figcaption>
+        {isZh ? "12 格生活小故事 · 点图放大，可保存分享" : "12-panel comic in Chinese · Tap to enlarge, save or share"}
+        {story.comic.style ? <span className="life-story-comic-style">
+          <a href={story.comic.style.url} target="_blank" rel="noopener noreferrer"
+            aria-label={isZh ? `在 Style Atlas 查看${story.comic.style.name}` : `Explore ${story.comic.style.nameEn} on Style Atlas`}>
+            {isZh ? "艺术风格：" : "Art style: "}{isZh ? story.comic.style.name : story.comic.style.nameEn} <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.25" aria-hidden="true"><path d="M5 3H3v10h10v-2M8 3h5v5M7 9l6-6" /></svg>
+          </a>
+        </span> : null}
+      </figcaption>
     </figure>
-    <details className="life-story-text"><summary>{isZh ? "查看文字解读" : "Read the Chinese reflection"}</summary>{text}</details>
+    <details className="life-story-text"><summary>{isZh ? "查看漫画解读" : "Read the comic reflection (Chinese)"}</summary>{text}</details>
   </>;
 }

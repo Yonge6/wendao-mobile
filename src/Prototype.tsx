@@ -2664,9 +2664,11 @@ export default function Prototype() {
                     <div className="section-copy">
                       {!isZh ? <p className="chapter-story-note">Essays in Chinese · Reflections on this chapter</p> : null}
                       {lifeStories.filter(story => story.chapter === chapter.id).map(story => (
-                        <article className="chapter-life-story" lang="zh-CN" key={story.slug} data-story-slug={story.slug}>
-                          <h2>{story.title}</h2>
-                          <p className="chapter-story-note chapter-story-meta">{story.theme} · 第 {chapter.id} 章</p>
+                        <article className="chapter-life-story" lang="zh-CN" key={story.slug} data-story-slug={story.slug} aria-label={story.comic?.title ?? story.title}>
+                          {!story.comic ? <>
+                            <h2>{story.title}</h2>
+                            <p className="chapter-story-note chapter-story-meta">{story.theme} · 第 {chapter.id} 章</p>
+                          </> : null}
                           <LifeStoryContent story={story} language={language} onOpenComic={() => openStoryShare(story)} />
                           <button className="section-share-action" type="button" onClick={() => openStoryShare(story)}>
                             <Share1Icon /><span>{isZh ? "分享这一层" : "Share this layer"}</span>

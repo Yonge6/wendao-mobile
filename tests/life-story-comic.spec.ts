@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 
 const slug = 'a-label-is-not-a-whole-person';
-const source = readFileSync(new URL('../public/assets/wendao/comics/chapter-32-art-nouveau.png', import.meta.url));
+const source = readFileSync(new URL('../public/assets/wendao/comics/chapter-32-art-nouveau-qr.png', import.meta.url));
 for (const theme of ['light', 'dark']) {
   test(`comic reading, enlargement and exact PNG sharing on mobile: ${theme}`, async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
@@ -18,9 +18,9 @@ for (const theme of ['light', 'dark']) {
     await comic.scrollIntoViewIfNeeded();
     await expect.poll(() => comic.evaluate((img: HTMLImageElement) => img.naturalHeight)).toBe(3336);
     await expect(story.locator('details')).not.toHaveAttribute('open', '');
-    await story.getByText('查看文字解读', { exact: true }).click();
+    await story.getByText('查看漫画解读', { exact: true }).click();
     await expect(story.locator('.chapter-life-story-body')).toBeVisible();
-    await story.getByText('查看文字解读', { exact: true }).click();
+    await story.getByText('查看漫画解读', { exact: true }).click();
     await story.getByRole('button', { name: /放大阅读漫画/ }).click();
     const sheet = page.getByRole('dialog', { name: '分享这篇文章' });
     const image = sheet.locator('.share-card-preview img');
@@ -56,6 +56,6 @@ test('comic is also available in the drawer and its canonical public article', a
   await page.goto(`/situations/${slug}/index.html`);
   await expect(page.locator('#reading-body img')).toBeVisible();
   await expect(page.locator('#reading-body details')).not.toHaveAttribute('open', '');
-  await page.getByText('查看文字解读', { exact: true }).click();
-  await expect(page.locator('#reading-body details')).toContainText('同时保留修改它的权利');
+  await page.getByText('查看漫画解读', { exact: true }).click();
+  await expect(page.locator('#reading-body details')).toContainText('允许后来的生活继续补充答案');
 });

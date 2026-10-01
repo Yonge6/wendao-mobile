@@ -3674,6 +3674,10 @@ textarea {
   font-size: 12px; line-height: 1.7; text-align: center;
 }
 .life-story-text { margin: 18px 0; color: var(--ink); }
+.life-story-comic-style { display: block; margin-top: 9px; font-size: 13px; }
+.life-story-comic-style a { display: inline-flex; align-items: center; gap: 6px; padding: 6px 0; color: var(--ink); text-decoration: none; }
+.life-story-comic-style a:hover { text-decoration: underline; text-underline-offset: 4px; }
+.life-story-comic-style svg { flex: none; }
 .life-story-text summary { padding: 10px 0; cursor: pointer; color: var(--ink-soft); font-family: var(--sans); font-size: 14px; }
 .life-story-text[open] summary { margin-bottom: 12px; }
 .comic-zoom-toggle {
