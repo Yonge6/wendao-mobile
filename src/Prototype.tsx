@@ -1934,6 +1934,9 @@ export default function Prototype() {
     try { sessionStorage.setItem("wendao-app-banner-dismissed", "1"); } catch { /* Keep the in-memory dismissal. */ }
   };
   const [language, setLanguage] = useState<Language>(initialRequest.language);
+  useEffect(() => {
+    document.documentElement.lang = language === "zh" ? "zh-CN" : "en";
+  }, [language]);
   const [recommendationDate] = useState(localDateKey);
   const [chapterId, setChapterId] = useState(() => initialRequest.chapterId ?? dailyChapterId(recommendationDate));
   const [chapterEntrySource, setChapterEntrySource] = useState<ChapterEntrySource>(initialRequest.chapterId ? "link" : "daily");

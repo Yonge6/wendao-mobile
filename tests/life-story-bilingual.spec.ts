@@ -44,6 +44,7 @@ test('English reflection, drawer, copy and public article stay in English; Chine
     Object.defineProperty(navigator, 'share', { value: undefined, configurable: true });
   });
   await page.goto('/?chapter=32&section=stories&lang=en&acceptance=1');
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en');
   const story = page.locator(`.chapter-current [data-story-slug="${slug}"]`);
   await expect(story).toHaveAttribute('lang', 'en');
   for (const paragraph of english[slug].paragraphs) await expect(story).toContainText(paragraph);
