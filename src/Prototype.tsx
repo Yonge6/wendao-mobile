@@ -74,6 +74,12 @@ import {
   READING_ACCESS_CHANGED_EVENT,
 } from "./readingAccess";
 
+function storiesForChapter(chapterId: number) {
+  const stories = lifeStories.filter(story => story.chapter === chapterId);
+  const comics = stories.filter(story => story.comic);
+  return comics.length ? comics : stories;
+}
+
 const ShareCardPanel = lazy(() => import("./ShareCardPanel"));
 const CompanionPanel = lazy(() => import("./companion/CompanionPanel"));
 const LifeManualReading = lazy(() => import("./LifeManualReading"));
@@ -2673,7 +2679,7 @@ export default function Prototype() {
                     </aside>
                     <div className="section-copy">
                       {!isZh ? <p className="chapter-story-note">Essays in Chinese · Reflections on this chapter</p> : null}
-                      {lifeStories.filter(story => story.chapter === chapter.id).map(story => (
+                      {storiesForChapter(chapter.id).map(story => (
                         <article className="chapter-life-story" lang="zh-CN" key={story.slug} data-story-slug={story.slug} aria-label={story.comic?.title ?? story.title}>
                           {!story.comic ? <>
                             <h2>{story.title}</h2>
