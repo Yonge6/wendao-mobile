@@ -191,7 +191,7 @@ export default function ShareCardPanel({
       <div className="wechat-image-instructions" role="status">
         <strong>{wechatAction === "save"
           ? (isZh ? "长按下方图片，选择保存到相册" : "Press and hold the image to save it to Photos")
-          : (isZh ? "长按下方图片，选择发送给朋友" : "Press and hold the image to send it to a friend")}</strong>
+          : (isZh ? "长按下方图片，选择分享或发送" : "Press and hold the image, then choose Share or Send")}</strong>
         <p>{wechatAction === "save"
           ? (isZh ? "完整长图可向下滑动，保存操作由微信完成。" : "Scroll to view the full image. Finish saving in WeChat.")
           : (isZh ? "如果没有发送选项，可先保存，再从微信相册发送。" : "If Send is unavailable, save it first and send it from your photo library.")}</p>

@@ -24,7 +24,7 @@ for (const [platform, userAgent] of Object.entries(agents)) {
         await expect(panel.locator('.share-card-preview img')).toBeVisible({ timeout: 20000 });
         for (const action of ['保存图片', '分享图片']) {
           await panel.getByRole('button', { name: action, exact: true }).click();
-          await expect(panel.locator('.wechat-image-instructions')).toContainText(action === '保存图片' ? '选择保存到相册' : '选择发送给朋友');
+          await expect(panel.locator('.wechat-image-instructions')).toContainText(action === '保存图片' ? '选择保存到相册' : '选择分享或发送');
           const img = panel.locator('.wechat-image-scroll img');
           await expect.poll(() => img.evaluate((e: HTMLImageElement) => e.naturalWidth)).toBe(comic ? 1024 : 1080);
           const src = await img.getAttribute('src');

@@ -60,6 +60,7 @@ import type { ShareCardKind } from "./shareCard";
 import { buildLifeStoryShareCardContent, lifeStoryUrl, type LifeStory } from "./lifeStoryShare";
 import { initializeNativeShell, nativeImpact, runtimeSurface, syncNativeTheme, shareLink } from "./native";
 import AppStoreDownloadLink from "./companion/AppStoreDownloadLink";
+import AppDownloadBanner from "./AppDownloadBanner";
 import { WENDAO_APP_STORE_REVIEW_URL } from "./companion/plans";
 import { loadStoreKitEntitlements, reviewStoreKit, STOREKIT_PRODUCTS } from "./companion/storekit";
 import { companionClient } from "./companion/client";
@@ -1915,6 +1916,14 @@ export default function Prototype() {
   useReadingResizeAnchor();
   const initialRequest = useRef(initialReadingRequest()).current;
   const webSupportEnabled = runtimeSurface() === "web";
+  const [appBannerDismissed, setAppBannerDismissed] = useState(() => {
+    try { return sessionStorage.getItem("wendao-app-banner-dismissed") === "1"; } catch { return false; }
+  });
+  const showAppBanner = webSupportEnabled && !appBannerDismissed;
+  const dismissAppBanner = () => {
+    setAppBannerDismissed(true);
+    try { sessionStorage.setItem("wendao-app-banner-dismissed", "1"); } catch { /* Keep the in-memory dismissal. */ }
+  };
   const [language, setLanguage] = useState<Language>(initialRequest.language);
   const [recommendationDate] = useState(localDateKey);
   const [chapterId, setChapterId] = useState(() => initialRequest.chapterId ?? dailyChapterId(recommendationDate));
@@ -2422,7 +2431,8 @@ export default function Prototype() {
   };
 
   return (
-    <div className={`wendao-workspace${companionOpen ? " is-companion-open" : ""}`}>
+    <div className={`wendao-workspace${companionOpen ? " is-companion-open" : ""}${showAppBanner ? " has-app-banner" : ""}`}>
+      {showAppBanner ? <AppDownloadBanner language={language} onClose={dismissAppBanner} /> : null}
       <header
         className={`reading-header reading-header-fixed ${isReadingScrolled ? "is-scrolled" : ""}`}
         aria-label={isZh ? "阅读工具" : "Reading tools"}

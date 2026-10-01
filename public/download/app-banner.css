@@ -1,0 +1,30 @@
+/* One dismissible App download banner for every H5 browser. */
+.wendao-workspace.has-app-banner { --app-banner-height: 80px; }
+.has-app-banner .reading-header-fixed { top: var(--app-banner-height); }
+.app-download-banner {
+  position: fixed; z-index: 13; top: 0; left: 50%; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 10px; box-sizing: border-box;
+  width: min(100%, 720px); height: calc(80px + env(safe-area-inset-top, 0px));
+  padding: calc(12px + env(safe-area-inset-top, 0px)) 18px 12px 8px;
+  background: var(--paper); color: var(--ink); border-bottom: 1px solid var(--gold-light, #d6c8aa);
+  font-family: var(--sans, -apple-system, BlinkMacSystemFont, sans-serif);
+}
+.app-download-banner-close { display: grid; place-items: center; flex: none; width: 28px; height: 44px; padding: 0; border: 0; background: transparent; color: var(--ink-soft, #596c64); cursor: pointer; }
+.app-download-banner > img { flex: none; width: 48px; height: 48px; border-radius: 11px; }
+.app-download-banner-copy { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 4px; }
+.app-download-banner-copy strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; line-height: 1.5; font-weight: 500; }
+.app-download-banner-copy span { font-size: 10px; line-height: 1.5; color: var(--ink-soft, #596c64); }
+.app-download-banner-action { flex: none; padding: 9px 12px; border: 1px solid var(--gold-light, #d6c8aa); border-radius: 999px; color: var(--ink); background: transparent; text-decoration: none; font-size: 12px; line-height: 1.3; white-space: nowrap; }
+.app-download-banner :focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+@media (max-width: 359px) {
+  .app-download-banner { gap: 7px; padding-right: 12px; padding-left: 4px; }
+  .app-download-banner > img { width: 42px; height: 42px; }
+  .app-download-banner-copy strong { font-size: 12px; }
+  .app-download-banner-action { padding: 8px 9px; font-size: 11px; }
+}
+@media (min-width: 800px) {
+  .wendao-workspace.is-companion-open .app-download-banner { left: max(0px, calc((100vw - 1440px) / 2)); width: min(50vw, 720px); transform: none; }
+}
+
+body.has-app-banner { padding-top: calc(80px + env(safe-area-inset-top, 0px)); }
+body.has-app-banner .app-download-banner { width: min(100%, 1080px); }

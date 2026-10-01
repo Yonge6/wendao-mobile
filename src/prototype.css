@@ -138,7 +138,7 @@ textarea {
   position: relative;
   z-index: 1;
   min-height: 100%;
-  padding: calc(env(safe-area-inset-top, 0px) + 91px) 24px calc(env(safe-area-inset-bottom, 0px) + 118px);
+  padding: calc(env(safe-area-inset-top, 0px) + 91px + var(--app-banner-height, 0px)) 24px calc(env(safe-area-inset-bottom, 0px) + 118px);
   background: transparent;
   font-family: var(--serif);
 }

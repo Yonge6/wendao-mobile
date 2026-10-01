@@ -21,7 +21,7 @@ def shell(title, description, path, body, slug='start', metadata=''):
 <meta property="og:description" content="{esc(description)}"><meta property="og:type" content="{'article' if path.startswith('/situations/') else 'website'}">
 <meta property="og:url" content="{ORIGIN}{path}"><meta name="theme-color" content="#f7f1e6">
 <meta property="og:site_name" content="三慢问道"><meta name="author" content="三慢问道">{metadata}
-<link rel="stylesheet" href="/growth/editorial.css?v={STYLE_VERSION}"><script src="/growth/reading.js?v={SCRIPT_VERSION}" defer></script>
+<link rel="stylesheet" href="/growth/editorial.css?v={STYLE_VERSION}"><link rel="stylesheet" href="/download/app-banner.css?v=20261001"><script src="/download/app-banner.js?v=20261001" defer></script><script src="/growth/reading.js?v={SCRIPT_VERSION}" defer></script>
 </head><body data-page="{slug}"><a class="skip" href="#main">跳到正文</a>
 <header><a class="brand" href="/start/">三慢问道<span>WENDAO</span></a><a href="/?lang=zh" data-action="chapter_click">读今日一章 ↗</a></header>
 <main id="main">{body}</main>
