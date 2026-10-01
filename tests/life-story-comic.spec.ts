@@ -45,14 +45,14 @@ for (const theme of ['light', 'dark']) {
 }
 
 test('comic is also available in the drawer and its canonical public article', async ({ page }) => {
-  await page.goto('/?lang=en&acceptance=1');
-  await page.getByRole('button', { name: 'Open more' }).click();
-  await page.getByRole('button', { name: /Tao in everyday life/ }).click();
+  await page.goto('/?lang=zh&acceptance=1');
+  await page.getByRole('button', { name: '打开更多功能' }).click();
+  await page.getByRole('button', { name: /生活里的道/ }).click();
   await page.getByRole('button', { name: /测出一个类型，不必把自己装进去/ }).click();
   const comic = page.locator('.drawer-story-detail .life-story-comic img');
   await comic.scrollIntoViewIfNeeded();
   await expect(comic).toBeVisible();
-  await expect(page.locator('.drawer-story-detail')).toContainText('Image style: Art Nouveau');
+  await expect(page.locator('.drawer-story-detail')).toContainText('图片风格：新艺术风格 Art Nouveau');
   await page.goto(`/situations/${slug}/index.html`);
   await expect(page.locator('#reading-body img')).toBeVisible();
   await expect(page.locator('#reading-body details')).not.toHaveAttribute('open', '');

@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import type { LifeStory } from '../src/lifeStoryShare';
 const stories: LifeStory[] = JSON.parse(readFileSync(new URL('../growth/copy.json', import.meta.url), 'utf8'));
+const english = JSON.parse(readFileSync(new URL('../growth/copy-en.json', import.meta.url), 'utf8'));
 
 for (let chapter = 1; chapter <= 81; chapter++) {
   test(`chapter ${chapter} includes its primary comic or matching essays after its inspiration`, async ({ page }) => {
@@ -30,7 +31,7 @@ for (let chapter = 1; chapter <= 81; chapter++) {
   });
 }
 
-for (const lang of ['zh', 'en']) {
+for (const lang of ['zh', 'en'] as const) {
   test(`reader shares the chapter story, restores scroll and resets chapter sharing: ${lang}`, async ({ page, context }) => {
     test.setTimeout(45000);
     await page.setViewportSize({ width: lang === 'zh' ? 390 : 1100, height: 844 });
@@ -42,9 +43,11 @@ for (const lang of ['zh', 'en']) {
     });
     await page.goto(`/?chapter=8&lang=${lang}&acceptance=1`);
     const section = page.locator('.chapter-current .life-stories-section');
-    if (lang === 'en') await expect(section).toContainText('Essays in Chinese');
     const matching = stories.filter(s => s.chapter === 8);
-    const story = matching.find(s => s.comic) ?? matching[0];
+    const source = matching.find(s => s.comic) ?? matching[0];
+    const translation = lang === 'en' ? english[source.slug] : undefined;
+    const story: LifeStory = translation ? { ...source, ...translation, language: 'en', comic: translation.comic ? { ...source.comic, ...translation.comic } : undefined } : { ...source, language: 'zh' };
+    if (lang === 'en' && story.language !== 'en') await expect(section).toContainText('Essays in Chinese');
     const essay = section.locator(`[data-story-slug="${story.slug}"]`);
     await expect(essay.getByRole('button', { name: lang === 'zh' ? '分享这一层' : 'Share this layer', exact: true })).toHaveCount(1);
     await essay.getByRole('button', { name: lang === 'zh' ? '分享这一层' : 'Share this layer', exact: true }).click();
@@ -55,7 +58,7 @@ for (const lang of ['zh', 'en']) {
     for (const text of [...story.paragraphs, story.practice, story.quote]) expect(label).toContain(text);
     await expect(page.locator('.ai-composer')).toHaveCount(0);
     await sheet.getByRole('button', { name: lang === 'zh' ? '分享链接' : 'Share link', exact: true }).click();
-    await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(`https://wendao.wonderelian.com/situations/${story.slug}/`);
+    await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(`https://wendao.wonderelian.com/situations/${story.slug}/${story.language === 'en' ? 'en/' : ''}`);
     await page.keyboard.press('Escape');
     await expect(sheet).toHaveCount(0);
     expect(await page.getByTestId('mobile-scroll').evaluate(e => e.scrollTop)).toBe(scroll);

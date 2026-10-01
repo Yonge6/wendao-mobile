@@ -33,7 +33,9 @@
   const optedOut = () => safeGet('wendao-growth-optout') === '1' || navigator.globalPrivacyControl === true;
   function showChoice() {
     if (!choice) return;
-    choice.textContent = optedOut() ? '匿名阅读统计已关闭' : '关闭匿名阅读统计';
+    choice.textContent = document.documentElement.lang.startsWith('en')
+      ? (optedOut() ? 'Anonymous reading statistics are off' : 'Turn off anonymous reading statistics')
+      : (optedOut() ? '匿名阅读统计已关闭' : '关闭匿名阅读统计');
     choice.setAttribute('aria-pressed', String(optedOut()));
   }
   choice?.addEventListener('click', () => {

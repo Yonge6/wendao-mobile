@@ -2,9 +2,12 @@ import { expect, test } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import type { LifeStory } from "../src/lifeStoryShare";
 const stories = JSON.parse(readFileSync(new URL("../growth/copy.json", import.meta.url), "utf8")) as LifeStory[];
+const english = JSON.parse(readFileSync(new URL("../growth/copy-en.json", import.meta.url), "utf8"));
 
 for (const language of ["zh", "en"] as const) {
-  for (const story of stories) {
+  for (const source of stories) {
+  const translation = language === 'en' ? english[source.slug] : undefined;
+  const story: LifeStory = translation ? { ...source, ...translation, language: 'en', comic: translation.comic ? { ...source.comic, ...translation.comic } : undefined } : { ...source, language: 'zh' };
   test(`article ${story.slug} shares its own link and complete poster, retaining reading position: ${language}`, async ({ page, context }) => {
     await page.setViewportSize({ width: language === "zh" ? 390 : 1100, height: 844 });
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
@@ -12,9 +15,9 @@ for (const language of ["zh", "en"] as const) {
     await page.goto(`/?lang=${language}&acceptance=1`);
     await page.getByRole("button", { name: language === "zh" ? "打开更多功能" : "Open more" }).click();
     await page.getByRole("button", { name: /生活里的道|Tao in everyday life/ }).click();
-      await page.getByRole("button", { name: new RegExp(story.title) }).click();
+      await page.locator('.drawer-story-card').filter({ hasText: story.title }).click();
       await page.locator(".side-drawer").getByRole("button", { name: language === "zh" ? "分享链接" : "Share link", exact: true }).click();
-      const url = `https://wendao.wonderelian.com/situations/${story.slug}/`;
+      const url = `https://wendao.wonderelian.com/situations/${story.slug}/${story.language === 'en' ? 'en/' : ''}`;
       await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(url);
       await expect(page.locator(".drawer-story-feedback")).toContainText(language === "zh" ? "文章链接已复制" : "Article link copied");
       await page.locator(".side-drawer").getByRole("button", { name: language === "zh" ? "分享图片" : "Share image", exact: true }).click();
@@ -30,7 +33,7 @@ for (const language of ["zh", "en"] as const) {
       await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(url);
       const download = page.waitForEvent("download");
       await sheet.getByRole("button", { name: language === "zh" ? "保存图片" : "Save image", exact: true }).click();
-      expect((await download).suggestedFilename()).toBe(`wendao-story-${story.slug}.png`);
+      expect((await download).suggestedFilename()).toBe(`wendao-story-${story.slug}${story.language === 'en' ? '-en' : ''}.png`);
       await sheet.getByRole("button", { name: "关闭", exact: true }).click();
       await expect(page.locator(".side-drawer").getByRole("heading", { name: story.title })).toBeVisible();
       await page.locator(".drawer-scroll").evaluate(e => { e.scrollTop = 320; });

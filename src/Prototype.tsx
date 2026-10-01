@@ -58,6 +58,7 @@ import {
 } from "./dailyNotifications";
 import type { ShareCardKind } from "./shareCard";
 import { buildLifeStoryShareCardContent, lifeStoryUrl, type LifeStory } from "./lifeStoryShare";
+import { localizeLifeStory } from "./lifeStoryLocale";
 import { initializeNativeShell, nativeImpact, runtimeSurface, syncNativeTheme, shareLink } from "./native";
 import AppStoreDownloadLink from "./companion/AppStoreDownloadLink";
 import AppDownloadBanner from "./AppDownloadBanner";
@@ -74,10 +75,10 @@ import {
   READING_ACCESS_CHANGED_EVENT,
 } from "./readingAccess";
 
-function storiesForChapter(chapterId: number) {
+function storiesForChapter(chapterId: number, language: "zh" | "en") {
   const stories = lifeStories.filter(story => story.chapter === chapterId);
   const comics = stories.filter(story => story.comic);
-  return comics.length ? comics : stories;
+  return (comics.length ? comics : stories).map(story => localizeLifeStory(story, language));
 }
 
 const ShareCardPanel = lazy(() => import("./ShareCardPanel"));
@@ -968,7 +969,8 @@ function SideDrawer({
   const [profileEditing, setProfileEditing] = useState(false);
   const drawerScrollRef = useRef<HTMLDivElement>(null);
   const [storySlug, setStorySlug] = useState(lifeStories[0]?.slug);
-  const activeStory = lifeStories.find((story) => story.slug === storySlug) ?? lifeStories[0];
+  const localizedStories = useMemo(() => lifeStories.map(story => localizeLifeStory(story, language)), [language]);
+  const activeStory = localizedStories.find((story) => story.slug === storySlug) ?? localizedStories[0];
   const [storyShareOpen, setStoryShareOpen] = useState(false);
   const [storyFeedback, setStoryFeedback] = useState<{ message: string } | null>(null);
   const storyCard = useMemo(() => activeStory ? buildLifeStoryShareCardContent(activeStory) : undefined, [activeStory]);
@@ -1223,7 +1225,7 @@ function SideDrawer({
                   <span className="drawer-nav-icon"><ReaderIcon /></span>
                   <span>
                     <strong>{isZh ? "生活里的道" : "Tao in everyday life"}</strong>
-                    <small>{isZh ? "从一件小事，读懂一句经典" : "Small moments, timeless words · Chinese essays"}</small>
+                    <small>{isZh ? "从一件小事，读懂一句经典" : "Small moments, timeless words"}</small>
                   </span>
                   <ChevronRightIcon />
                 </button>
@@ -1322,16 +1324,16 @@ function SideDrawer({
             <section className="drawer-stories" aria-label={isZh ? "生活里的道文章列表" : "Everyday reflections"}>
               <p className="drawer-stories-intro">{isZh
                 ? "带着此刻的处境，读一段，停一停。这里收录三慢问道的生活随笔，慢慢更新。"
-                : "Read, pause, and bring a small moment of life to the Daodejing. These essays are currently in Chinese."}</p>
+                : "Read, pause, and bring a small moment of life to the Daodejing."}</p>
               <div className="drawer-story-list">
-                {lifeStories.map((story, index) => (
+                {localizedStories.map((story, index) => (
                   <button className="drawer-story-card" type="button" key={story.slug} onClick={() => {
                     setStorySlug(story.slug);
                     onViewChange("story");
                   }}>
                     <span className="drawer-story-number" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
-                    <span className="drawer-story-copy" lang="zh-CN">
-                      <small>{story.theme} · 第 {story.chapter} 章</small>
+                    <span className="drawer-story-copy" lang={story.language === "en" ? "en" : "zh-CN"}>
+                      <small>{story.theme} · {story.language === "en" ? `Chapter ${story.chapter}` : `第 ${story.chapter} 章`}{!isZh && story.language !== "en" ? " · Chinese" : ""}</small>
                       <strong>{story.title}</strong>
                       <span>{story.teaser}</span>
                     </span>
@@ -1344,10 +1346,11 @@ function SideDrawer({
           ) : null}
 
           {view === "story" && activeStory ? (
-            <article className="drawer-story-detail" lang="zh-CN">
-              <span className="drawer-kicker">{activeStory.theme} · 慢读约 3 分钟</span>
+            <article className="drawer-story-detail" lang={activeStory.language === "en" ? "en" : "zh-CN"}>
+              <span className="drawer-kicker">{activeStory.theme} · {activeStory.language === "en" ? "A 3-minute pause" : "慢读约 3 分钟"}</span>
               <h3>{activeStory.title}</h3>
-              <p className="drawer-story-note">三慢问道创作记录</p>
+              <p className="drawer-story-note">{activeStory.language === "en" ? "Wendao editorial" : "三慢问道创作记录"}</p>
+              {!isZh && activeStory.language !== "en" ? <p className="drawer-story-note" lang="en">This reflection is currently in Chinese.</p> : null}
               <div className="drawer-story-share-actions">
                 <button type="button" onClick={() => void shareStoryLink()}><Link2Icon />{isZh ? "分享链接" : "Share link"}</button>
                 <button type="button" onClick={() => setStoryShareOpen(true)}><ImageIcon />{isZh ? "分享图片" : "Share image"}</button>
@@ -1356,7 +1359,7 @@ function SideDrawer({
               <button className="drawer-primary drawer-story-continue" type="button" onClick={() => onStoryChapterOpen(activeStory.chapter)}>
                 {isZh ? `继续读第 ${activeStory.chapter} 章` : `Read chapter ${activeStory.chapter}`}<ArrowRightIcon />
               </button>
-              <p className="drawer-story-note">AI 辅助编辑，引文经产品校读库核对。生活解读是当代观察，不是古文逐字翻译。</p>
+              <p className="drawer-story-note">{activeStory.language === "en" ? "AI-assisted editing. Source excerpts are checked against Wendao's reading edition. These are contemporary reflections, not line-by-line translations." : "AI 辅助编辑，引文经产品校读库核对。生活解读是当代观察，不是古文逐字翻译。"}</p>
             </article>
           ) : null}
 
@@ -1939,7 +1942,7 @@ export default function Prototype() {
   const [directoryFocusRequested, setDirectoryFocusRequested] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [sharedLifeStory, setSharedLifeStory] = useState<LifeStory | null>(null);
-  const sharedStoryCard = useMemo(() => sharedLifeStory ? buildLifeStoryShareCardContent(sharedLifeStory) : undefined, [sharedLifeStory]);
+  const sharedStoryCard = useMemo(() => sharedLifeStory ? buildLifeStoryShareCardContent(localizeLifeStory(lifeStories.find(story => story.slug === sharedLifeStory.slug) ?? sharedLifeStory, language)) : undefined, [sharedLifeStory, language]);
   const [shareChapterId, setShareChapterId] = useState(chapterId);
   const [shareInitialKind, setShareInitialKind] = useState<ShareCardKind>("verse");
   const [companionShare, setCompanionShare] = useState<{ answer: string } | null>(null);
@@ -2678,12 +2681,12 @@ export default function Prototype() {
                       <span className="rail-line rail-fill" />
                     </aside>
                     <div className="section-copy">
-                      {!isZh ? <p className="chapter-story-note">Essays in Chinese · Reflections on this chapter</p> : null}
-                      {storiesForChapter(chapter.id).map(story => (
-                        <article className="chapter-life-story" lang="zh-CN" key={story.slug} data-story-slug={story.slug} aria-label={story.comic?.title ?? story.title}>
+                      {storiesForChapter(chapter.id, language).map(story => (
+                        <article className="chapter-life-story" lang={story.language === "en" ? "en" : "zh-CN"} key={story.slug} data-story-slug={story.slug} aria-label={story.comic?.title ?? story.title}>
+                          {!isZh && story.language !== "en" ? <p className="chapter-story-note" lang="en">Essays in Chinese · Reflections on this chapter</p> : null}
                           {!story.comic ? <>
                             <h2>{story.title}</h2>
-                            <p className="chapter-story-note chapter-story-meta">{story.theme} · 第 {chapter.id} 章</p>
+                            <p className="chapter-story-note chapter-story-meta">{story.theme} · {story.language === "en" ? `Chapter ${chapter.id}` : `第 ${chapter.id} 章`}</p>
                           </> : null}
                           <LifeStoryContent story={story} language={language} onOpenComic={() => openStoryShare(story)} />
                           <button className="section-share-action" type="button" onClick={() => openStoryShare(story)}>
@@ -2691,7 +2694,7 @@ export default function Prototype() {
                           </button>
                         </article>
                       ))}
-                      <p className="chapter-story-note" lang="zh-CN">AI 辅助编辑，引文经产品校读库核对。生活解读是当代观察，不是古文逐字翻译；〔〕内为校补字。</p>
+                      <p className="chapter-story-note">{isZh ? "AI 辅助编辑，引文经产品校读库核对。生活解读是当代观察，不是古文逐字翻译；〔〕内为校补字。" : "AI-assisted editing. Source excerpts are checked against Wendao's reading edition. These are contemporary reflections, not line-by-line translations; brackets mark supplied characters in the Chinese source."}</p>
                     </div>
                   </section>
                 </div>

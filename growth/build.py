@@ -4,10 +4,12 @@ import hashlib
 import json
 from pathlib import Path
 from search import ABOUT, AUTHOR, related, schema, structured
+from english import build_english
 
 ROOT = Path(__file__).resolve().parents[1]
 PUBLIC = ROOT / 'public'
 ITEMS = json.loads((ROOT / 'growth/copy.json').read_text())
+ENGLISH = json.loads((ROOT / 'growth/copy-en.json').read_text())
 ORIGIN = 'https://wendao.wonderelian.com'
 esc = html.escape
 SCRIPT_VERSION = hashlib.sha256((PUBLIC/'growth/reading.js').read_bytes()).hexdigest()[:12]
@@ -49,11 +51,14 @@ for i in ITEMS:
         body = body.replace('<span id="reading-end"', '</details><span id="reading-end"', 1)
     out=PUBLIC/'situations'/slug;out.mkdir(parents=True,exist_ok=True)
     body += related(i, ITEMS)
-    (out/'index.html').write_text(shell(i['title'],i['teaser'],f'/situations/{slug}/',body,slug, schema(i['title'],i['teaser'],f'/situations/{slug}/',item=i)))
+    alternate = f'<link rel="alternate" hreflang="en" href="{ORIGIN}/situations/{slug}/en/"><link rel="alternate" hreflang="zh-CN" href="{ORIGIN}/situations/{slug}/">' if slug in ENGLISH else ''
+    if slug in ENGLISH:
+        body = f'<a href="/situations/{slug}/en/" lang="en">Read in English ↗</a>' + body
+    (out/'index.html').write_text(shell(i['title'],i['teaser'],f'/situations/{slug}/',body,slug, schema(i['title'],i['teaser'],f'/situations/{slug}/',item=i) + alternate))
 (PUBLIC/'about').mkdir(exist_ok=True)
 about_schema = structured({'@context':'https://schema.org','@graph':[AUTHOR, {'@type':'AboutPage','name':'关于三慢问道与文本来源','url':ORIGIN+'/about/','inLanguage':'zh-CN','about':{'@id':ORIGIN+'/about/#publisher'}}]})
 (PUBLIC/'about/index.html').write_text(shell('关于三慢问道：阅读方法、文本来源与使用说明','了解三慢问道的帛书乙本阅读、AI 问道、免费范围、文章编辑方式及联系渠道。','/about/',ABOUT,'about',about_schema))
-paths=['/','/start/','/about/']+[f'/situations/{i["slug"]}/' for i in ITEMS]
+paths=['/','/start/','/about/']+[f'/situations/{i["slug"]}/' for i in ITEMS] + build_english(ROOT, ITEMS)
 (PUBLIC/'sitemap.xml').write_text('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'+''.join(f'<url><loc>{ORIGIN}{p}</loc></url>' for p in paths)+'</urlset>\n')
 (PUBLIC/'robots.txt').write_text('User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /api/\nDisallow: /__growth/event\nSitemap: '+ORIGIN+'/sitemap.xml\n')
 print(f'Built start + {len(ITEMS)} editorial pages + sitemap')

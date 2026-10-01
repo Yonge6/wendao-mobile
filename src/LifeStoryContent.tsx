@@ -7,13 +7,14 @@ export default function LifeStoryContent({ story, language, drawer = false, onOp
   onOpenComic: () => void;
 }) {
   const isZh = language === "zh";
+  const contentIsEn = story.language === "en";
   const [quoteClass, practiceClass, kickerClass] = drawer
     ? [undefined, "drawer-story-practice", "drawer-kicker"]
     : ["chapter-story-quote", "practice-card", "practice-kicker"];
   const text = <>
     <div className={drawer ? undefined : "chapter-life-story-body"}>{story.paragraphs.map((paragraph, index) => <p key={index}>{paragraph}</p>)}</div>
-    <blockquote className={quoteClass}><p>{story.quote}</p><cite>《道德经》今本第 {story.chapter} 章 · 帛书乙本底本校读节选</cite></blockquote>
-    <div className={practiceClass}><span className={kickerClass}>留给今天的一点空间</span><p>{story.practice}</p></div>
+    <blockquote className={quoteClass}><p>{story.quote}</p><cite>{contentIsEn ? `Daodejing · Chapter ${story.chapter} · English rendering of the Silk B base reading excerpt` : `《道德经》今本第 ${story.chapter} 章 · 帛书乙本底本校读节选`}</cite></blockquote>
+    <div className={practiceClass}><span className={kickerClass}>{contentIsEn ? "A little room for today" : "留给今天的一点空间"}</span><p>{story.practice}</p></div>
   </>;
   if (!story.comic) return text;
   return <>
@@ -32,6 +33,6 @@ export default function LifeStoryContent({ story, language, drawer = false, onOp
         </span> : null}
       </figcaption>
     </figure>
-    <details className="life-story-text"><summary>{isZh ? "查看漫画解读" : "Read the comic reflection (Chinese)"}</summary>{text}</details>
+    <details className="life-story-text"><summary>{isZh ? "查看漫画解读" : contentIsEn ? "Read the comic reflection" : "Read the comic reflection (Chinese)"}</summary>{text}</details>
   </>;
 }
