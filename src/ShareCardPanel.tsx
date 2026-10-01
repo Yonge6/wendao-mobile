@@ -51,6 +51,7 @@ export default function ShareCardPanel({
   }, []);
   const [saving, setSaving] = useState(false);
   const [comicZoomed, setComicZoomed] = useState(false);
+  const [wechatAction, setWechatAction] = useState<"save" | "share" | null>(null);
   const previewScrollRef = useRef<HTMLDivElement>(null);
   const needsManual = !customContent && !companionShare && kind === "manual" && !profileReady;
   const content = useMemo(
@@ -67,6 +68,7 @@ export default function ShareCardPanel({
 
   useEffect(() => {
     let cancelled = false;
+    setWechatAction(null);
     setRendering(true);
     setImageUrl("");
     if (needsManual) {
@@ -112,11 +114,17 @@ export default function ShareCardPanel({
       content.filename,
       customContent ? content.chapterTitle : (isZh ? `三慢问道 · 第${chapter.id}章` : `Wendao · Chapter ${chapter.id}`),
     );
+    if (outcome === "preview") {
+      setFeedback(null);
+      setWechatAction("share");
+      onAction?.("image_preview", kind);
+      return;
+    }
     if (outcome !== "cancelled") {
       showFeedback(outcome === "shared"
         ? (isZh ? "已打开系统分享" : "Share sheet opened")
         : outcome === "downloaded"
-          ? (isZh ? "当前浏览器已保存图片" : "Image saved by your browser")
+          ? (isZh ? "已发起图片下载" : "Image download requested")
           : (isZh ? "暂时无法分享图片" : "Image sharing is unavailable"));
     }
     onAction?.(`image_${outcome}`, kind);
@@ -132,11 +140,16 @@ export default function ShareCardPanel({
         content.filename,
         isZh ? "保存三慢问道分享卡" : "Save Wendao share card",
       );
+      if (outcome === "preview") {
+        setWechatAction("save");
+        onAction?.("save_preview", kind);
+        return;
+      }
       if (outcome !== "cancelled") {
         showFeedback(outcome === "saved"
           ? (isZh ? "已保存到相册" : "Saved to Photos")
           : outcome === "downloaded"
-            ? (isZh ? "图片已下载" : "Image downloaded")
+            ? (isZh ? "已发起图片下载" : "Image download requested")
             : outcome === "shared"
               ? (isZh ? "请在系统面板选择“存储图像”" : "Choose Save Image in the system sheet")
               : (isZh ? "保存失败，请检查相册权限后重试" : "Could not save. Check Photos access and try again."));
@@ -172,6 +185,25 @@ export default function ShareCardPanel({
     }
     onAction?.(`link_${outcome}`, kind);
   };
+
+  if (wechatAction && imageUrl) return (
+    <div className="share-card-panel wechat-image-panel">
+      <div className="wechat-image-instructions" role="status">
+        <strong>{wechatAction === "save"
+          ? (isZh ? "长按下方图片，选择保存到相册" : "Press and hold the image to save it to Photos")
+          : (isZh ? "长按下方图片，选择发送给朋友" : "Press and hold the image to send it to a friend")}</strong>
+        <p>{wechatAction === "save"
+          ? (isZh ? "完整长图可向下滑动，保存操作由微信完成。" : "Scroll to view the full image. Finish saving in WeChat.")
+          : (isZh ? "如果没有发送选项，可先保存，再从微信相册发送。" : "If Send is unavailable, save it first and send it from your photo library.")}</p>
+        <button type="button" onClick={() => setWechatAction(null)}>{isZh ? "返回操作" : "Back to actions"}</button>
+      </div>
+      <div className="wechat-image-scroll" key={`${kind}-${wechatAction}`}>
+        <img src={content.imageSource || imageUrl}
+          alt={isZh ? `${content.label}完整图片，可长按保存或发送` : `${content.label} full image; press and hold to save or send`}
+          onError={(event) => { if (event.currentTarget.src !== imageUrl) event.currentTarget.src = imageUrl; }} />
+      </div>
+    </div>
+  );
 
   return (
     <div className={`share-card-panel${content.imageSource ? " has-comic" : ""}`}>

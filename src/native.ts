@@ -7,7 +7,7 @@ import { StatusBar, Style } from "@capacitor/status-bar";
 import { saveStoreKitImage } from "./companion/storekit";
 
 type NativeTheme = "light" | "dark";
-export type ShareOutcome = "shared" | "copied" | "downloaded" | "saved" | "cancelled" | "unavailable";
+export type ShareOutcome = "shared" | "copied" | "downloaded" | "saved" | "cancelled" | "unavailable" | "preview";
 
 const CANONICAL_URL = "https://wendao.wonderelian.com/";
 
@@ -63,6 +63,10 @@ export async function shareLink(title: string, url: string): Promise<ShareOutcom
   }
 }
 
+export function needsWeChatImagePreview(): boolean {
+  return !Capacitor.isNativePlatform() && /MicroMessenger/i.test(navigator.userAgent);
+}
+
 function downloadDataUrl(dataUrl: string, filename: string) {
   const anchor = document.createElement("a");
   anchor.href = dataUrl;
@@ -95,6 +99,8 @@ export async function shareCardImage(
       return "shared";
     }
 
+    if (needsWeChatImagePreview()) return "preview";
+
     const file = dataUrlFile(dataUrl, filename);
     if (navigator.share && navigator.canShare?.({ files: [file] })) {
       await navigator.share({ files: [file] });
@@ -126,6 +132,7 @@ export async function saveCardImage(dataUrl: string, filename: string, title: st
       }
       return "shared";
     }
+    if (needsWeChatImagePreview()) return "preview";
     downloadDataUrl(dataUrl, filename);
     return "downloaded";
   } catch (error) {

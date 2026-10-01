@@ -5020,3 +5020,11 @@ textarea {
   justify-content: center;
   pointer-events: none;
 }
+
+/* A plain, unwrapped image lets WeChat own its native long-press menu. */
+.wechat-image-instructions { flex: none; padding: 6px 0 14px; color: var(--ink); }
+.wechat-image-instructions strong { display: block; font: 500 15px/1.7 var(--sans); }
+.wechat-image-instructions p { margin: 5px 0 10px; color: var(--ink-soft); font: 13px/1.7 var(--sans); }
+.wechat-image-instructions button { min-height: 40px; padding: 8px 16px; border: 1px solid var(--gold-light); border-radius: 999px; background: transparent; color: var(--ink); font: 14px var(--sans); }
+.wechat-image-scroll { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; padding-bottom: 12px; }
+.wechat-image-scroll img { display: block; width: 100%; height: auto; -webkit-touch-callout: default; -webkit-user-select: auto; user-select: auto; touch-action: auto; }
