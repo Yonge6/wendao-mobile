@@ -10,6 +10,7 @@ export type LifeStory = {
   paragraphs: string[];
   quote: string;
   practice: string;
+  comic?: { title: string; image: string; original: string; width: number; height: number; alt: string };
 };
 
 export function lifeStoryUrl(story: LifeStory) {
@@ -33,6 +34,6 @@ export function buildLifeStoryShareCardContent(story: LifeStory): ShareCardConte
     url,
     shareText: `${story.title}\n\n${primary}\n\n${secondary}\n\n${url}`,
     filename: `wendao-story-${story.slug}.png`,
+    imageSource: story.comic?.original,
   };
 }
-

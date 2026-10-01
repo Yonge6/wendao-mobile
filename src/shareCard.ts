@@ -25,6 +25,7 @@ export type ShareCardContent = {
   url: string;
   shareText: string;
   filename: string;
+  imageSource?: string;
 };
 
 export const SHARE_CARD_KINDS: ShareCardKind[] = ["verse", "meaning", "inspiration", "manual"];
@@ -433,6 +434,18 @@ async function loadPaperTexture() {
 }
 
 export async function renderShareCardDataUrl(content: ShareCardContent) {
+  if (content.imageSource) {
+    const response = await fetch(content.imageSource);
+    if (!response.ok) throw new Error("COMIC_IMAGE_UNAVAILABLE");
+    const blob = await response.blob();
+    if (blob.type !== "image/png") throw new Error("COMIC_IMAGE_INVALID");
+    return new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = () => reject(new Error("COMIC_IMAGE_READ_FAILED"));
+      reader.readAsDataURL(blob);
+    });
+  }
   await document.fonts.ready;
   const canvas = document.createElement("canvas");
   canvas.width = 1080;

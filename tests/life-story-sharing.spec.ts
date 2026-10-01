@@ -24,7 +24,7 @@ for (const language of ["zh", "en"] as const) {
       await expect(sheet.getByRole("tablist")).toHaveCount(0);
       const text = await sheet.locator("figure").getAttribute("aria-label");
       for (const paragraph of [...story.paragraphs, story.quote, story.practice]) expect(text).toContain(paragraph);
-      expect(await image.evaluate((e: HTMLImageElement) => e.naturalWidth)).toBe(1080);
+      expect(await image.evaluate((e: HTMLImageElement) => e.naturalWidth)).toBe(story.comic?.width ?? 1080);
       expect(await image.evaluate((e: HTMLImageElement) => e.naturalHeight)).toBeGreaterThan(2160);
       await sheet.getByRole("button", { name: language === "zh" ? "分享链接" : "Share link", exact: true }).click();
       await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(url);

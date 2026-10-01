@@ -674,7 +674,15 @@
       "一份工具可以提供新的语言，也可能带来先入为主的期待。涉及重要选择时，仍应依据能力、条件和实际尝试。你可以使用标签，同时保留修改它的权利。"
     ],
     "practice": "从一个常用来描述自己的标签中找出一条判断，写下一次符合与一次不符合的经历，看看它适用的边界。",
-    "quote": "始制有名，名亦既有，夫亦将知止，知止所以不殆。"
+    "quote": "始制有名，名亦既有，夫亦将知止，知止所以不殆。",
+    "comic": {
+      "title": "测出一个类型，别急着装箱",
+      "image": "/assets/wendao/comics/chapter-32-art-nouveau.webp",
+      "original": "/assets/wendao/comics/chapter-32-art-nouveau.png",
+      "width": 1024,
+      "height": 3336,
+      "alt": "十二格漫画：小林被“内向型”标签劝退，却为了不放香菜侃侃而谈。他准备三张绿萝照片，紧张地完成了一次午间分享，回家后仍享受安静。标签是备注，不是封条。底部为三慢问道及 App Store 标识。"
+    }
   },
   {
     "slug": "help-without-becoming-indispensable",

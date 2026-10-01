@@ -45,6 +45,7 @@ import type { HumanDesignReadingChart } from "./humanDesignReading";
 import { chapters, type Chapter, type RelatedItem } from "./data/chapters";
 import { dailyChapterId, localDateKey } from "./dailyEncounter";
 import lifeStories from "../growth/copy.json";
+import LifeStoryContent from "./LifeStoryContent";
 import { normalizeSearch, searchChapters, searchExcerpt, type SearchMatch } from "./chapterSearch";
 import {
   DAILY_NOTIFICATION_TIME_LABEL,
@@ -1344,15 +1345,7 @@ function SideDrawer({
                 <button type="button" onClick={() => void shareStoryLink()}><Link2Icon />{isZh ? "分享链接" : "Share link"}</button>
                 <button type="button" onClick={() => setStoryShareOpen(true)}><ImageIcon />{isZh ? "分享图片" : "Share image"}</button>
               </div>
-              {activeStory.paragraphs.map((paragraph, index) => <p key={index}>{paragraph}</p>)}
-              <blockquote>
-                <p>{activeStory.quote}</p>
-                <cite>《道德经》今本第 {activeStory.chapter} 章<br />帛书乙本底本校读 · 节选</cite>
-              </blockquote>
-              <section className="drawer-story-practice">
-                <span className="drawer-kicker">留给今天的一点空间</span>
-                <p>{activeStory.practice}</p>
-              </section>
+              <LifeStoryContent story={activeStory} language={language} drawer onOpenComic={() => setStoryShareOpen(true)} />
               <button className="drawer-primary drawer-story-continue" type="button" onClick={() => onStoryChapterOpen(activeStory.chapter)}>
                 {isZh ? `继续读第 ${activeStory.chapter} 章` : `Read chapter ${activeStory.chapter}`}<ArrowRightIcon />
               </button>
@@ -2674,9 +2667,7 @@ export default function Prototype() {
                         <article className="chapter-life-story" lang="zh-CN" key={story.slug} data-story-slug={story.slug}>
                           <h2>{story.title}</h2>
                           <p className="chapter-story-note chapter-story-meta">{story.theme} · 第 {chapter.id} 章</p>
-                          <div className="chapter-life-story-body">{story.paragraphs.map((paragraph, index) => <p key={index}>{paragraph}</p>)}</div>
-                          <blockquote className="chapter-story-quote"><p>{story.quote}</p><cite>《道德经》今本第 {chapter.id} 章 · 帛书乙本底本校读节选</cite></blockquote>
-                          <div className="practice-card"><span className="practice-kicker">留给今天的一点空间</span><p>{story.practice}</p></div>
+                          <LifeStoryContent story={story} language={language} onOpenComic={() => openStoryShare(story)} />
                           <button className="section-share-action" type="button" onClick={() => openStoryShare(story)}>
                             <Share1Icon /><span>{isZh ? "分享这一层" : "Share this layer"}</span>
                           </button>

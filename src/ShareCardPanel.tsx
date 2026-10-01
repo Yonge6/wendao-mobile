@@ -50,6 +50,7 @@ export default function ShareCardPanel({
     setFeedback(message ? { message } : null);
   }, []);
   const [saving, setSaving] = useState(false);
+  const [comicZoomed, setComicZoomed] = useState(false);
   const previewScrollRef = useRef<HTMLDivElement>(null);
   const needsManual = !customContent && !companionShare && kind === "manual" && !profileReady;
   const content = useMemo(
@@ -95,6 +96,7 @@ export default function ShareCardPanel({
 
   useEffect(() => {
     previewScrollRef.current?.scrollTo({ top: 0 });
+    setComicZoomed(false);
   }, [chapter.id, kind, language]);
 
   const selectKind = (nextKind: ShareCardKind) => {
@@ -172,7 +174,7 @@ export default function ShareCardPanel({
   };
 
   return (
-    <div className="share-card-panel">
+    <div className={`share-card-panel${content.imageSource ? " has-comic" : ""}`}>
       <div className="share-feedback-layer" role="status" aria-live="polite" aria-atomic="true">
         {feedback ? <p className="share-action-feedback">{feedback.message}</p> : null}
       </div>
@@ -193,6 +195,11 @@ export default function ShareCardPanel({
         })}
       </div> : null}
 
+      {content.imageSource ? <button type="button" className="comic-zoom-toggle" aria-pressed={comicZoomed}
+        onClick={() => setComicZoomed(value => !value)}>
+        {comicZoomed ? (isZh ? "适合屏幕" : "Fit to screen") : (isZh ? "放大阅读" : "Enlarge comic")}
+        <span>{comicZoomed ? (isZh ? "可左右滑动看细节" : "Scroll sideways for details") : (isZh ? "完整长图 · 向下阅读" : "Full comic · Scroll to read")}</span>
+      </button> : null}
       <div className="share-card-workspace">
         <div className="share-card-preview-scroll" ref={previewScrollRef} data-testid="share-card-preview-scroll">
           {needsManual ? (
@@ -207,7 +214,7 @@ export default function ShareCardPanel({
                 : "This is a tool for self-exploration, not a scientific conclusion or a definition of who you are. Once created, you can share an anonymous card here without your name or birth details."}</p>
             </section>
           ) : <figure
-            className="share-card-preview"
+            className={`share-card-preview${comicZoomed ? " is-comic-zoomed" : ""}`}
             aria-label={`${content.primary} ${pinyinDescription} ${content.secondaryLabel} ${content.secondary}`.trim()}
           >
             {imageUrl ? (

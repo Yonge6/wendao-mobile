@@ -40,6 +40,10 @@ for i in ITEMS:
     body=f'''<a class="back" href="/start/">← 生活里的道</a><div class="article-head"><span class="eyebrow">{i['theme']} · 慢读约 3 分钟</span><h1>{i['title']}</h1><p class="byline"><a rel="author" href="/about/">三慢问道创作记录</a> · AI 辅助编辑{date_note}</p></div>
 <article id="reading-body">{paragraphs}<blockquote><p>{i['quote']}</p><cite>《道德经》今本第 {cid} 章<br>帛书乙本底本校读 · 节选</cite></blockquote><section class="practice"><span class="eyebrow">留给今天的一点空间</span><p>{esc(i['practice'])}</p></section><span id="reading-end" aria-hidden="true"></span></article>
 <section class="quiet"><h2>把这一刻，带回第 {cid} 章。</h2><p>继续看完整校读正文、逐句今译和本章的生活启发。</p><a class="button" data-action="chapter_click" href="/?chapter={cid}&lang=zh">继续读第 {cid} 章 <span>→</span></a><p class="small">今日推荐免费。其他章节可在剩余名额内主动保留，总计 10 章；名额用尽后仍可读今日推荐。</p><a class="download" data-action="store_click" href="/download.html?chapter={cid}&lang=zh">下载 App，方便每天回来 ↗</a><p class="small">AI 问道为会员服务，章节买断不含 AI。<br>实际价格以 App Store 显示为准。</p></section>'''
+    if comic := i.get('comic'):
+        comic_markup = f'''<figure style="margin:0 0 24px"><a href="{esc(comic['original'])}" target="_blank" rel="noopener" aria-label="放大阅读漫画"><img src="{esc(comic['image'])}" width="{comic['width']}" height="{comic['height']}" alt="{esc(comic['alt'])}" style="display:block;width:100%;height:auto" fetchpriority="high"></a><figcaption class="small">12 格生活小故事 · 点图放大</figcaption></figure><p><a class="button" href="{esc(comic['original'])}" download="wendao-story-{esc(slug)}.png">保存完整漫画 ↓</a></p>'''
+        body = body.replace('<article id="reading-body">', '<article id="reading-body">' + comic_markup + '<details><summary style="cursor:pointer;margin:24px 0">查看文字解读</summary>', 1)
+        body = body.replace('<span id="reading-end"', '</details><span id="reading-end"', 1)
     out=PUBLIC/'situations'/slug;out.mkdir(parents=True,exist_ok=True)
     body += related(i, ITEMS)
     (out/'index.html').write_text(shell(i['title'],i['teaser'],f'/situations/{slug}/',body,slug, schema(i['title'],i['teaser'],f'/situations/{slug}/',item=i)))
