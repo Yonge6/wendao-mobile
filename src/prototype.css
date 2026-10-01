@@ -3678,8 +3678,25 @@ textarea {
 .life-story-comic-style a { display: inline-flex; align-items: center; gap: 6px; padding: 6px 0; color: var(--ink); text-decoration: none; }
 .life-story-comic-style a:hover { text-decoration: underline; text-underline-offset: 4px; }
 .life-story-comic-style svg { flex: none; }
-.life-story-text summary { padding: 10px 0; cursor: pointer; color: var(--ink-soft); font-family: var(--sans); font-size: 14px; }
+.life-story-text summary {
+  display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 12px 0;
+  list-style: none; cursor: pointer; color: var(--gold);
+  font-family: var(--serif); font-size: 16px; font-weight: 400; line-height: 1.7;
+  letter-spacing: 0.06em;
+}
+.life-story-text summary::-webkit-details-marker { display: none; }
+.life-story-text summary::marker { content: ""; }
+.life-story-text summary::before {
+  content: ""; width: 28px; height: 1px; flex: none; background: var(--gold-light);
+}
+.life-story-text summary::after {
+  content: ""; width: 8px; height: 8px; flex: none; margin: 0 3px 4px auto;
+  border-right: 1px solid currentColor; border-bottom: 1px solid currentColor;
+  transform: rotate(45deg);
+}
+.life-story-text summary:focus-visible { outline: 1px solid var(--gold); outline-offset: 4px; }
 .life-story-text[open] summary { margin-bottom: 12px; }
+.life-story-text[open] summary::after { transform: rotate(225deg); margin-bottom: -4px; }
 .comic-zoom-toggle {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
   min-height: 42px; margin-top: 8px; padding: 8px 12px;
