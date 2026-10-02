@@ -6,7 +6,8 @@ const english = JSON.parse(readFileSync(new URL('../growth/copy-en.json', import
 
 test('published comics have unique chapter styles, complete originals and matching public articles', () => {
   const comics = stories.filter(s => s.comic);
-  assert.ok(comics.length >= 9);
+  assert.equal(comics.length, 81);
+  assert.deepEqual(comics.map(s => s.chapter).sort((a, b) => a - b), Array.from({ length: 81 }, (_, i) => i + 1));
   assert.equal(new Set(comics.map(s => s.chapter)).size, comics.length);
   const styles = comics.map(s => new URL(s.comic.style.url).searchParams.get('style'));
   assert.equal(new Set(styles).size, comics.length);
@@ -27,6 +28,8 @@ test('published comics have unique chapter styles, complete originals and matchi
 });
 
 test('English comic editions have their own complete PNG, WebP and English canonical article', () => {
+  const comicSlugs = stories.filter(s => s.comic).map(s => s.slug).sort();
+  assert.deepEqual(Object.entries(english).filter(([, s]) => s.comic).map(([slug]) => slug).sort(), comicSlugs);
   for (const [slug, story] of Object.entries(english)) {
     if (!story.comic) continue;
     const source = stories.find(s => s.slug === slug);
