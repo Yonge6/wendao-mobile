@@ -11,6 +11,7 @@ public class WendaoStoreKitPlugin: CAPPlugin, CAPBridgedPlugin {
     public let identifier = "WendaoStoreKitPlugin"
     public let jsName = "WendaoStoreKit"
     public let pluginMethods: [CAPPluginMethod] = [
+        CAPPluginMethod(name: "analyticsContext", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "products", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "entitlements", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "purchase", returnType: CAPPluginReturnPromise),
@@ -26,6 +27,18 @@ public class WendaoStoreKitPlugin: CAPPlugin, CAPBridgedPlugin {
         "com.yonge6.wendao.companion.annual",
         "com.yonge6.wendao.reading.lifetime",
     ]
+
+    @objc func analyticsContext(_ call: CAPPluginCall) {
+        #if DEBUG
+        let production = false
+        #else
+        let receipt = Bundle.main.appStoreReceiptURL
+        let production = receipt?.lastPathComponent == "receipt" && FileManager.default.fileExists(atPath: receipt?.path ?? "")
+        #endif
+        call.resolve(["production": production,
+                      "version": Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown",
+                      "build": Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "unknown"])
+    }
 
     @objc func products(_ call: CAPPluginCall) {
         Task {

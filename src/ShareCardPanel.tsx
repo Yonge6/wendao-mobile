@@ -1,3 +1,4 @@
+import { usageEvent } from "./productUsage";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   CopyIcon,
@@ -109,11 +110,13 @@ export default function ShareCardPanel({
 
   const shareImage = async () => {
     if (!imageUrl) return;
+    usageEvent("share_request", { chapter: chapter.id, section: kind });
     const outcome = await shareCardImage(
       imageUrl,
       content.filename,
       customContent ? content.chapterTitle : (isZh ? `三慢问道 · 第${chapter.id}章` : `Wendao · Chapter ${chapter.id}`),
     );
+    usageEvent("share_result", { chapter: chapter.id, section: kind, result: outcome });
     if (outcome === "preview") {
       setFeedback(null);
       setWechatAction("share");
@@ -135,11 +138,13 @@ export default function ShareCardPanel({
     setFeedback(null);
     setSaving(true);
     try {
+      usageEvent("save_request", { chapter: chapter.id, section: kind });
       const outcome = await saveCardImage(
         imageUrl,
         content.filename,
         isZh ? "保存三慢问道分享卡" : "Save Wendao share card",
       );
+      usageEvent("save_result", { chapter: chapter.id, section: kind, result: outcome });
       if (outcome === "preview") {
         setWechatAction("save");
         onAction?.("save_preview", kind);
@@ -163,10 +168,12 @@ export default function ShareCardPanel({
   const copyText = async () => {
     try {
       await navigator.clipboard.writeText(content.shareText);
+      usageEvent("copy_result", { chapter: chapter.id, result: "copied" });
       showFeedback(isZh ? "已复制文字" : "Text copied");
       onAction?.("text_copied", kind);
     } catch {
       showFeedback(isZh ? "暂时无法复制" : "Copying is unavailable");
+      usageEvent("copy_result", { chapter: chapter.id, result: "unavailable" });
       onAction?.("text_unavailable", kind);
     }
   };
@@ -183,6 +190,7 @@ export default function ShareCardPanel({
           ? (isZh ? (customContent ? "文章链接已复制" : "章节链接已复制") : (customContent ? "Article link copied" : "Chapter link copied"))
           : (isZh ? "暂时无法分享链接" : "Link sharing is unavailable"));
     }
+    usageEvent("link_result", { chapter: chapter.id, result: outcome });
     onAction?.(`link_${outcome}`, kind);
   };
 

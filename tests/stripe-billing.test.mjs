@@ -71,7 +71,7 @@ test("checkout blocks every existing active entitlement to prevent double billin
   const response = await handleStripeCheckout(checkoutRequest("monthly"), {
     environment,
     authenticate: async () => ({ id: userId }),
-    store: { getEntitlement: async () => ({ status: "active", source: "apple", expires_at: "2026-09-19T00:00:00Z" }) },
+    store: { getEntitlement: async () => ({ status: "active", source: "apple", expires_at: new Date(Date.now() + 86400_000).toISOString() }) },
     stripe: { checkout: { sessions: { create: async () => { called = true; } } } },
   });
   assert.equal(response.status, 409);

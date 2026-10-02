@@ -16,7 +16,8 @@ test("native launch remains branded until the first React frame is painted", asy
   assert.match(index, /把真实处境，带回这一章/);
   assert.match(index, /章节 AI 对话 · 可控记忆/);
   assert.match(index, /prefers-reduced-motion/);
-  assert.match(index, /apple-itunes-app" content="app-id=6796945428/);
+  assert.match(index, /download\/app-banner\.css/);
+  assert.doesNotMatch(index, /apple-itunes-app/);
 });
 
 test("secondary experiences are split out of the first reading bundle", async () => {

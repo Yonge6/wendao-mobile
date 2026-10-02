@@ -8,6 +8,7 @@ import re
 import sqlite3
 import threading
 import time
+import usage
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 PAGES = {'rediscover-your-own-neighborhood', 'keep-the-goal-out-of-your-anger', 'credit-the-quiet-work', 'help-without-taking-over', 'trust-built-in-small-things', 'start', 'help-without-becoming-indispensable', 'less-supervision', 'the-work-beneath-a-result', 'let-the-work-cook', 'a-label-is-not-a-whole-person', 'remember-why-you-started', 'reversible-decision', 'review-a-repeating-week', 'boundaries', 'shopping-after-scrolling', 'make-it-easy-to-disagree', 'a-soft-voice-with-a-clear-boundary', 'show-one-useful-step', 'room-to-rest', 'a-rule-people-can-understand', 'after-a-piece-of-praise', 'an-honest-progress-update', 'fewer-rules-more-clarity', 'change-a-plan-while-it-is-alive', 'understand-one-familiar-place', 'disagree-gently', 'leave-room-for-the-unexpected', 'a-gathering-without-performance', 'before-sending-the-angry-message', 'a-hobby-without-a-score', 'the-shortcut-still-needs-work', 'let-some-things-stay-unexplained', 'what-a-new-opportunity-costs', 'give-a-new-routine-time', 'the-stronger-side-can-listen-first', 'finishing-carefully', 'beginner-again', 'start-with-the-promise-you-own', 'useful-before-perfect', 'self-respect-without-a-defense', 'repair-after-mistake', 'quiet-work-still-has-value', 'return-to-what-worked', 'leave-room-in-conversation', 'comparing', 'find-another-use', 'courage-to-say-not-yet', 'one-knot-at-a-time', 'leave-an-avoidable-risk', 'yield-on-the-method', 'a-weekend-of-your-own', 'honest-without-being-harsh', 'choosing', 'resolve-without-an-extra-blow', 'finishing', 'slower-while-learning', 'stop-standing-on-tiptoe', 'help-where-the-load-is-heaviest', 'let-an-upgrade-wait', 'without-an-answer', 'care-beyond-family-slogans', 'a-pace-after-enthusiasm', 'saying-no', 'after-winning-an-argument', 'enough-for-today', 'explaining', 'do-not-answer-outside-your-role', 'a-method-that-fits-your-day', 'finish-a-meal-without-feeds', 'leave-a-way-to-make-amends', 'look-at-the-load-before-blame', 'notice-the-present-details', 'waiting-for-reply', 'ask-how-they-want-help', 'remove-one-extra-goal', 'a-gift-without-a-hidden-task', 'different-strengths', 'listen-before-giving-expertise', 'letting-go-of-cost', 'support-a-childs-choice', 'substance-before-a-good-image', 'care-within-your-means', 'first-small-step', 'reading-a-difficult-line', 'save-some-energy-for-tomorrow', 'a-relationship-without-new-events', 'keep-a-small-ritual'}
@@ -36,6 +37,7 @@ def connect(path):
       event TEXT, target TEXT, campaign TEXT, test INTEGER, created INTEGER)''')
     db.execute('CREATE INDEX IF NOT EXISTS events_time ON events(created)')
     db.execute('CREATE INDEX IF NOT EXISTS events_visitor ON events(visitor,event,created)')
+    usage.setup(db)
     return db
 
 def save(db,data,now=None):
@@ -74,17 +76,25 @@ def main():
         while True:
             with connect(args.db) as db:
                 db.execute('DELETE FROM events WHERE created < ?', (int(time.time())-30*86400,))
+                db.execute('DELETE FROM usage_events WHERE created < ?', (int(time.time())-30*86400,))
             time.sleep(3600)
     threading.Thread(target=prune,daemon=True).start()
     recent={};lock=threading.Lock()
     class Handler(BaseHTTPRequestHandler):
         def log_message(self,*args): pass
+        def do_OPTIONS(self):
+            origin=self.headers.get('Origin')
+            if self.path!='/__usage/event' or origin not in ('https://wendao.wonderelian.com','capacitor://localhost'): self.send_error(403);return
+            self.send_response(204);self.send_header('Access-Control-Allow-Origin',origin);self.send_header('Vary','Origin');self.send_header('Access-Control-Allow-Methods','POST, OPTIONS');self.send_header('Access-Control-Allow-Headers','Content-Type');self.end_headers()
         def do_GET(self):
+            if self.path=='/__usage/report':
+                with connect(args.db) as db: payload=json.dumps(usage.report(db)).encode()
+                self.send_response(200);self.send_header('Content-Type','application/json');self.send_header('Cache-Control','no-store');self.end_headers();self.wfile.write(payload);return
             if self.path!='/health': self.send_error(404);return
             self.send_response(200);self.end_headers();self.wfile.write(b'wendao-growth-ok')
         def do_POST(self):
-            if self.path!='/__growth/event': self.send_error(404);return
-            if self.headers.get('Origin')!='https://wendao.wonderelian.com': self.send_error(403);return
+            if self.path not in ('/__growth/event','/__usage/event'): self.send_error(404);return
+            if self.headers.get('Origin') not in (('https://wendao.wonderelian.com','capacitor://localhost') if self.path=='/__usage/event' else ('https://wendao.wonderelian.com',)): self.send_error(403);return
             if not self.headers.get('Content-Type','').startswith('application/json'): self.send_error(415);return
             try: length=int(self.headers.get('Content-Length','0'))
             except ValueError: self.send_error(400);return
@@ -98,11 +108,12 @@ def main():
                 limited=bucket[1]>120 or len(recent)>10000
             if limited: self.send_error(429);return
             try:
-                data=validate(json.loads(self.rfile.read(length)))
-                with connect(args.db) as db: save(db,data)
+                product=self.path=='/__usage/event'
+                data=(usage.validate if product else validate)(json.loads(self.rfile.read(length)))
+                with connect(args.db) as db: (usage.save if product else save)(db,data)
             except (ValueError,TypeError,KeyError): self.send_error(400);return
             except sqlite3.Error: self.send_error(503);return
-            self.send_response(204);self.send_header('Cache-Control','no-store');self.end_headers()
+            self.send_response(204);self.send_header('Cache-Control','no-store');self.send_header('Access-Control-Allow-Origin',self.headers.get('Origin'));self.send_header('Vary','Origin');self.end_headers()
     server=ThreadingHTTPServer(('127.0.0.1',args.port),Handler)
     server.serve_forever()
 

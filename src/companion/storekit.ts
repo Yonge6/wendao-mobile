@@ -25,6 +25,7 @@ export type StoreKitProduct = {
 };
 
 type StoreKitPlugin = {
+  analyticsContext(): Promise<{ production: boolean; version: string; build: string }>;
   products(): Promise<{ products: StoreKitProduct[] }>;
   entitlements(): Promise<{ entitlements: Array<{ productId: string; expiresAt?: string }> }>;
   purchase(input: { productId: string; appAccountToken?: string }): Promise<{
@@ -40,6 +41,8 @@ type StoreKitPlugin = {
 };
 
 const nativeStoreKit = registerPlugin<StoreKitPlugin>("WendaoStoreKit");
+
+export function loadAnalyticsContext() { return nativeStoreKit.analyticsContext(); }
 
 function requireNative() {
   if (Capacitor.getPlatform() !== "ios") throw new Error("STOREKIT_UNAVAILABLE");

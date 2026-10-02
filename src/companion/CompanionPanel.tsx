@@ -1,3 +1,4 @@
+import { usageEvent } from "../productUsage";
 import { FormEvent, type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { GearIcon } from "@radix-ui/react-icons";
 import type { Session, SupabaseClient } from "@supabase/supabase-js";
@@ -296,6 +297,9 @@ export function SignedInCompanion({
       { id: assistantId, role: "assistant", content: "", status: "pending", chapter_id: chapterId },
     ]);
     slowTimerRef.current = window.setTimeout(() => setPhase((current) => current === "connecting" ? "connecting_slow" : current === "fallback" ? current : "slow"), 18_000);
+    const usageStarted = performance.now();
+    usageEvent("chat_request", { chapter: requestContext.chapterId });
+    let usageCompleted = false;
     let replacementStarted = false;
     try {
       await streamCompanionAnswer({
@@ -327,6 +331,7 @@ export function SignedInCompanion({
             )));
           },
           done: (payload) => {
+            if (!usageCompleted) { usageCompleted = true; usageEvent("chat_success", { chapter: requestContext.chapterId }); usageEvent("chat_latency", { chapter: requestContext.chapterId, seconds: (performance.now() - usageStarted) / 1000 }); }
             if (typeof payload.remainingFreeQuestions === "number") {
               setState((current) => current ? { ...current, remainingFreeQuestions: payload.remainingFreeQuestions as number } : current);
             }
@@ -339,6 +344,7 @@ export function SignedInCompanion({
       });
     } catch (nextError) {
       const stopped = controller.signal.aborted;
+      if (!usageCompleted) usageEvent(stopped ? "chat_cancel" : "chat_error", { chapter: requestContext.chapterId, error_code: nextError instanceof CompanionApiError && nextError.code === "daily_free_limit_reached" ? "quota" : "transport" });
       if (!stopped) console.warn("Wendao answer failed", {
         requestId: requestContext.requestId,
         code: nextError instanceof CompanionApiError ? nextError.code : "transport_error",

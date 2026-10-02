@@ -99,7 +99,7 @@ test("native purchase intent blocks cross-provider double billing before StoreKi
     environment,
     authenticate: async () => ({ id: userId }),
     store: {
-      getEntitlement: async () => ({ status: "active", source: "stripe", expires_at: "2026-09-19T00:00:00Z" }),
+      getEntitlement: async () => ({ status: "active", source: "stripe", expires_at: new Date(Date.now() + 86400_000).toISOString() }),
       reserveCheckout: async () => { reserved = true; return true; },
     },
   });

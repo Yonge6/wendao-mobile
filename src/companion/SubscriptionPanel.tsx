@@ -1,3 +1,4 @@
+import { usageEvent } from "../productUsage";
 import { Capacitor } from "@capacitor/core";
 import type { Session } from "@supabase/supabase-js";
 import { useCallback, useEffect, useState } from "react";
@@ -23,6 +24,7 @@ type SubscriptionPanelProps = {
 export default function SubscriptionPanel({ language, session, onSignOut, onMembershipChanged, onOpenAccount }: SubscriptionPanelProps) {
   const isZh = language === "zh";
   const native = Capacitor.isNativePlatform();
+  useEffect(() => { usageEvent("paywall_view"); }, []);
   const [selectedPlan, setSelectedPlan] = useState<"monthly" | "annual" | "lifetime">("annual");
   const [busyPlan, setBusyPlan] = useState<"monthly" | "annual" | "lifetime" | null>(null);
   const [restoring, setRestoring] = useState(false);
@@ -75,12 +77,14 @@ export default function SubscriptionPanel({ language, session, onSignOut, onMemb
     setBusyPlan(plan);
     setError("");
     try {
+      usageEvent("purchase_request", { plan });
       const result = await purchaseStoreKit({
         plan,
         userId: session.user.id,
         apiUrl: config.apiUrl,
         accessToken: session.access_token,
       });
+      usageEvent("purchase_result", { plan, result });
       if (result === "purchased" && plan !== "lifetime") await onMembershipChanged();
       if (result === "purchased" && plan === "lifetime") {
         setNotice(isZh ? "已永久解锁全部 81 章。" : "All 81 chapters are now unlocked forever.");
@@ -88,6 +92,7 @@ export default function SubscriptionPanel({ language, session, onSignOut, onMemb
       if (result === "pending") setNotice(isZh ? "购买正在等待 App Store 确认。" : "Your purchase is awaiting App Store approval.");
       setBusyPlan(null);
     } catch (nextError) {
+      usageEvent("purchase_result", { plan, result: "failed" });
       setError(nextError instanceof Error ? nextError.message : (isZh ? "暂时无法打开订阅。" : "Unable to open checkout."));
       setBusyPlan(null);
     }
@@ -101,11 +106,13 @@ export default function SubscriptionPanel({ language, session, onSignOut, onMemb
     setNotice("");
     try {
       const result = await restoreStoreKit({ apiUrl: config.apiUrl, accessToken: session.access_token });
+      usageEvent("restore_result", { result: result.verified > 0 ? "found" : "empty" });
       if (result.verified > 0) await onMembershipChanged();
       if (result.productIds.length > 0) {
         setNotice(isZh ? "购买记录已恢复。" : "Your purchases have been restored.");
       } else setNotice(isZh ? "没有找到可恢复的购买。" : "No purchases were found to restore.");
     } catch (nextError) {
+      usageEvent("restore_result", { result: "failed" });
       setError(nextError instanceof Error ? nextError.message : (isZh ? "恢复购买未完成。" : "Purchases could not be restored."));
     } finally {
       setRestoring(false);

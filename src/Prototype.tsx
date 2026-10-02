@@ -1,3 +1,4 @@
+import { initializeUsage, usageEvent, usageConsent, UsagePreference } from "./productUsage";
 import {
   FormEvent,
   lazy,
@@ -1062,12 +1063,12 @@ function SideDrawer({
     },
     {
       id: "human-design",
-      href: "https://human-design.wonderelian.com/",
-      name: isZh ? "不二 认识自己" : "Bu'er · Know Yourself",
-      tagline: isZh ? "人生使用说明书" : "A manual for your life",
+      href: "https://buer.wonderelian.com/",
+      name: isZh ? "不二见己" : "Buer Within",
+      tagline: isZh ? "与真实的自己温柔相遇" : "Meet your authentic self with kindness",
       description: isZh
-        ? "从出生信息生成中英双语人类图与基础解读，换一个角度认识自己的运行方式。"
-        : "Turn birth details into a bilingual chart and foundational reading—a different lens on how you move through life.",
+        ? "从人生说明书到 AI 对话、行动与复盘，慢慢看见自己的节奏，把理解带进真实生活。"
+        : "Explore your rhythms through a life manual, AI conversations, actions and reflection, and bring that understanding into everyday life.",
     },
     {
       id: "style-atlas",
@@ -1152,6 +1153,7 @@ function SideDrawer({
               </section>
 
               <nav className="drawer-nav" aria-label={isZh ? "你的空间" : "Your space"}>
+                <UsagePreference language={language} />
                 <button type="button" className="companion-nav-entry" onClick={onCompanionOpen}>
                   <span className="drawer-nav-icon"><ChatBubbleIcon /></span>
                   <span>
@@ -1327,7 +1329,7 @@ function SideDrawer({
                 : "Read, pause, and bring a small moment of life to the Daodejing."}</p>
               <div className="drawer-story-list">
                 {localizedStories.map((story, index) => (
-                  <button className="drawer-story-card" type="button" key={story.slug} onClick={() => {
+                  <button className="drawer-story-card" data-chapter-id={story.chapter} type="button" key={story.slug} onClick={() => {
                     setStorySlug(story.slug);
                     onViewChange("story");
                   }}>
@@ -1346,7 +1348,7 @@ function SideDrawer({
           ) : null}
 
           {view === "story" && activeStory ? (
-            <article className="drawer-story-detail" lang={activeStory.language === "en" ? "en" : "zh-CN"}>
+            <article className="drawer-story-detail" data-chapter-id={activeStory.chapter} lang={activeStory.language === "en" ? "en" : "zh-CN"}>
               <span className="drawer-kicker">{activeStory.theme} · {activeStory.language === "en" ? "A 3-minute pause" : "慢读约 3 分钟"}</span>
               <h3>{activeStory.title}</h3>
               <p className="drawer-story-note">{activeStory.language === "en" ? "Wendao editorial" : "三慢问道创作记录"}</p>
@@ -2028,6 +2030,8 @@ export default function Prototype() {
   }, [searchTarget, chapterId, searchTargetReadable, directoryOpen, language]);
 
   const trackEvent = (eventName: string, metadata: Record<string, string | number> = {}, eventChapter = chapterId) => {
+    usageEvent(eventName, { ...metadata, chapter: eventChapter });
+    if (!usageConsent()) return;
     const googleTag = (window as typeof window & { gtag?: (...args: unknown[]) => void }).gtag;
     if ((eventName === "chapter_view" || eventName === "chance_chapter") && typeof googleTag === "function") {
       googleTag("event", "chapter_read", {
@@ -2205,6 +2209,7 @@ export default function Prototype() {
   useEffect(() => {
     if (appOpenTracked.current) return;
     appOpenTracked.current = true;
+    initializeUsage();
     trackEvent("app_open", { source: runtimeSurface() });
     trackEvent("chapter_view", { source: "initial" }, chapterId);
   }, []);
