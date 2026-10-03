@@ -748,6 +748,9 @@ type CompanionDialogProps = {
   language: Language;
   chapterId: number;
   chapterTitle: string;
+  initialView?: "conversation" | "subscription";
+  initialPlan?: "monthly" | "annual" | "lifetime";
+  entryRevision?: number;
   onShareAnswer: (answer: string, sourceChapterId?: number) => void;
   children?: ReactNode;
 };
@@ -758,6 +761,9 @@ export function CompanionDialog({
   language,
   chapterId,
   chapterTitle,
+  initialView,
+  initialPlan,
+  entryRevision,
   onShareAnswer,
   children,
 }: CompanionDialogProps) {
@@ -843,7 +849,7 @@ export function CompanionDialog({
                 {isZh ? "正在展开你的问道…" : "Opening your Wendao…"}
               </div>
             )}>
-              {children ?? <CompanionPanel language={language} chapterId={chapterId} onShareAnswer={onShareAnswer} onSignedOut={onClose} />}
+              {children ?? <CompanionPanel language={language} chapterId={chapterId} initialView={initialView} initialPlan={initialPlan} entryRevision={entryRevision} onShareAnswer={onShareAnswer} onSignedOut={onClose} />}
             </Suspense>
           ) : null}
         </div>
@@ -863,7 +869,7 @@ function ReadingAccessGate({
   language: Language;
   remaining: number;
   onKeepFree: () => void;
-  onOpenMembership: () => void;
+  onOpenMembership: (plan: "annual" | "lifetime") => void;
 }) {
   const isZh = language === "zh";
   const native = runtimeSurface() === "ios";
@@ -884,11 +890,11 @@ function ReadingAccessGate({
         <p className="reading-access-used">{isZh ? "10 个免费章节已经选完。" : "You have chosen all 10 free chapters."}</p>
       )}
       <div className="reading-access-options">
-        <button type="button" onClick={onOpenMembership}>
+        <button type="button" onClick={() => onOpenMembership("annual")}>
           <strong>{isZh ? "订阅问道同行" : "Subscribe to Wendao Companion"}</strong>
           <small>{isZh ? "解锁 81 章，并使用不限次数 AI 问道" : "Unlock all 81 chapters and unlimited Wendao AI"}</small>
         </button>
-        <button type="button" onClick={onOpenMembership}>
+        <button type="button" onClick={() => onOpenMembership("lifetime")}>
           <strong>{isZh ? "永久解锁全部章节" : "Unlock every chapter forever"}</strong>
           <small>{isZh ? "一次买断，不含 AI；价格以 App Store 显示为准" : "One-time purchase without AI; see the localized App Store price"}</small>
         </button>
@@ -1955,6 +1961,7 @@ export default function Prototype() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerView, setDrawerView] = useState<DrawerView>("home");
   const [companionOpen, setCompanionOpen] = useState(false);
+  const [companionEntry, setCompanionEntry] = useState<{ view: "conversation" | "subscription"; plan: "annual" | "lifetime"; revision: number }>({ view: "conversation", plan: "annual", revision: 0 });
   const [isReadingScrolled, setIsReadingScrolled] = useState(false);
   const [visibleChapterCount, setVisibleChapterCount] = useState(1);
   const [isOpeningNextChapter, setIsOpeningNextChapter] = useState(false);
@@ -2311,8 +2318,16 @@ export default function Prototype() {
 
   const openCompanion = () => {
     setDrawerOpen(false);
+    setCompanionEntry((current) => ({ view: "conversation", plan: current.plan, revision: current.revision + 1 }));
     setCompanionOpen(true);
     trackEvent("companion_open", { source: "reading_composer" });
+  };
+
+  const openMembership = (plan: "annual" | "lifetime") => {
+    setDrawerOpen(false);
+    setCompanionEntry((current) => ({ view: "subscription", plan, revision: current.revision + 1 }));
+    setCompanionOpen(true);
+    trackEvent("companion_open", { source: "reading_access_gate", target: "subscription", plan });
   };
 
   const changeDailyNotifications = async (enabled: boolean) => {
@@ -2716,7 +2731,7 @@ export default function Prototype() {
               language={language}
               remaining={freeChapterSlotsRemaining(freeChapterIds)}
               onKeepFree={() => keepCurrentChapterFree(lockedChapter.id)}
-              onOpenMembership={openCompanion}
+              onOpenMembership={openMembership}
             />
           ) : null}
 
@@ -2942,6 +2957,9 @@ export default function Prototype() {
         language={language}
         chapterId={chapterId}
         chapterTitle={activeChapter[language].title}
+        initialView={companionEntry.view}
+        initialPlan={companionEntry.plan}
+        entryRevision={companionEntry.revision}
         onShareAnswer={openCompanionShare}
       />
       <VideoChannelModal open={videoChannelOpen} onClose={() => setVideoChannelOpen(false)} language={language} />

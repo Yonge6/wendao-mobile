@@ -10,11 +10,14 @@ import "@fontsource/noto-serif-sc/400.css";
 const config = { supabaseUrl: "https://history-fixture.supabase.co", supabaseAnonKey: "fixture-public-key", apiUrl: "https://api.wendao.test" };
 const client = createClient(config.supabaseUrl, config.supabaseAnonKey, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
 function Fixture() {
-  const adaptive = new URLSearchParams(location.search).has("adaptive");
-  const language = new URLSearchParams(location.search).get("lang") === "en" ? "en" : "zh";
+  const params = new URLSearchParams(location.search);
+  const adaptive = params.has("adaptive");
+  const language = params.get("lang") === "en" ? "en" : "zh";
+  const initialView = params.get("view") === "subscription" ? "subscription" : "conversation";
+  const initialPlan = params.get("plan") === "lifetime" ? "lifetime" : "annual";
   const [user, setUser] = useState("11111111-1111-4111-8111-111111111111");
   const session = { user: { id: user }, access_token: "fixture-token" } as Session;
-  const panel = <SignedInCompanion key={user} session={session} language={language} chapterId={8} client={client} config={config} onSignOut={async () => {}} onShareAnswer={(answer, chapterId) => sessionStorage.setItem("fixture-shared-answer", JSON.stringify({ answer, chapterId }))} />;
+  const panel = <SignedInCompanion key={user} session={session} language={language} chapterId={8} initialView={initialView} initialPlan={initialPlan} client={client} config={config} onSignOut={async () => {}} onShareAnswer={(answer, chapterId) => sessionStorage.setItem("fixture-shared-answer", JSON.stringify({ answer, chapterId }))} />;
   return <div className={adaptive ? "wendao-workspace is-companion-open" : undefined}>
     <button style={{ position: "fixed", top: 0, left: 0, zIndex: 1000 }} onClick={() => setUser("22222222-2222-4222-8222-222222222222")}>Switch fixture account</button>
     {adaptive ? <CompanionDialog open onClose={() => {}} language={language} chapterId={8} chapterTitle="上善若水" onShareAnswer={() => {}}>{panel}</CompanionDialog> : <div className="companion-layer" style={{ "--companion-viewport-height": "100dvh", "--companion-viewport-top": "0px" } as React.CSSProperties}>

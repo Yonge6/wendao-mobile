@@ -20,6 +20,9 @@ type CompanionPanelProps = {
   language: "zh" | "en";
   chapterId: number;
   initialQuestion?: string;
+  initialView?: "conversation" | "subscription";
+  initialPlan?: "monthly" | "annual" | "lifetime";
+  entryRevision?: number;
   onShareAnswer?: (answer: string, sourceChapterId?: number) => void;
   onSignedOut?: () => void;
 };
@@ -101,6 +104,9 @@ export function SignedInCompanion({
   language,
   chapterId,
   initialQuestion,
+  initialView = "conversation",
+  initialPlan = "annual",
+  entryRevision = 0,
   onShareAnswer,
   onSignOut,
   client = companionClient(),
@@ -119,7 +125,7 @@ export function SignedInCompanion({
   const [asking, setAsking] = useState(false);
   const [phase, setPhase] = useState<"idle" | "connecting" | "connecting_slow" | "preparing" | "answering" | "slow" | "fallback">("idle");
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
-  const [view, setView] = useState<"conversation" | "history" | "memory" | "weekly" | "account" | "subscription">("conversation");
+  const [view, setView] = useState<"conversation" | "history" | "memory" | "weekly" | "account" | "subscription">(initialView);
   const [historyState, setHistoryState] = useState<"loading" | "ready" | "error">("loading");
   const [threads, setThreads] = useState<CompanionThread[]>([]);
   const [awayFromBottom, setAwayFromBottom] = useState(false);
@@ -196,6 +202,10 @@ export function SignedInCompanion({
     if (initialQuestion) setQuestion(initialQuestion);
   }, [initialQuestion]);
 
+  useEffect(() => {
+    setView(initialView);
+  }, [entryRevision, initialView]);
+
   useEffect(() => () => {
     abortRef.current?.abort();
     if (slowTimerRef.current !== null) window.clearTimeout(slowTimerRef.current);
@@ -266,7 +276,7 @@ export function SignedInCompanion({
   if (view === "subscription") {
     return <section className="companion-membership-view">
       <button className="companion-text-button" type="button" onClick={() => setView("conversation")}>{isZh ? "← 返回问道" : "← Back to Wendao"}</button>
-      <SubscriptionPanel language={language} session={session} onSignOut={() => onSignOut("sign-out")} onMembershipChanged={refresh} onOpenAccount={() => setView("account")} />
+      <SubscriptionPanel language={language} session={session} initialPlan={initialPlan} onSignOut={() => onSignOut("sign-out")} onMembershipChanged={refresh} onOpenAccount={() => setView("account")} />
     </section>;
   }
 
@@ -601,7 +611,7 @@ export function SignedInCompanion({
   );
 }
 
-export default function CompanionPanel({ language, chapterId, initialQuestion, onShareAnswer, onSignedOut }: CompanionPanelProps) {
+export default function CompanionPanel({ language, chapterId, initialQuestion, initialView, initialPlan, entryRevision, onShareAnswer, onSignedOut }: CompanionPanelProps) {
   return (
     <CompanionAuth language={language}>
       {(session, signOut) => (
@@ -611,6 +621,9 @@ export default function CompanionPanel({ language, chapterId, initialQuestion, o
           language={language}
           chapterId={chapterId}
           initialQuestion={initialQuestion}
+          initialView={initialView}
+          initialPlan={initialPlan}
+          entryRevision={entryRevision}
           onShareAnswer={onShareAnswer}
           onSignOut={async (mode) => {
             await signOut();

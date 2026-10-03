@@ -6,6 +6,8 @@ Retained from approved 1.9: Tao in everyday life contains 87 editorially reviewe
 
 NEW IN 1.9.3: Signed-in non-members may now ask 3 free Wendao AI questions per UTC day; the remaining count is shown in the conversation, and membership continues to provide unlimited questions. Build 27 also fixes Share link so the system Copy action receives the canonical URL itself rather than descriptive text. This applies to chapter cards and Tao in everyday life essays. Image sharing remains PNG-only. Monthly, annual, and lifetime products now use fixed standard pricing with no introductory offer. Night-mode contrast and direct Photos saving from prior approved versions are retained.
 
+BUILD 29 NAVIGATION FIX: On a locked chapter, the subscription action opens the membership purchase view with annual selected, and the permanent-unlock action opens it with the lifetime product selected. These actions no longer open the AI conversation before the purchase choices appear.
+
 Suggested review:
 1. Read today's free chapter, then scroll past section 03 to section 04 and open Share this layer. Save its image to Photos (system permission required on first use) or copy its article link. Close the panel and confirm the reading position remains.
 2. Open More > Tao in everyday life, select an essay and return to its related chapter. Switch Chinese/English; the essays remain clearly labeled Chinese.

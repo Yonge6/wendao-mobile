@@ -19,13 +19,14 @@ type SubscriptionPanelProps = {
   onSignOut: () => Promise<void>;
   onMembershipChanged: () => Promise<void>;
   onOpenAccount: () => void;
+  initialPlan?: "monthly" | "annual" | "lifetime";
 };
 
-export default function SubscriptionPanel({ language, session, onSignOut, onMembershipChanged, onOpenAccount }: SubscriptionPanelProps) {
+export default function SubscriptionPanel({ language, session, onSignOut, onMembershipChanged, onOpenAccount, initialPlan = "annual" }: SubscriptionPanelProps) {
   const isZh = language === "zh";
   const native = Capacitor.isNativePlatform();
   useEffect(() => { usageEvent("paywall_view"); }, []);
-  const [selectedPlan, setSelectedPlan] = useState<"monthly" | "annual" | "lifetime">("annual");
+  const [selectedPlan, setSelectedPlan] = useState<"monthly" | "annual" | "lifetime">(initialPlan);
   const [busyPlan, setBusyPlan] = useState<"monthly" | "annual" | "lifetime" | null>(null);
   const [restoring, setRestoring] = useState(false);
   const [nativeProducts, setNativeProducts] = useState<StoreKitProduct[]>([]);
@@ -33,6 +34,10 @@ export default function SubscriptionPanel({ language, session, onSignOut, onMemb
   const [checkingMembership, setCheckingMembership] = useState(false);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    setSelectedPlan(initialPlan);
+  }, [initialPlan]);
 
   const reloadNativeProducts = useCallback(async () => {
     if (!native) return;

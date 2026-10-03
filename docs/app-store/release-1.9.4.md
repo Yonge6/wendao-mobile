@@ -1,4 +1,4 @@
-# Wendao AI 1.9.4 (28)
+# Wendao AI 1.9.4 (29)
 
 Based on production source 1c8b075. Adds 81 Chinese and 81 English comics with matching reflections, image-sharing updates, refreshed Buer Within entry, and opt-in product usage analytics.
 
@@ -18,3 +18,5 @@ Tao in Everyday Life now includes illustrated stories for all 81 chapters, with 
 ## Submission
 
 Submitted 2026-10-02 at approximately 20:18 Asia/Shanghai. App Store Connect UI independently showed **1.9.4 (28), Waiting for Review**. Release mode: automatically after approval. Version ID: `9b6d0836-4402-46e6-a3ca-abafc654b4f1`; build ID: `b4f815bf-a923-4095-851d-ef95db60e88c`. Three stalled Chinese iPhone screenshots were deleted and uploaded again; all new screenshots reached COMPLETE before submission. Approval/public availability are still pending.
+
+Build 29 follows build 28 with one purchase-navigation correction: from a locked chapter, “Subscribe to Wendao Companion” opens the membership purchase view with annual selected, while “Unlock every chapter forever” opens the same purchase view with lifetime selected. Neither entry opens the AI conversation first. The build passed the production client build, focused domain tests, and direct Chrome checks for both purchase entries.

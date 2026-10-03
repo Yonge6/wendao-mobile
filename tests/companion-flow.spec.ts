@@ -42,6 +42,22 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
+test("purchase entries open membership instead of the AI conversation and keep the requested plan selected", async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(window, "webkit", {
+      configurable: true,
+      value: { messageHandlers: { bridge: { postMessage: () => undefined } } },
+    });
+  });
+
+  for (const [plan, label] of [["annual", /年付/], ["lifetime", /永久解锁 81 章/]] as const) {
+    await page.goto(`/tests/companion-fixture.html?view=subscription&plan=${plan}`);
+    await expect(page.locator(".companion-membership-view")).toBeVisible();
+    await expect(page.locator(".companion-conversation-shell")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: label }).first()).toHaveClass(/is-selected/);
+  }
+});
+
 test("restores cloud history after reload and never shows the previous account's messages", async ({ page }) => {
   await page.goto("/tests/companion-fixture.html");
   await expect(page.locator(".companion-conversation")).toContainText("A 的历史回应");
