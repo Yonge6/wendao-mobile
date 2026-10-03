@@ -18,3 +18,7 @@ Tao in Everyday Life now includes illustrated stories for all 81 chapters, with 
 ## Release note
 
 Apple reported that the 1.9.4 prerelease train is closed because 1.9.4 has already been approved. This correction is therefore prepared as version 1.9.5 build 30.
+
+## Submission
+
+Uploaded and submitted on 2026-10-03 at approximately 10:02 Asia/Shanghai. App Store Connect independently showed **1.9.5 (30), Waiting for Review**. Release is automatic after approval, immediately to all users, with the existing rating preserved. Review submission ID: `06cecc48-ffcb-4b0f-ae64-6c9c47121fe1`.
