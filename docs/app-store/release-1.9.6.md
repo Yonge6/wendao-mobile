@@ -27,6 +27,11 @@ Wendao now adapts to the new iPhone Duo display sizes, with the reading experien
 
 三慢问道现已适配新款 iPhone Duo 的显示尺寸，阅读、目录、更多抽屉与 AI 对话会随当前窗口自然调整。本次也更新了中英文 App Store 展示素材。现有阅读权益、会员功能和价格保持不变。
 
+## Native screenshot evidence
+
+- `wendao-1.9.6-duo-zh.png`: 1398 x 2034, SHA-256 `a02412cf4185b26309dc95780a21952c2a9a13e918c54fd722caa75fbfc0576c`
+- `wendao-1.9.6-duo-en.png`: 1398 x 2034, SHA-256 `696b5cb1dc70c97fb90aa341e5691dcc24c218953219a88fa732f314c106a091`
+
 ## Submission
 
 Pending archive, upload, build processing and App Store review submission. Record each state separately after live verification.
