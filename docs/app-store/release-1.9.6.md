@@ -16,7 +16,7 @@ This release follows the Yixiu 1.19 App Store treatment for Apple's iPhone Duo w
 Prepared independent bilingual title and search-result creatives at Apple's required dimensions:
 
 - Title: 3840 x 1646 PNG, Chinese and English.
-- Search result: 3840 x 2560 PNG, Chinese and English.
+- Search result: 3840 x 2560, English PNG and Chinese JPEG (the JPEG is a visually equivalent lightweight upload fallback after App Store Connect stalled while processing the PNG).
 - Artwork uses the Wendao icon, restrained teal/gold palette, and Daodejing reading/reflection positioning. No price, QR code, fabricated UI or device mockup appears in these marketing assets.
 
 ## What is new — English
@@ -34,4 +34,7 @@ Wendao now adapts to the new iPhone Duo display sizes, with the reading experien
 
 ## Submission
 
-Pending archive, upload, build processing and App Store review submission. Record each state separately after live verification.
+- Archive: `Wendao-1.9.6-31.xcarchive`, codesign verified, `ARCHIVE SUCCEEDED`.
+- Upload: build 31 uploaded and processed by Apple; App Store Connect build ID `272de0c2-8228-4648-b4f2-a42c46ade3ff`.
+- Version record: build 31 is bound to iOS 1.9.6. Simplified Chinese and English metadata, native iPhone Duo screenshots, title creatives and search-result creatives are saved in App Store Connect.
+- Review: submitted at 2026-10-09 16:06 CST; submission ID `1d1ae92d-0e3d-41fa-9ebb-d86fb29c9dcc`; App Store Connect state `Waiting for Review` (`等待审核`). This is submitted, not approved or released.

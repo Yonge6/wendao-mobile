@@ -1,4 +1,4 @@
-# App Review Notes · Version 1.9.3 (27)
+# App Review Notes · Version 1.9.6 (31)
 
 Wendao AI combines bilingual Daodejing reading and chapter-grounded reflection. Today's chapter is always free; readers may deliberately keep 10 additional chapters free on the device. Contents and search do not consume a choice. All 81 chapters are bundled for offline reading, subject to reading access.
 
