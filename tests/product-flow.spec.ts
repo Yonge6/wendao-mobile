@@ -108,12 +108,14 @@ test("loads the saved life manual on demand and preserves both complete reading 
 });
 
 for (const viewport of [
+  { width: 466, height: 678 },
+  { width: 669, height: 951 },
   { width: 768, height: 1024 },
   { width: 1024, height: 1366 },
   { width: 1366, height: 1024 },
   { width: 375, height: 1024 },
 ]) {
-  test(`iPad ${viewport.width}x${viewport.height} keeps reading and overlays usable`, async ({ page }, testInfo) => {
+  test(`adaptive ${viewport.width}x${viewport.height} keeps reading and overlays usable`, async ({ page }, testInfo) => {
     await page.setViewportSize(viewport);
     await page.goto("/?chapter=8&lang=zh");
     await expect(page.locator(".chapter-current")).toBeVisible();
