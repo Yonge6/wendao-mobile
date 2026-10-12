@@ -1,4 +1,5 @@
 import { CANONICAL_URL } from "./native";
+import { lifeStoryAssetUrl } from "./lifeStoryAssets";
 import type { ShareCardContent } from "./shareCard";
 
 export type LifeStory = {
@@ -42,6 +43,6 @@ export function buildLifeStoryShareCardContent(story: LifeStory): ShareCardConte
     url,
     shareText: `${story.title}\n\n${primary}\n\n${secondary}\n\n${url}`,
     filename: `wendao-story-${story.slug}${isEn ? "-en" : ""}.png`,
-    imageSource: story.comic?.original,
+    imageSource: story.comic?.original ? lifeStoryAssetUrl(story.comic.original) : undefined,
   };
 }

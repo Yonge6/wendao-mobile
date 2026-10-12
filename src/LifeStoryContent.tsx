@@ -1,4 +1,5 @@
 import type { LifeStory } from "./lifeStoryShare";
+import { lifeStoryAssetUrl } from "./lifeStoryAssets";
 
 export default function LifeStoryContent({ story, language, drawer = false, onOpenComic }: {
   story: LifeStory;
@@ -17,11 +18,12 @@ export default function LifeStoryContent({ story, language, drawer = false, onOp
     <div className={practiceClass}><span className={kickerClass}>{contentIsEn ? "A little room for today" : "留给今天的一点空间"}</span><p>{story.practice}</p></div>
   </>;
   if (!story.comic) return text;
+  const comicImage = lifeStoryAssetUrl(story.comic.image);
   return <>
     <figure className="life-story-comic">
       <button type="button" className="life-story-comic-open" onClick={onOpenComic}
         aria-label={`${isZh ? "放大阅读漫画" : "Read comic in detail"}：${story.comic.title}`}>
-        <img src={story.comic.image} width={story.comic.width} height={story.comic.height}
+        <img src={comicImage} width={story.comic.width} height={story.comic.height}
           alt={story.comic.alt} loading="lazy" decoding="async" draggable={false} />
       </button>
       <figcaption>

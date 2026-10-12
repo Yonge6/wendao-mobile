@@ -47,4 +47,14 @@ if (manifest.chapterCount !== 81 || !/^[a-f0-9]{64}$/.test(manifest.chapterDataS
   throw new Error("Invalid Wendao build manifest in the iOS bundle.");
 }
 
-console.log(`iOS sync verified: ${webFiles.length} files · ${manifest.chapterCount} chapters · ${manifest.commit.slice(0, 7)}`);
+const bundledComics = iosFiles.filter((file) => file.startsWith("assets/wendao/comics/"));
+if (bundledComics.length) {
+  throw new Error(`The iOS bundle must load comics from the public site, but contains: ${bundledComics.slice(0, 5).join(", ")}`);
+}
+
+const iosBundleBytes = iosFiles.reduce((sum, relative) => sum + statSync(path.join(iosDir, relative)).size, 0);
+if (iosBundleBytes > 250 * 1024 * 1024) {
+  throw new Error(`The iOS web bundle is unexpectedly large: ${(iosBundleBytes / 1024 / 1024).toFixed(1)} MiB.`);
+}
+
+console.log(`iOS sync verified: ${webFiles.length} files · ${(iosBundleBytes / 1024 / 1024).toFixed(1)} MiB · ${manifest.chapterCount} chapters · ${manifest.commit.slice(0, 7)}`);
