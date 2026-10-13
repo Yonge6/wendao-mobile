@@ -1,0 +1,8 @@
+{
+  "status": "active",
+  "commit": "bad09c0c23a8913530ac7e4e1361466bd31e83cf",
+  "previous": "1c8b075af054a0227a07b4f1aa4a20a525aca459",
+  "backup": "/srv/wonderelian/backups/wendao-before-bad09c0-20261013",
+  "liveFilesVerified": 1635,
+  "comicUrlsVerified": 162
+}

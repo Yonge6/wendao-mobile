@@ -1,0 +1,43 @@
+{
+  "capturedAt": "2026-10-13T04:37:55.941Z",
+  "base": "http://127.0.0.1:4186/",
+  "mode": "library",
+  "records": [
+    {
+      "path": "/Users/yongyuan/Documents/道德经/wendao-ux-20261013/docs/app-store/screenshots/experience-1.9.8/iphone/zh-Hans/01-comic-library.jpg",
+      "viewport": {
+        "width": 440,
+        "height": 956
+      },
+      "native": true,
+      "theme": "light"
+    },
+    {
+      "path": "/Users/yongyuan/Documents/道德经/wendao-ux-20261013/docs/app-store/screenshots/experience-1.9.8/iphone/en-US/01-comic-library.jpg",
+      "viewport": {
+        "width": 440,
+        "height": 956
+      },
+      "native": true,
+      "theme": "light"
+    },
+    {
+      "path": "/Users/yongyuan/Documents/道德经/wendao-ux-20261013/docs/app-store/screenshots/experience-1.9.8/ipad/zh-Hans/01-comic-library.jpg",
+      "viewport": {
+        "width": 1032,
+        "height": 1376
+      },
+      "native": true,
+      "theme": "light"
+    },
+    {
+      "path": "/Users/yongyuan/Documents/道德经/wendao-ux-20261013/docs/app-store/screenshots/experience-1.9.8/ipad/en-US/01-comic-library.jpg",
+      "viewport": {
+        "width": 1032,
+        "height": 1376
+      },
+      "native": true,
+      "theme": "light"
+    }
+  ]
+}

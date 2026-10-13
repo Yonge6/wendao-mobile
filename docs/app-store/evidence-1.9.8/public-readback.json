@@ -1,0 +1,20 @@
+{
+  "manifest": {
+    "schemaVersion": 1,
+    "appName": "\u4e09\u6162\u95ee\u9053 AI",
+    "bundleId": "com.yonge6.wendao",
+    "appVersion": "1.9.8",
+    "buildNumber": 33,
+    "commit": "bad09c0c23a8913530ac7e4e1361466bd31e83cf",
+    "chapterCount": 81,
+    "chapterDataSha256": "07840f0973d314efeb498545c76c4d7afe6dc1444e876c79fc0c7506463711c2"
+  },
+  "files": {
+    "index.html": "same SHA256",
+    "download/app-banner.css": "same SHA256",
+    "download/app-banner.js": "same SHA256",
+    "product-usage.js": "same SHA256",
+    "situations/a-label-is-not-a-whole-person/index.html": "same SHA256",
+    "situations/a-label-is-not-a-whole-person/en/index.html": "same SHA256"
+  }
+}

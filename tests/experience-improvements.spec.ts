@@ -216,4 +216,14 @@ test("anonymous lifetime intent opens benefits and selected plan before sign-in,
   await expect(purchase.locator(".companion-subscription")).toContainText("AI, memory, and weekly reflection are not included");
   await expect(purchase.locator(".companion-composer")).toHaveCount(0);
   await page.screenshot({ path: path.join(qaDirectory, "anonymous-lifetime-intent-en-390.png") });
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "Open more" }).click();
+  await page.locator(".side-drawer").getByRole("button", { name: /^Wendao AI/ }).click();
+  const auth = page.locator(".companion-auth");
+  await expect(auth).toBeVisible();
+  await expect(auth.getByRole("button", { name: /Continue with Apple/ })).toBeEnabled();
+  await expect(auth.getByRole("button", { name: /Continue with Google/ })).toBeEnabled();
+  await expect(auth).not.toContainText("Sign-in is not configured yet");
+  await expect(auth.locator(".form-message.is-error")).toHaveCount(0);
+  await page.screenshot({ path: path.join(qaDirectory, "anonymous-ai-auth-configured-en-390.png") });
 });
