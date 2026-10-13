@@ -10,6 +10,8 @@ import { createStripePortal } from "./api";
 import MemoryPanel from "./MemoryPanel";
 import WeeklyReflectionPanel from "./WeeklyReflectionPanel";
 import { Capacitor } from "@capacitor/core";
+import { App as NativeApp } from "@capacitor/app";
+import { companionAccessSnapshot, formatCompanionReset, loadCompanionAllowance, type CompanionAccessSnapshot, type CompanionAllowanceState, type CompanionPlan } from "./allowance";
 import { manageStoreKit } from "./storekit";
 import AccountPanel from "./AccountPanel";
 import { membershipEntitlementIsActive } from "../readingAccess";
@@ -25,6 +27,8 @@ type CompanionPanelProps = {
   entryRevision?: number;
   onShareAnswer?: (answer: string, sourceChapterId?: number) => void;
   onSignedOut?: () => void;
+  onAccessChange?: (snapshot: CompanionAccessSnapshot) => void;
+  onPurchaseViewChange?: (isBuying: boolean) => void;
 };
 
 type ConversationMessage = {
@@ -36,11 +40,6 @@ type ConversationMessage = {
   retry?: { requestId: string; chapterId: number; locale: "zh" | "en"; threadId: string | null };
   failureNote?: string;
   chapter_id?: number | null;
-};
-
-type CompanionState = {
-  entitlement: { status: string; source: string; expires_at: string | null } | null;
-  remainingFreeQuestions: number;
 };
 
 function friendlyCompanionError(error: unknown, isZh: boolean) {
@@ -108,6 +107,8 @@ export function SignedInCompanion({
   initialPlan = "annual",
   entryRevision = 0,
   onShareAnswer,
+  onAccessChange,
+  onPurchaseViewChange,
   onSignOut,
   client = companionClient(),
   config = companionPublicConfig(),
@@ -117,7 +118,7 @@ export function SignedInCompanion({
   client?: SupabaseClient | null;
   config?: CompanionPublicConfig | null;
 }) {
-  const [state, setState] = useState<CompanionState | null>(null);
+  const [state, setState] = useState<CompanionAllowanceState | null>(null);
   const [accessError, setAccessError] = useState("");
   const [question, setQuestion] = useState(initialQuestion ?? "");
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
@@ -133,6 +134,9 @@ export function SignedInCompanion({
   const historyAbortRef = useRef<AbortController | null>(null);
   const historyRequestRef = useRef<{ selectedId?: string; listOnly: boolean }>({ listOnly: false });
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const accessAliveRef = useRef(true);
+  const accessAbortRef = useRef<AbortController | null>(null);
+  const accessRequestRef = useRef<Promise<CompanionAllowanceState> | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const slowTimerRef = useRef<number | null>(null);
   const conversationRef = useRef<HTMLDivElement>(null);
@@ -206,6 +210,10 @@ export function SignedInCompanion({
     setView(initialView);
   }, [entryRevision, initialView]);
 
+  useEffect(() => {
+    onPurchaseViewChange?.(view === "subscription");
+  }, [onPurchaseViewChange, view]);
+
   useEffect(() => () => {
     abortRef.current?.abort();
     if (slowTimerRef.current !== null) window.clearTimeout(slowTimerRef.current);
@@ -227,34 +235,83 @@ export function SignedInCompanion({
     conversation.scrollTo({ top: conversation.scrollHeight, behavior: "auto" });
   }, [asking, messages, view, state]);
 
-  const refresh = useCallback(async () => {
-    if (!client) return;
-    setAccessError("");
-    const today = new Date().toISOString().slice(0, 10);
-    const [entitlementResult, usageResult] = await Promise.all([
-      client.from("wendao_entitlements").select("status,source,expires_at").eq("user_id", session.user.id).maybeSingle(),
-      client.from("wendao_usage_periods").select("question_allowance,used_questions").eq("user_id", session.user.id).eq("period_start", today).maybeSingle(),
-    ]);
-    if (entitlementResult.error) {
-      setAccessError(entitlementResult.error.message);
-      return;
-    }
-    const used = Number(usageResult.data?.used_questions ?? 0);
-    setState({
-      entitlement: entitlementResult.data,
-      remainingFreeQuestions: Math.max(0, 3 - used),
-    });
+  const refresh = useCallback((): Promise<CompanionAllowanceState> => {
+    if (!accessAliveRef.current) return Promise.reject(new Error("ABORTED"));
+    if (accessRequestRef.current) return accessRequestRef.current;
+    const controller = new AbortController();
+    accessAbortRef.current = controller;
+    const request = loadCompanionAllowance(client, session.user.id, controller.signal)
+      .then((next) => {
+        if (!controller.signal.aborted) {
+          setAccessError("");
+          setState(next);
+        }
+        return next;
+      })
+      .catch((error) => {
+        if (!controller.signal.aborted) setAccessError(error instanceof Error ? error.message : "ACCESS_UNAVAILABLE");
+        throw error;
+      })
+      .finally(() => {
+        if (accessRequestRef.current === request) accessRequestRef.current = null;
+      });
+    accessRequestRef.current = request;
+    return request;
   }, [client, session.user.id]);
 
   useEffect(() => {
-    void refresh();
+    accessAliveRef.current = true;
+    const synchronize = () => { void refresh().catch(() => undefined); };
+    synchronize();
+    const onVisible = () => { if (document.visibilityState === "visible") synchronize(); };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", synchronize);
+    window.addEventListener("online", synchronize);
+    let active = true;
+    let listener: { remove(): Promise<void> } | undefined;
+    if (Capacitor.isNativePlatform()) {
+      void NativeApp.addListener("appStateChange", ({ isActive }) => {
+        if (isActive) synchronize();
+      }).then((handle) => {
+        if (active) listener = handle;
+        else void handle.remove();
+      }).catch(() => undefined);
+    }
+    return () => {
+      active = false;
+      accessAliveRef.current = false;
+      accessAbortRef.current?.abort();
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", synchronize);
+      window.removeEventListener("online", synchronize);
+      void listener?.remove();
+    };
   }, [refresh]);
+
+  useEffect(() => {
+    if (!state) return;
+    // This timer requests the new server day; it never grants quota locally.
+    const wait = Math.max(100, Date.parse(state.nextResetAt) - Date.now() + 50);
+    const timer = window.setTimeout(() => { void refresh().catch(() => undefined); }, wait);
+    return () => window.clearTimeout(timer);
+  }, [refresh, state?.nextResetAt]);
+
+  useEffect(() => {
+    onAccessChange?.(companionAccessSnapshot(state, Boolean(accessError)));
+  }, [accessError, onAccessChange, state]);
+
+  if (view === "subscription") {
+    return <section className="companion-membership-view">
+      <button className="companion-text-button" type="button" onClick={() => setView("conversation")}>{isZh ? "← 返回问道" : "← Back to Wendao"}</button>
+      <SubscriptionPanel language={language} session={session} initialPlan={initialPlan} onSignOut={() => onSignOut("sign-out")} onMembershipChanged={refresh} onOpenAccount={() => setView("account")} />
+    </section>;
+  }
 
   if (accessError && !state) {
     return (
       <section className="companion-loading">
-        <p>{isZh ? "暂时无法读取会员状态。" : "Membership status is temporarily unavailable."}</p>
-        <button type="button" onClick={() => void refresh()}>{isZh ? "重新加载" : "Try again"}</button>
+        <p>{isZh ? "暂时无法确认会员或今日免费额度。" : "Membership or today’s free allowance could not be confirmed."}</p>
+        <button type="button" onClick={() => void refresh().catch(() => undefined)}>{isZh ? "重新加载" : "Try again"}</button>
       </section>
     );
   }
@@ -273,12 +330,7 @@ export function SignedInCompanion({
       />
     );
   }
-  if (view === "subscription") {
-    return <section className="companion-membership-view">
-      <button className="companion-text-button" type="button" onClick={() => setView("conversation")}>{isZh ? "← 返回问道" : "← Back to Wendao"}</button>
-      <SubscriptionPanel language={language} session={session} initialPlan={initialPlan} onSignOut={() => onSignOut("sign-out")} onMembershipChanged={refresh} onOpenAccount={() => setView("account")} />
-    </section>;
-  }
+
 
   if (view === "memory") {
     return <MemoryPanel session={session} language={language} onBack={() => setView("conversation")} />;
@@ -378,6 +430,11 @@ export function SignedInCompanion({
       if (abortRef.current === controller) abortRef.current = null;
       setAsking(false);
       setPhase("idle");
+      // Failure/cancellation may have released a server reservation. Read it
+      // back instead of restoring a question optimistically.
+      const pendingRead = accessRequestRef.current;
+      if (pendingRead) void pendingRead.catch(() => undefined).then(() => refresh()).catch(() => undefined);
+      else void refresh().catch(() => undefined);
     }
   };
 
@@ -464,7 +521,8 @@ export function SignedInCompanion({
           </div>
         </div>
         {!isMember ? <div className="companion-free-usage" role="status">
-          <span>{isZh ? `今日免费问道还剩 ${state.remainingFreeQuestions} 条` : `${state.remainingFreeQuestions} free questions left today`}</span>
+          <span>{accessError ? (isZh ? "今日免费额度暂时未能确认" : "Today’s free allowance could not be confirmed") : (isZh ? `今日免费问道还剩 ${state.remainingFreeQuestions} 条` : `${state.remainingFreeQuestions} free questions left today`)}</span>
+          {!accessError ? <small>{formatCompanionReset(state.nextResetAt, language)}</small> : <button type="button" onClick={() => void refresh().catch(() => undefined)}>{isZh ? "重新检查额度" : "Check allowance again"}</button>}
           <button type="button" onClick={() => setView("subscription")}>{isZh ? "会员不限次数" : "Unlimited with membership"}</button>
         </div> : null}
         {messages.length === 0 && view === "conversation" && historyState === "ready" ? <h3>{isZh ? "借老子的智慧，聊眼前的困惑。" : "Bring today’s questions to Laozi’s wisdom."}</h3> : null}
@@ -611,9 +669,17 @@ export function SignedInCompanion({
   );
 }
 
-export default function CompanionPanel({ language, chapterId, initialQuestion, initialView, initialPlan, entryRevision, onShareAnswer, onSignedOut }: CompanionPanelProps) {
+export default function CompanionPanel({ language, chapterId, initialQuestion, initialView, initialPlan = "annual", entryRevision, onShareAnswer, onSignedOut, onAccessChange, onPurchaseViewChange }: CompanionPanelProps) {
+  const [selectedPlan, setSelectedPlan] = useState<CompanionPlan>(initialPlan);
+  useEffect(() => { setSelectedPlan(initialPlan); }, [entryRevision, initialPlan]);
+  const sessionChanged = useCallback((session: Session | null) => {
+    if (!session) {
+      onAccessChange?.({ status: "signed_out", isMember: false, remainingFreeQuestions: null, nextResetAt: null });
+      onPurchaseViewChange?.(initialView === "subscription");
+    }
+  }, [initialView, onAccessChange, onPurchaseViewChange]);
   return (
-    <CompanionAuth language={language}>
+    <CompanionAuth language={language} onSessionChange={sessionChanged} purchaseIntent={initialView === "subscription" ? { plan: selectedPlan, onPlanChange: setSelectedPlan } : undefined}>
       {(session, signOut) => (
         <SignedInCompanion
           key={session.user.id}
@@ -622,9 +688,11 @@ export default function CompanionPanel({ language, chapterId, initialQuestion, i
           chapterId={chapterId}
           initialQuestion={initialQuestion}
           initialView={initialView}
-          initialPlan={initialPlan}
+          initialPlan={selectedPlan}
           entryRevision={entryRevision}
           onShareAnswer={onShareAnswer}
+          onAccessChange={onAccessChange}
+          onPurchaseViewChange={onPurchaseViewChange}
           onSignOut={async (mode) => {
             await signOut();
             if (mode !== "switch") onSignedOut?.();

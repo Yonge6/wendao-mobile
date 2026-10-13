@@ -1,8 +1,8 @@
 import AppStoreDownloadLink from './companion/AppStoreDownloadLink';
 
-export default function AppDownloadBanner({ language, onClose }: { language: 'zh' | 'en'; onClose: () => void }) {
+export default function AppDownloadBanner({ language, onClose, compact = false }: { language: 'zh' | 'en'; onClose: () => void; compact?: boolean }) {
   const isZh = language === 'zh';
-  return <aside className="app-download-banner" aria-label={isZh ? '下载三慢问道 App' : 'Download Wendao App'}>
+  return <aside className={`app-download-banner${compact ? ' is-compact' : ''}`} aria-label={isZh ? '下载三慢问道 App' : 'Download Wendao App'}>
     <button className="app-download-banner-close" type="button" onClick={onClose}
       aria-label={isZh ? '关闭下载横幅' : 'Dismiss app banner'}>
       <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.3" aria-hidden="true"><path d="m4 4 8 8M12 4l-8 8" /></svg>

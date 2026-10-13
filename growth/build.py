@@ -23,7 +23,7 @@ def shell(title, description, path, body, slug='start', metadata=''):
 <meta property="og:description" content="{esc(description)}"><meta property="og:type" content="{'article' if path.startswith('/situations/') else 'website'}">
 <meta property="og:url" content="{ORIGIN}{path}"><meta name="theme-color" content="#f7f1e6">
 <meta property="og:site_name" content="三慢问道"><meta name="author" content="三慢问道">{metadata}
-<link rel="stylesheet" href="/growth/editorial.css?v={STYLE_VERSION}"><link rel="stylesheet" href="/download/app-banner.css?v=20261001"><script src="/download/app-banner.js?v=20261001" defer></script><script src="/growth/reading.js?v={SCRIPT_VERSION}" defer></script>
+<link rel="stylesheet" href="/growth/editorial.css?v={STYLE_VERSION}"><link rel="stylesheet" href="/download/app-banner.css?v=20261013"><script src="/download/app-banner.js?v=20261013" defer></script><script src="/growth/reading.js?v={SCRIPT_VERSION}" defer></script>
 </head><body data-page="{slug}"><a class="skip" href="#main">跳到正文</a>
 <header><a class="brand" href="/start/">三慢问道<span>WENDAO</span></a><a href="/?lang=zh" data-action="chapter_click">读今日一章 ↗</a></header>
 <main id="main">{body}</main>
@@ -31,7 +31,7 @@ def shell(title, description, path, body, slug='start', metadata=''):
 <small>三慢问道创作记录 · AI 辅助编辑，引文经产品校读库核对。<br>生活解读是当代观察，不是古文逐字翻译。</small></footer></body></html>'''
 
 cards = ''.join(f'''<a class="story" href="/situations/{i['slug']}/"><span class="number">{n+1:02d}</span><div><span class="eyebrow">{i['theme']}</span><h2>{i['title']}</h2><p>{i['teaser']}</p></div><span class="arrow" aria-hidden="true">↗</span></a>''' for n,i in enumerate(ITEMS))
-start = f'''<section class="opening"><span class="eyebrow">把《道德经》读进真实生活</span><h1>生活里的道</h1><p class="intro">从一件小事，读懂一句经典。<br>带着此刻的处境，读一段，停一停。</p><span class="rule"></span><p class="small">{len(ITEMS)} 篇生活随笔 · 无需登录即可阅读</p></section><section aria-label="生活情境">{cards}</section><section class="quiet"><h2>读一章，也是在认识自己。</h2><p>三慢问道提供帛书乙本底本校读、逐句今译与生活启发。今日推荐章节免费，另可主动保留 10 章。</p><a class="button" href="/?lang=zh" data-action="chapter_click">读今日一章 <span>→</span></a><p class="small">完整章节买断与 AI 问道会员可按需选择。<br>AI 服务需会员；章节买断不含 AI。</p></section>'''
+start = f'''<section class="opening"><span class="eyebrow">把《道德经》读进真实生活</span><h1>生活里的道</h1><p class="intro">从一件小事，读懂一句经典。<br>带着此刻的处境，读一段，停一停。</p><span class="rule"></span><p class="small">81 章生活漫画与随笔 · 无需登录即可阅读</p></section><section aria-label="生活情境">{cards}</section><section class="quiet"><h2>读一章，也是在认识自己。</h2><p>三慢问道提供帛书乙本底本校读、逐句今译与生活启发。今日推荐章节免费，另可主动保留 10 章。</p><a class="button" href="/?lang=zh" data-action="chapter_click">读今日一章 <span>→</span></a><p class="small">完整章节买断与 AI 问道会员可按需选择。<br>登录后每天可免费问道 3 条，会员不限次数；章节买断不含会员 AI。</p></section>'''
 (PUBLIC/'start').mkdir(exist_ok=True)
 (PUBLIC/'start/index.html').write_text(shell('生活里的道', '关系、选择、用力过度时，读一段《道德经》的生活解读。无需登录，先从与你有关的片刻开始。', '/start/', start, metadata=schema('生活里的道', '把《道德经》读进真实生活。', '/start/', items=ITEMS)))
 for i in ITEMS:
@@ -43,7 +43,7 @@ for i in ITEMS:
 <article id="reading-body">{paragraphs}<blockquote><p>{i['quote']}</p><cite>《道德经》今本第 {cid} 章<br>帛书乙本底本校读 · 节选</cite></blockquote><section class="practice"><span class="eyebrow">留给今天的一点空间</span><p>{esc(i['practice'])}</p></section><span id="reading-end" aria-hidden="true"></span></article>
 <section class="quiet"><h2>把这一刻，带回第 {cid} 章。</h2><p>继续看完整校读正文、逐句今译和本章的生活启发。</p><a class="button" data-action="chapter_click" href="/?chapter={cid}&lang=zh">继续读第 {cid} 章 <span>→</span></a><p class="small">今日推荐免费。其他章节可在剩余名额内主动保留，总计 10 章；名额用尽后仍可读今日推荐。</p><a class="download" data-action="store_click" href="/download.html?chapter={cid}&lang=zh">下载 App，方便每天回来 ↗</a><p class="small">AI 问道为会员服务，章节买断不含 AI。<br>实际价格以 App Store 显示为准。</p></section>'''
     if comic := i.get('comic'):
-        comic_markup = f'''<figure style="margin:0 0 24px"><a href="{esc(comic['original'])}" target="_blank" rel="noopener" aria-label="放大阅读漫画"><img src="{esc(comic['image'])}" width="{comic['width']}" height="{comic['height']}" alt="{esc(comic['alt'])}" style="display:block;width:100%;height:auto" fetchpriority="high"></a><figcaption class="small"></figcaption></figure><p><a class="button" href="{esc(comic['original'])}" download="wendao-story-{esc(slug)}.png">保存完整漫画 ↓</a></p>'''
+        comic_markup = f'''<figure style="margin:0 0 24px"><a href="{esc(comic['image'])}" target="_blank" rel="noopener" aria-label="放大阅读漫画"><img src="{esc(comic['image'])}" width="{comic['width']}" height="{comic['height']}" alt="{esc(comic['alt'])}" style="display:block;width:100%;height:auto" fetchpriority="high"></a><figcaption class="small"></figcaption></figure><p><a class="button" href="{esc(comic['original'])}" download="wendao-story-{esc(slug)}.png">保存完整漫画 ↓</a></p>'''
         if style := comic.get('style'):
             credit = f'<span style="display:block;margin-top:10px"><a href="{esc(style["url"])}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:6px;padding:6px 0">图片风格：{esc(style["name"])} <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.25" aria-hidden="true"><path d="M5 3H3v10h10v-2M8 3h5v5M7 9l6-6"/></svg></a></span>'
             comic_markup = comic_markup.replace('</figcaption>', credit + '</figcaption>', 1)

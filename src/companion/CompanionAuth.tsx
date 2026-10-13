@@ -7,19 +7,24 @@ import {
   type CompanionAuthProvider,
 } from "./auth";
 import { companionClient } from "./client";
+import SubscriptionPanel from "./SubscriptionPanel";
+import type { CompanionPlan } from "./allowance";
 
 type CompanionAuthProps = {
   language: "zh" | "en";
   children: (session: Session, signOut: () => Promise<void>) => ReactNode;
+  onSessionChange?: (session: Session | null) => void;
+  purchaseIntent?: { plan: CompanionPlan; onPlanChange: (plan: CompanionPlan) => void };
 };
 
 let cachedSession: Session | null | undefined;
 
-export default function CompanionAuth({ language, children }: CompanionAuthProps) {
+export default function CompanionAuth({ language, children, onSessionChange, purchaseIntent }: CompanionAuthProps) {
   const [session, setSession] = useState<Session | null>(cachedSession ?? null);
   const [loading, setLoading] = useState(cachedSession === undefined);
   const [busyProvider, setBusyProvider] = useState<CompanionAuthProvider | null>(null);
   const [error, setError] = useState("");
+  const [signInRequested, setSignInRequested] = useState(false);
   const isZh = language === "zh";
 
   useEffect(() => {
@@ -64,6 +69,12 @@ export default function CompanionAuth({ language, children }: CompanionAuthProps
     };
   }, []);
 
+  useEffect(() => {
+    if (!loading) onSessionChange?.(session);
+  }, [loading, onSessionChange, session]);
+
+  useEffect(() => { setSignInRequested(false); }, [purchaseIntent?.plan]);
+
   const signIn = async (provider: CompanionAuthProvider) => {
     setBusyProvider(provider);
     setError("");
@@ -84,11 +95,20 @@ export default function CompanionAuth({ language, children }: CompanionAuthProps
     return children(session, signOutCompanion);
   }
 
+  if (purchaseIntent && !signInRequested) {
+    return <SubscriptionPanel language={language} session={null} initialPlan={purchaseIntent.plan} onPlanChange={purchaseIntent.onPlanChange} onRequireSignIn={() => setSignInRequested(true)} />;
+  }
+
   return (
     <section className="companion-auth" aria-labelledby="companion-auth-title">
-      <span className="drawer-kicker">{isZh ? "AI 问道" : "Wendao AI"}</span>
+      {purchaseIntent ? <button className="companion-text-button" type="button" onClick={() => setSignInRequested(false)}>{isZh ? "← 返回方案" : "← Back to plans"}</button> : null}
+      <span className="drawer-kicker">{purchaseIntent ? (isZh ? "阅读与同行" : "Reading and membership") : (isZh ? "AI 问道" : "Wendao AI")}</span>
       <h3 id="companion-auth-title">
-        {isZh ? "让每一次提问，延续成一段理解自己的路。" : "Let each question become part of a longer path toward understanding yourself."}
+        {purchaseIntent
+          ? (purchaseIntent.plan === "lifetime"
+            ? (isZh ? "登录后，继续永久解锁 81 章。" : "Sign in to continue your permanent 81-chapter unlock.")
+            : (isZh ? `登录后，继续${purchaseIntent.plan === "annual" ? "年付" : "月付"}问道同行。` : `Sign in to continue with ${purchaseIntent.plan === "annual" ? "annual" : "monthly"} membership.`))
+          : (isZh ? "让每一次提问，延续成一段理解自己的路。" : "Let each question become part of a longer path toward understanding yourself.")}
       </h3>
       <p>
         {isZh

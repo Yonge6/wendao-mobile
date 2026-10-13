@@ -157,6 +157,7 @@ test("the subscription screen recovers when StoreKit returns no or partial price
   assert.match(source, /products\.length < Object\.keys\(STOREKIT_PRODUCTS\)\.length/);
   assert.match(source, /重新读取价格/);
   assert.match(source, /visibilitychange/);
-  assert.match(source, /setSelectedPlan\(availablePlan\)/);
+  assert.doesNotMatch(source, /setSelectedPlan\(availablePlan\)/);
+  assert.match(source, /!nativePrice\(selectedPlan\)/);
   assert.doesNotMatch(source, /nativePrice\("annual"\) \?\? "…"/);
 });

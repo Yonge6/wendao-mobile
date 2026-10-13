@@ -9,6 +9,7 @@ import {
   type ReactNode,
   type SetStateAction,
   useEffect,
+  useCallback,
   useMemo,
   useRef,
   useState,
@@ -47,6 +48,10 @@ import { chapters, type Chapter, type RelatedItem } from "./data/chapters";
 import { dailyChapterId, localDateKey } from "./dailyEncounter";
 import lifeStories from "../growth/copy.json";
 import LifeStoryContent from "./LifeStoryContent";
+import { filterLifeStories } from "./lifeStoryBrowse";
+import { lifeStoryAssetUrl } from "./lifeStoryAssets";
+import { getComicCacheStats, clearComicCache } from "./comicMedia";
+import { loadCompanionAllowance, type CompanionAccessSnapshot } from "./companion/allowance";
 import { normalizeSearch, searchChapters, searchExcerpt, type SearchMatch } from "./chapterSearch";
 import {
   DAILY_NOTIFICATION_TIME_LABEL,
@@ -753,6 +758,7 @@ type CompanionDialogProps = {
   entryRevision?: number;
   onShareAnswer: (answer: string, sourceChapterId?: number) => void;
   children?: ReactNode;
+  onAccessChange?: (snapshot: CompanionAccessSnapshot) => void;
 };
 
 export function CompanionDialog({
@@ -766,8 +772,13 @@ export function CompanionDialog({
   entryRevision,
   onShareAnswer,
   children,
+  onAccessChange,
 }: CompanionDialogProps) {
   const isZh = language === "zh";
+  const [buying, setBuying] = useState(initialView === "subscription");
+  useEffect(() => { setBuying(initialView === "subscription"); }, [initialView, entryRevision]);
+  const dialogTitle = buying ? (isZh ? "阅读与会员" : "Reading and membership")
+    : (isZh ? "我的问道" : "My Wendao");
   const [wide, setWide] = useState(() => window.matchMedia("(min-width: 800px)").matches);
   useEffect(() => {
     const query = window.matchMedia("(min-width: 800px)");
@@ -823,7 +834,7 @@ export function CompanionDialog({
       <button
         type="button"
         className="companion-backdrop"
-        aria-label={isZh ? "关闭我的问道" : "Close My Wendao"}
+        aria-label={buying ? (isZh ? "关闭购买页面" : "Close purchase page") : (isZh ? "关闭我的问道" : "Close My Wendao")}
         onClick={onClose}
       />
       <section
@@ -834,22 +845,23 @@ export function CompanionDialog({
       >
         <header className="companion-dialog-header">
           <div>
-            <span>三慢问道 · AI WENDAO</span>
-            <h2 id="companion-dialog-title">{isZh ? "我的问道" : "My Wendao"}</h2>
+            <span>{buying ? (isZh ? "三慢问道 · 阅读与同行" : "WENDAO · READING & COMPANION") : "三慢问道 · AI WENDAO"}</span>
+            <h2 id="companion-dialog-title">{dialogTitle}</h2>
             <small>
-              {isZh ? `正与第 ${chapterId} 章对话 · ${chapterTitle}` : `In conversation with Chapter ${chapterId} · ${chapterTitle}`}
+              {buying ? (isZh ? "选择完整阅读，或与 AI 持续同行" : "Choose full reading or ongoing AI companionship")
+                : isZh ? `正与第 ${chapterId} 章对话 · ${chapterTitle}` : `In conversation with Chapter ${chapterId} · ${chapterTitle}`}
             </small>
           </div>
-          <button type="button" aria-label={isZh ? "关闭我的问道" : "Close My Wendao"} onClick={onClose}>×</button>
+          <button type="button" aria-label={buying ? (isZh ? "关闭购买页面" : "Close purchase page") : (isZh ? "关闭我的问道" : "Close My Wendao")} onClick={onClose}>×</button>
         </header>
         <div className="companion-dialog-body">
           {hasOpened ? (
             <Suspense fallback={(
               <div className="companion-loading" role="status">
-                {isZh ? "正在展开你的问道…" : "Opening your Wendao…"}
+                {buying ? (isZh ? "正在载入权益与方案…" : "Loading benefits and plans…") : (isZh ? "正在展开你的问道…" : "Opening your Wendao…")}
               </div>
             )}>
-              {children ?? <CompanionPanel language={language} chapterId={chapterId} initialView={initialView} initialPlan={initialPlan} entryRevision={entryRevision} onShareAnswer={onShareAnswer} onSignedOut={onClose} />}
+              {children ?? <CompanionPanel language={language} chapterId={chapterId} initialView={initialView} initialPlan={initialPlan} entryRevision={entryRevision} onShareAnswer={onShareAnswer} onSignedOut={onClose} onAccessChange={onAccessChange} onPurchaseViewChange={setBuying} />}
             </Suspense>
           ) : null}
         </div>
@@ -935,6 +947,7 @@ type SideDrawerProps = {
   showSupport: boolean;
   onSupportOpen: () => void;
   onCompanionOpen: () => void;
+  onMembershipOpen: () => void;
   onAppStoreAction: (action: "download" | "rate") => void;
   dailyNotificationState: DailyNotificationState;
   dailyNotificationBusy: boolean;
@@ -965,6 +978,7 @@ function SideDrawer({
   showSupport,
   onSupportOpen,
   onCompanionOpen,
+  onMembershipOpen,
   onAppStoreAction,
   dailyNotificationState,
   dailyNotificationBusy,
@@ -977,6 +991,33 @@ function SideDrawer({
   const drawerScrollRef = useRef<HTMLDivElement>(null);
   const [storySlug, setStorySlug] = useState(lifeStories[0]?.slug);
   const localizedStories = useMemo(() => lifeStories.map(story => localizeLifeStory(story, language)), [language]);
+  const [storyQuery, setStoryQuery] = useState("");
+  const [storyTheme, setStoryTheme] = useState("");
+  const [storyChapter, setStoryChapter] = useState("");
+  const [storyKind, setStoryKind] = useState<"comic" | "essay" | "all">("comic");
+  const themes = useMemo(() => [...new Set(localizedStories.map(story => story.theme))], [localizedStories]);
+  const filteredStories = useMemo(() => filterLifeStories(localizedStories, { query: storyQuery, theme: storyTheme, chapter: storyChapter, kind: storyKind }), [localizedStories, storyQuery, storyTheme, storyChapter, storyKind]);
+  const [cacheStats, setCacheStats] = useState<{ images: number; bytes: number } | null>(null);
+  const [cacheBusy, setCacheBusy] = useState(false);
+  const [cacheNotice, setCacheNotice] = useState("");
+  useEffect(() => { setStoryTheme(""); }, [language]);
+  useEffect(() => {
+    if (!open || view !== "home") return;
+    let active = true;
+    void getComicCacheStats().then(stats => { if (active) setCacheStats(stats); }).catch(() => { if (active) setCacheStats(null); });
+    return () => { active = false; };
+  }, [open, view]);
+  const clearCachedComics = async () => {
+    setCacheBusy(true);
+    setCacheNotice("");
+    try {
+      await clearComicCache();
+      setCacheStats(await getComicCacheStats());
+      usageEvent("comic_cache_clear", { result: "cleared" });
+      setCacheNotice(isZh ? "漫画缓存已清除" : "Comic cache cleared");
+    } catch { usageEvent("comic_cache_clear", { result: "failed" }); setCacheNotice(isZh ? "暂时未能清除，请重试" : "Could not clear the cache. Try again."); }
+    finally { setCacheBusy(false); }
+  };
   const activeStory = localizedStories.find((story) => story.slug === storySlug) ?? localizedStories[0];
   const [storyShareOpen, setStoryShareOpen] = useState(false);
   const [storyFeedback, setStoryFeedback] = useState<{ message: string } | null>(null);
@@ -1104,7 +1145,7 @@ function SideDrawer({
         aria-label={isZh ? "关闭菜单" : "Close menu"}
         onClick={onClose}
       />
-      <aside inert={storyShareOpen} className="side-drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title">
+      <aside inert={storyShareOpen} className={`side-drawer${view === "story" || view === "stories" ? " is-story-reading" : ""}`} role="dialog" aria-modal="true" aria-labelledby="drawer-title">
         <header className="drawer-header">
           {view !== "home" ? (
             <button
@@ -1164,8 +1205,13 @@ function SideDrawer({
                   <span className="drawer-nav-icon"><ChatBubbleIcon /></span>
                   <span>
                     <strong>{isZh ? "AI 问道" : "Wendao AI"}</strong>
-                    <small>{isZh ? "借老子的智慧，聊眼前的困惑" : "Bring your questions to Laozi’s wisdom"}</small>
+                    <small>{isZh ? "每天免费问 3 条，聊眼前的困惑" : "3 free questions daily, grounded in your chapter"}</small>
                   </span>
+                  <ChevronRightIcon />
+                </button>
+                <button type="button" onClick={onMembershipOpen}>
+                  <span className="drawer-nav-icon"><LockClosedIcon /></span>
+                  <span><strong>{isZh ? "阅读与会员" : "Reading and membership"}</strong><small>{isZh ? "订阅同行或永久解锁章节，按需选择" : "Companion membership or permanent chapter access"}</small></span>
                   <ChevronRightIcon />
                 </button>
                 <div className="drawer-nav-row">
@@ -1204,6 +1250,13 @@ function SideDrawer({
                       </button>
                     ))}
                   </div>
+                </div>
+                <div className="drawer-cache-controls">
+                  <strong>{isZh ? "漫画缓存" : "Comic cache"}</strong>
+                  <small>{cacheStats ? (isZh ? `${cacheStats.images} 张 · ${(cacheStats.bytes / 1024 / 1024).toFixed(1)} MB` : `${cacheStats.images} images · ${(cacheStats.bytes / 1024 / 1024).toFixed(1)} MB`) : (isZh ? "正在读取…" : "Checking…")}</small>
+                  <p>{isZh ? "最近看过的漫画会暂存，方便下次阅读。" : "Recent comics are kept for your next reading."}</p>
+                  <button type="button" disabled={cacheBusy || !cacheStats?.images} onClick={() => void clearCachedComics()}>{cacheBusy ? (isZh ? "正在清除…" : "Clearing…") : (isZh ? "清除漫画缓存" : "Clear comic cache")}</button>
+                  {cacheNotice ? <span role="status">{cacheNotice}</span> : null}
                 </div>
                 {surface === "ios" ? (
                   <div className="drawer-nav-row">
@@ -1331,17 +1384,28 @@ function SideDrawer({
           {view === "stories" ? (
             <section className="drawer-stories" aria-label={isZh ? "生活里的道文章列表" : "Everyday reflections"}>
               <p className="drawer-stories-intro">{isZh
-                ? "带着此刻的处境，读一段，停一停。这里收录三慢问道的生活随笔，慢慢更新。"
-                : "Read, pause, and bring a small moment of life to the Daodejing."}</p>
+                ? "81 章，81 个生活漫画。带着眼前的小困惑，找一个故事看看。"
+                : "81 chapters, 81 everyday comics. Find a story for the moment you are in."}</p>
+              <div className="story-browse-controls" role="search" aria-label={isZh ? "查找生活里的道" : "Find everyday stories"}>
+                <label className="story-search"><MagnifyingGlassIcon aria-hidden="true" /><input type="search" value={storyQuery} onChange={event => setStoryQuery(event.target.value)} aria-label={isZh ? "搜索漫画和随笔" : "Search comics and essays"} placeholder={isZh ? "搜索标题、话题或章次" : "Search title, theme or chapter"} /></label>
+                <div className="story-kind-control" role="group" aria-label={isZh ? "内容类型" : "Content type"}>
+                  {(["comic", "essay", "all"] as const).map(kind => <button key={kind} type="button" aria-pressed={storyKind === kind} onClick={() => {setStoryKind(kind);usageEvent("story_filter",{source:"stories",value:kind});}}>{isZh ? {comic:"漫画",essay:"随笔",all:"全部"}[kind] : {comic:"Comics",essay:"Essays",all:"All"}[kind]}</button>)}
+                </div>
+                <div className="story-filter-row">
+                  <label><span>{isZh ? "主题" : "Theme"}</span><select value={storyTheme} onChange={event => {setStoryTheme(event.target.value);usageEvent("story_filter",{source:"stories",value:"theme"});}}><option value="">{isZh ? "所有主题" : "All themes"}</option>{themes.map(theme => <option value={theme} key={theme}>{theme}</option>)}</select></label>
+                  <label><span>{isZh ? "章次" : "Chapter"}</span><select value={storyChapter} onChange={event => {setStoryChapter(event.target.value);usageEvent("story_filter",{source:"stories",value:"chapter"});}}><option value="">{isZh ? "所有章节" : "All chapters"}</option>{Array.from({length:81},(_,index)=>index+1).map(id => <option value={id} key={id}>{isZh ? `第 ${id} 章` : `Chapter ${id}`}</option>)}</select></label>
+                </div>
+                <span className="story-results" aria-live="polite">{isZh ? `找到 ${filteredStories.length} 篇` : `${filteredStories.length} stories`}</span>
+              </div>
               <div className="drawer-story-list">
-                {localizedStories.map((story, index) => (
-                  <button className="drawer-story-card" data-chapter-id={story.chapter} type="button" key={story.slug} onClick={() => {
+                {filteredStories.map((story, index) => (
+                  <button className={`drawer-story-card${story.comic ? " has-thumbnail" : ""}`} data-chapter-id={story.chapter} type="button" key={story.slug} onClick={() => {
                     setStorySlug(story.slug);
                     onViewChange("story");
                   }}>
-                    <span className="drawer-story-number" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
+                    {story.comic ? <img className="drawer-story-thumbnail" src={lifeStoryAssetUrl(story.comic.image)} width="88" height="116" loading="lazy" decoding="async" alt="" /> : <span className="drawer-story-number" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>}
                     <span className="drawer-story-copy" lang={story.language === "en" ? "en" : "zh-CN"}>
-                      <small>{story.theme} · {story.language === "en" ? `Chapter ${story.chapter}` : `第 ${story.chapter} 章`}{!isZh && story.language !== "en" ? " · Chinese" : ""}</small>
+                      <small>{story.theme} · {story.language === "en" ? `Chapter ${story.chapter}` : `第 ${story.chapter} 章`} · {story.comic ? (isZh ? "漫画" : "Comic") : (isZh ? "随笔" : "Essay")}{!isZh && story.language !== "en" ? " · Chinese" : ""}</small>
                       <strong>{story.title}</strong>
                       <span>{story.teaser}</span>
                     </span>
@@ -1349,6 +1413,7 @@ function SideDrawer({
                   </button>
                 ))}
               </div>
+              {!filteredStories.length ? <p className="drawer-story-empty">{isZh ? "没有找到，换一个词或筛选条件试试。" : "No stories found. Try a different word or filter."}<button type="button" onClick={() => {setStoryQuery("");setStoryTheme("");setStoryChapter("");setStoryKind("comic");}}>{isZh ? "重置筛选" : "Reset filters"}</button></p> : null}
               <p className="drawer-story-note">{isZh ? `共 ${lifeStories.length} 篇 · 无需登录，随时慢读。` : `${lifeStories.length} essays · No sign-in needed.`}</p>
             </section>
           ) : null}
@@ -1950,6 +2015,7 @@ export default function Prototype() {
   const [chapterEntrySource, setChapterEntrySource] = useState<ChapterEntrySource>(initialRequest.chapterId ? "link" : "daily");
   const [directoryOpen, setDirectoryOpen] = useState(false);
   const [directoryQuery, setDirectoryQuery] = useState("");
+  const [directoryOrder, setDirectoryOrder] = useState<"silk" | "received">("silk");
   const [directoryFocusRequested, setDirectoryFocusRequested] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [sharedLifeStory, setSharedLifeStory] = useState<LifeStory | null>(null);
@@ -1980,6 +2046,20 @@ export default function Prototype() {
   const [hasCompanionMembership, setHasCompanionMembership] = useState(false);
   const [readingAccessReady, setReadingAccessReady] = useState(runtimeSurface() !== "ios");
   const [companionSignedIn, setCompanionSignedIn] = useState<boolean | null>(null);
+  const [freeQuestionsRemaining, setFreeQuestionsRemaining] = useState<number | null>(null);
+  const lastCompanionMember = useRef<boolean | null>(null);
+  const onCompanionAccessChange = useCallback((snapshot: CompanionAccessSnapshot) => {
+    if (snapshot.status === "signed_out") { setCompanionSignedIn(false); setFreeQuestionsRemaining(null); }
+    if (snapshot.status === "error") setFreeQuestionsRemaining(null);
+    if (snapshot.status === "ready") {
+      setCompanionSignedIn(true);
+      setHasCompanionMembership(snapshot.isMember);
+      setFreeQuestionsRemaining(snapshot.remainingFreeQuestions);
+      if (snapshot.isMember) setHasFullReadingAccess(true);
+      else if (lastCompanionMember.current === true) window.dispatchEvent(new Event(READING_ACCESS_CHANGED_EVENT));
+      lastCompanionMember.current = snapshot.isMember;
+    }
+  }, []);
   const [dailyNotificationState, setDailyNotificationState] = useState<DailyNotificationState>(() => dailyNotificationsEnabled() ? "enabled" : "disabled");
   const [dailyNotificationBusy, setDailyNotificationBusy] = useState(false);
   const clientId = useRef(stableId(CLIENT_ID_KEY));
@@ -2000,8 +2080,11 @@ export default function Prototype() {
   const profileReady = Boolean(chart?.chartHash);
   const normalizedDirectoryQuery = normalizeSearch(directoryQuery.trim());
   const directoryChapters = useMemo(
-    () => searchChapters(chapters, normalizedDirectoryQuery, language),
-    [normalizedDirectoryQuery, language],
+    () => {
+      const matches = searchChapters(chapters, normalizedDirectoryQuery, language);
+      return !normalizedDirectoryQuery && directoryOrder === "received" ? [...matches].sort((a,b) => a.chapter.id-b.chapter.id) : matches;
+    },
+    [normalizedDirectoryQuery, language, directoryOrder],
   );
   const canReadChapter = (id: number) => chapterIsReadable({
     chapterId: id,
@@ -2124,6 +2207,7 @@ export default function Prototype() {
   useEffect(() => {
     let active = true;
     let refreshId = 0;
+    let resetTimer: number | undefined;
     const client = companionClient();
     const refresh = async () => {
       const currentRefreshId = ++refreshId;
@@ -2158,18 +2242,16 @@ export default function Prototype() {
           signedIn = Boolean(session);
           if (!session) {
             cloudAccess = false;
+            if (active && currentRefreshId === refreshId) setFreeQuestionsRemaining(null);
           } else {
-            const result = await client
-              .from("wendao_entitlements")
-              .select("status,expires_at")
-              .eq("user_id", session.user.id)
-              .maybeSingle();
-            if (result.error) throw result.error;
-            cloudAccess = membershipEntitlementIsActive(result.data);
+            const result = await loadCompanionAllowance(client, session.user.id);
+            cloudAccess = membershipEntitlementIsActive(result.entitlement);
+            if (active && currentRefreshId === refreshId) setFreeQuestionsRemaining(result.remainingFreeQuestions);
           }
         } catch {
           signedIn = null;
           cloudAccess = null;
+          if (active && currentRefreshId === refreshId) setFreeQuestionsRemaining(null);
         }
       }
 
@@ -2187,22 +2269,39 @@ export default function Prototype() {
       });
       setReadingAccessReady(true);
     };
+    const scheduleDayRefresh = () => {
+      window.clearTimeout(resetTimer);
+      const now = new Date();
+      const nextDay = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1);
+      resetTimer = window.setTimeout(() => {
+        setFreeQuestionsRemaining(null);
+        void refresh();
+        scheduleDayRefresh();
+      }, Math.max(100, nextDay - Date.now() + 50));
+    };
     void refresh();
+    scheduleDayRefresh();
     const handleChange = () => void refresh();
     const handleVisibility = () => {
       if (document.visibilityState === "visible") void refresh();
     };
     window.addEventListener(READING_ACCESS_CHANGED_EVENT, handleChange);
+    window.addEventListener("focus", handleChange);
+    window.addEventListener("online", handleChange);
     document.addEventListener("visibilitychange", handleVisibility);
     const authSubscription = client?.auth.onAuthStateChange((_event, session) => {
       if (!active) return;
       setCompanionSignedIn(Boolean(session));
+      setFreeQuestionsRemaining(null);
       window.setTimeout(handleChange, 0);
     });
     return () => {
       active = false;
       refreshId += 1;
+      window.clearTimeout(resetTimer);
       window.removeEventListener(READING_ACCESS_CHANGED_EVENT, handleChange);
+      window.removeEventListener("focus", handleChange);
+      window.removeEventListener("online", handleChange);
       document.removeEventListener("visibilitychange", handleVisibility);
       authSubscription?.data.subscription.unsubscribe();
     };
@@ -2463,8 +2562,8 @@ export default function Prototype() {
   };
 
   return (
-    <div className={`wendao-workspace${companionOpen ? " is-companion-open" : ""}${showAppBanner ? " has-app-banner" : ""}`}>
-      {showAppBanner ? <AppDownloadBanner language={language} onClose={dismissAppBanner} /> : null}
+    <div className={`wendao-workspace${companionOpen ? " is-companion-open" : ""}${showAppBanner ? " has-app-banner" : ""}${isReadingScrolled ? " is-reading-scrolled" : ""}`}>
+      {showAppBanner ? <AppDownloadBanner language={language} onClose={dismissAppBanner} compact={isReadingScrolled} /> : null}
       <header
         className={`reading-header reading-header-fixed ${isReadingScrolled ? "is-scrolled" : ""}`}
         aria-label={isZh ? "阅读工具" : "Reading tools"}
@@ -2605,12 +2704,15 @@ export default function Prototype() {
                           </p>
                         ))}
                       </div>
+                      <details className="collation-details">
+                        <summary>{isZh ? "查看帛书转写与版本校读" : "Silk transcription and edition notes"}<ChevronRightIcon aria-hidden="true" /></summary>
                       <div className="transcription-layer">
                         <strong>{isZh ? "第一层｜帛书乙本转写" : "Layer 1 · Silk B transcription"}</strong>
                         <p lang="zh-Hant">{chapter.sources.silkBTranscription}</p>
                         <small>{isZh ? chapter.sources.reconstructionNotes : `Editorial record: ${chapter.sources.reconstructionNotes}`}</small>
                       </div>
                       <p className="variant-note">{copy.variant}</p>
+                      </details>
                       <button type="button" className="section-share-action" onClick={() => openShare("verse", chapter.id)}>
                         <Share1Icon />
                         <span>{isZh ? "分享这一层" : "Share this layer"}</span>
@@ -2775,11 +2877,11 @@ export default function Prototype() {
           <div className="composer-field">
             <small className="composer-expectation" id="composer-expectation">
               {companionSignedIn === false
-                ? (isZh ? "AI 问道 · 登录后使用" : "Wendao AI · sign in to use")
+                ? (isZh ? "AI 问道 · 每天免费问 3 条" : "Wendao AI · 3 free questions daily")
                 : hasCompanionMembership
                   ? (isZh ? "AI 问道 · 会员可用" : "Wendao AI · membership active")
                   : companionSignedIn
-                  ? (isZh ? "AI 问道 · 查看会员" : "Wendao AI · view membership")
+                  ? (freeQuestionsRemaining === null ? (isZh ? "AI 问道 · 每天免费问 3 条" : "Wendao AI · 3 free questions daily") : (isZh ? `AI 问道 · 今日还可问 ${freeQuestionsRemaining} 条` : `Wendao AI · ${freeQuestionsRemaining} free questions left`))
                     : (isZh ? "AI 问道 · 正在同步" : "Wendao AI · syncing")}
             </small>
             <span className="composer-placeholder">
@@ -2799,7 +2901,7 @@ export default function Prototype() {
           if (!open) setDirectoryFocusRequested(false);
         }}
         title={isZh ? "目录" : "Contents"}
-        description={isZh ? "帛书次序为主，括号内为今本章次" : "Silk-text order first; received chapter in parentheses"}
+        description={isZh ? "可按帛书次序或今本章次浏览；搜索结果按相关度排列" : "Browse by Silk or received order; search results rank by relevance"}
         variant="directory"
       >
         <div className="directory-search" role="search" aria-label={isZh ? "搜索章节" : "Search chapters"}>
@@ -2829,6 +2931,10 @@ export default function Prototype() {
               : (isZh ? "可搜索乙本转写、校读正文、传世参照与现代解读" : "Includes Silk B, base readings, received references, and interpretation")}
           </small>
         </div>
+        <div className="directory-order" role="group" aria-label={isZh ? "目录次序" : "Chapter order"}>
+          <button type="button" aria-pressed={directoryOrder === "silk"} onClick={() => {setDirectoryOrder("silk");usageEvent("directory_order_change",{value:"silk"});}}>{isZh ? "帛书次序" : "Silk order"}</button>
+          <button type="button" aria-pressed={directoryOrder === "received"} onClick={() => {setDirectoryOrder("received");usageEvent("directory_order_change",{value:"received"});}}>{isZh ? "今本章次" : "Received order"}</button>
+        </div>
         <div className="directory-list">
           {directoryChapters.map(({ chapter, match }) => {
             const copy = chapter[language];
@@ -2841,10 +2947,10 @@ export default function Prototype() {
                 data-chapter-id={chapter.id}
                 onClick={() => selectChapter(chapter.id, match)}
               >
-                <span className="directory-number">{String(chapter.silkOrder).padStart(2, "0")}</span>
+                <span className="directory-number">{String(directoryOrder === "received" ? chapter.id : chapter.silkOrder).padStart(2, "0")}</span>
                 <span className="directory-copy">
                   <strong><SearchHighlight text={copy.title} query={directoryQuery} /></strong>
-                  <small>{isZh ? `今本第 ${chapter.id} 章` : `Received chapter ${chapter.id}`}</small>
+                  <small>{directoryOrder === "silk" ? (isZh ? `今本第 ${chapter.id} 章` : `Received chapter ${chapter.id}`) : (isZh ? `帛书次序 ${chapter.silkOrder}` : `Silk order ${chapter.silkOrder}`)}</small>
                   {match ? <span className="directory-match">
                     <span className="directory-match-source">{match.weight === 100 ? (isZh ? "原文" : "Text") : match.label[language]}{match.language !== language ? (match.language === "zh" ? " · 中文" : " · English") : ""}</span>
                     <span className="directory-match-excerpt"><SearchHighlight
@@ -2941,6 +3047,7 @@ export default function Prototype() {
         showSupport={webSupportEnabled}
         onSupportOpen={() => setSupportOpen(true)}
         onCompanionOpen={openCompanion}
+        onMembershipOpen={() => openMembership("annual")}
         onAppStoreAction={(action) => {
           trackEvent("app_store_action", { action, source: runtimeSurface() });
           if (action === "rate") {
@@ -2961,6 +3068,7 @@ export default function Prototype() {
         initialPlan={companionEntry.plan}
         entryRevision={companionEntry.revision}
         onShareAnswer={openCompanionShare}
+        onAccessChange={onCompanionAccessChange}
       />
       <VideoChannelModal open={videoChannelOpen} onClose={() => setVideoChannelOpen(false)} language={language} />
       {webSupportEnabled ? <SupportModal open={supportOpen} onClose={() => setSupportOpen(false)} language={language} /> : null}

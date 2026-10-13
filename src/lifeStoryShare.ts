@@ -44,5 +44,8 @@ export function buildLifeStoryShareCardContent(story: LifeStory): ShareCardConte
     shareText: `${story.title}\n\n${primary}\n\n${secondary}\n\n${url}`,
     filename: `wendao-story-${story.slug}${isEn ? "-en" : ""}.png`,
     imageSource: story.comic?.original ? lifeStoryAssetUrl(story.comic.original) : undefined,
+    previewImageSource: story.comic?.image ? lifeStoryAssetUrl(story.comic.image) : undefined,
+    previewWidth: story.comic?.width,
+    previewHeight: story.comic?.height,
   };
 }

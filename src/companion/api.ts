@@ -16,12 +16,33 @@ function fetchEventStream(url: string, init: RequestInit) {
   const webFetch = typeof window !== "undefined"
     ? (window as Window & { CapacitorWebFetch?: typeof fetch }).CapacitorWebFetch
     : undefined;
-  const signal = init.signal
-    ? AbortSignal.any([init.signal, AbortSignal.timeout(75_000)])
-    : AbortSignal.timeout(75_000);
   return webFetch
-    ? webFetch.call(window, url, { ...init, signal })
-    : fetch(url, { ...init, signal });
+    ? webFetch.call(window, url, init)
+    : fetch(url, init);
+}
+
+function streamRequestLifetime(parent?: AbortSignal) {
+  const controller = new AbortController();
+  let rejectStopped!: (error: unknown) => void;
+  const stopped = new Promise<never>((_resolve, reject) => { rejectStopped = reject; });
+  const stop = (reason: unknown) => {
+    controller.abort(reason);
+    rejectStopped(reason);
+  };
+  const cancel = () => stop(parent?.reason ?? new DOMException("Request cancelled", "AbortError"));
+  parent?.addEventListener("abort", cancel, { once: true });
+  // A single deadline covers connection and every body read. Manual wiring
+  // supports older WebKit without AbortSignal.any/timeout and native transports
+  // that fail to settle their fetch promise after cancellation.
+  const timeout = setTimeout(() => stop(new DOMException("Wendao Companion request timed out", "TimeoutError")), 75_000);
+  return {
+    signal: controller.signal,
+    wait: <T,>(work: Promise<T>) => Promise.race([work, stopped]),
+    cleanup: () => {
+      clearTimeout(timeout);
+      parent?.removeEventListener("abort", cancel);
+    },
+  };
 }
 
 export class CompanionApiError extends Error {
@@ -39,10 +60,21 @@ export class CompanionApiError extends Error {
 export async function readCompanionEvents(
   body: ReadableStream<Uint8Array>,
   handlers: CompanionEventHandlers,
+  signal?: AbortSignal,
 ) {
+  if (signal?.aborted) throw signal.reason ?? new DOMException("Request cancelled", "AbortError");
   const reader = body.getReader();
   const decoder = new TextDecoder();
   let buffer = "";
+  let completed = false;
+  let rejectStopped!: (error: unknown) => void;
+  const stopped = new Promise<never>((_resolve, reject) => { rejectStopped = reject; });
+  const cancel = () => {
+    const reason = signal?.reason ?? new DOMException("Request cancelled", "AbortError");
+    void reader.cancel(reason).catch(() => undefined);
+    rejectStopped(reason);
+  };
+  signal?.addEventListener("abort", cancel, { once: true });
 
   function consume(block: string) {
     const event = block.match(/^event:\s*([^\n]+)/m)?.[1]?.trim() as keyof CompanionEventMap | undefined;
@@ -55,15 +87,21 @@ export async function readCompanionEvents(
     handlers[event]?.(JSON.parse(data));
   }
 
-  while (true) {
-    const { value, done } = await reader.read();
-    buffer += decoder.decode(value, { stream: !done }).replace(/\r\n/g, "\n");
-    const blocks = buffer.split("\n\n");
-    buffer = blocks.pop() ?? "";
-    blocks.forEach(consume);
-    if (done) break;
+  try {
+    while (true) {
+      const { value, done } = await (signal ? Promise.race([reader.read(), stopped]) : reader.read());
+      buffer += decoder.decode(value, { stream: !done }).replace(/\r\n/g, "\n");
+      const blocks = buffer.split("\n\n");
+      buffer = blocks.pop() ?? "";
+      blocks.forEach(consume);
+      if (done) { completed = true; break; }
+    }
+    if (buffer.trim()) consume(buffer);
+  } finally {
+    signal?.removeEventListener("abort", cancel);
+    if (!completed) void reader.cancel().catch(() => undefined);
+    try { reader.releaseLock(); } catch { /* Cancellation may still be settling a transport-owned read. */ }
   }
-  if (buffer.trim()) consume(buffer);
 }
 
 export async function streamCompanionAnswer({
@@ -91,42 +129,54 @@ export async function streamCompanionAnswer({
   onRequestIdChanged?: (requestId: string) => void;
   allowReleasedRetry?: boolean;
 }) {
-  let completed = false;
-  const response = await fetchEventStream(`${apiUrl}/api/companion/respond`, {
-    method: "POST",
-    headers: {
-      authorization: `Bearer ${accessToken}`,
-      "content-type": "application/json",
-      "x-request-id": requestId,
-    },
-    body: JSON.stringify({ requestId, threadId, chapterId, locale, question }),
-    signal,
-  });
-  if (!response.ok) {
-    const payload = await response.json().catch(() => null) as { error?: { code?: string; message?: string } } | null;
-    // Rotate only after the server proves the previous reservation was released.
-    // Uncertain or completed requests always reuse the original id for replay.
-    if (response.status === 409 && payload?.error?.code === "request_released" && allowReleasedRetry) {
-      const nextId = crypto.randomUUID();
-      onRequestIdChanged?.(nextId);
-      return streamCompanionAnswer({ apiUrl, accessToken, requestId: nextId, threadId, chapterId, locale, question, handlers, signal, onRequestIdChanged, allowReleasedRetry: false });
+  if (signal?.aborted) throw signal.reason ?? new DOMException("Request cancelled", "AbortError");
+  const lifetime = streamRequestLifetime(signal);
+  try {
+    let completed = false;
+    const request = fetchEventStream(`${apiUrl}/api/companion/respond`, {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${accessToken}`,
+        "content-type": "application/json",
+        "x-request-id": requestId,
+      },
+      body: JSON.stringify({ requestId, threadId, chapterId, locale, question }),
+      signal: lifetime.signal,
+    });
+    // A late response from a transport that ignored abort must not keep its body
+    // open after the caller has left or the deadline has elapsed.
+    void request.then((response) => {
+      if (lifetime.signal.aborted) void response.body?.cancel().catch(() => undefined);
+    }).catch(() => undefined);
+    const response = await lifetime.wait(request);
+    if (!response.ok) {
+      const payload = await lifetime.wait(response.json().catch(() => null)) as { error?: { code?: string; message?: string } } | null;
+      // Rotate only after the server proves the previous reservation was released.
+      // Uncertain or completed requests always reuse the original id for replay.
+      if (response.status === 409 && payload?.error?.code === "request_released" && allowReleasedRetry) {
+        const nextId = crypto.randomUUID();
+        onRequestIdChanged?.(nextId);
+        return streamCompanionAnswer({ apiUrl, accessToken, requestId: nextId, threadId, chapterId, locale, question, handlers, signal, onRequestIdChanged, allowReleasedRetry: false });
+      }
+      throw new CompanionApiError(payload?.error?.code || "request_failed", payload?.error?.message || "Wendao Companion is temporarily unavailable", response.status);
     }
-    throw new CompanionApiError(payload?.error?.code || "request_failed", payload?.error?.message || "Wendao Companion is temporarily unavailable", response.status);
+    if (!response.body) throw new Error("Wendao Companion is temporarily unavailable");
+    await lifetime.wait(readCompanionEvents(response.body, {
+      ...handlers,
+      error: (payload) => {
+        const error = new CompanionApiError(payload.code || "ai_unavailable", payload.message || "AI provider unavailable");
+        handlers.error?.(payload);
+        throw error;
+      },
+      done: (payload) => {
+        completed = true;
+        handlers.done?.(payload);
+      },
+    }, lifetime.signal));
+    if (!completed) throw new Error("Wendao Companion response was interrupted");
+  } finally {
+    lifetime.cleanup();
   }
-  if (!response.body) throw new Error("Wendao Companion is temporarily unavailable");
-  await readCompanionEvents(response.body, {
-    ...handlers,
-    error: (payload) => {
-      const error = new CompanionApiError(payload.code || "ai_unavailable", payload.message || "AI provider unavailable");
-      handlers.error?.(payload);
-      throw error;
-    },
-    done: (payload) => {
-      completed = true;
-      handlers.done?.(payload);
-    },
-  });
-  if (!completed) throw new Error("Wendao Companion response was interrupted");
 }
 
 export type CompanionMemory = {

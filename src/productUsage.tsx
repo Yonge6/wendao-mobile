@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { loadAnalyticsContext } from './companion/storekit';
+import { usageEventDetail } from './productUsageMetadata';
 
 export const usageConsentKey = 'wendao.usageConsent.v1';
 export function usageConsent() { try { return localStorage.getItem(usageConsentKey) === 'granted'; } catch { return false; } }
+
 export function usageEvent(event: string, metadata: Record<string, string | number | boolean> = {}) {
-  window.dispatchEvent(new CustomEvent('wendao:usage', { detail: { event, ...metadata } }));
+  window.dispatchEvent(new CustomEvent('wendao:usage', { detail: usageEventDetail(event, metadata) }));
 }
 let started = false;
 export function initializeUsage() {

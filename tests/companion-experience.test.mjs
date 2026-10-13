@@ -12,7 +12,7 @@ test("conversation renders emphasis as typography and keeps the reading area dom
   assert.match(panel, /part\.replace\(\/\\\*\\\*\/g, ""\)/);
   assert.match(panel, /event\.key !== "Enter" \|\| event\.shiftKey/);
   assert.doesNotMatch(panel, /本月 \$\{state\.usage\.used_questions\}/);
-  assert.match(panel, /wendao_usage_periods/);
+  assert.match(panel, /loadCompanionAllowance/);
   assert.match(panel, /今日免费问道还剩/);
   assert.match(panel, /daily_free_limit_reached/);
   assert.doesNotMatch(panel, /Enter 发送 · Shift\+Enter 换行/);

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { createRoot } from "react-dom/client";
 import { createClient, type Session } from "@supabase/supabase-js";
-import { SignedInCompanion } from "../src/companion/CompanionPanel";
+import CompanionPanel, { SignedInCompanion } from "../src/companion/CompanionPanel";
 import { CompanionDialog } from "../src/Prototype";
 import "../src/prototype.css";
 import "@fontsource/noto-sans-sc/400.css";
@@ -14,10 +14,10 @@ function Fixture() {
   const adaptive = params.has("adaptive");
   const language = params.get("lang") === "en" ? "en" : "zh";
   const initialView = params.get("view") === "subscription" ? "subscription" : "conversation";
-  const initialPlan = params.get("plan") === "lifetime" ? "lifetime" : "annual";
+  const initialPlan = params.get("plan") === "lifetime" ? "lifetime" : params.get("plan") === "monthly" ? "monthly" : "annual";
   const [user, setUser] = useState("11111111-1111-4111-8111-111111111111");
   const session = { user: { id: user }, access_token: "fixture-token" } as Session;
-  const panel = <SignedInCompanion key={user} session={session} language={language} chapterId={8} initialView={initialView} initialPlan={initialPlan} client={client} config={config} onSignOut={async () => {}} onShareAnswer={(answer, chapterId) => sessionStorage.setItem("fixture-shared-answer", JSON.stringify({ answer, chapterId }))} />;
+  const panel = params.has("anon") ? <CompanionPanel language={language} chapterId={8} initialView={initialView} initialPlan={initialPlan} /> : <SignedInCompanion key={user} session={session} language={language} chapterId={8} initialView={initialView} initialPlan={initialPlan} client={client} config={config} onSignOut={async () => {}} onShareAnswer={(answer, chapterId) => sessionStorage.setItem("fixture-shared-answer", JSON.stringify({ answer, chapterId }))} />;
   return <div className={adaptive ? "wendao-workspace is-companion-open" : undefined}>
     <button style={{ position: "fixed", top: 0, left: 0, zIndex: 1000 }} onClick={() => setUser("22222222-2222-4222-8222-222222222222")}>Switch fixture account</button>
     {adaptive ? <CompanionDialog open onClose={() => {}} language={language} chapterId={8} chapterTitle="上善若水" onShareAnswer={() => {}}>{panel}</CompanionDialog> : <div className="companion-layer" style={{ "--companion-viewport-height": "100dvh", "--companion-viewport-top": "0px" } as React.CSSProperties}>

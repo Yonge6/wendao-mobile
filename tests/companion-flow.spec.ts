@@ -261,3 +261,84 @@ test("slow connection never claims the model is already composing", async ({ pag
   await page.evaluate(() => { (window as any).emitAnswer("delta", { text: "已连接后的回答" }); (window as any).emitAnswer("done", {}); });
   await expect(page.locator(".companion-thread")).toContainText("已连接后的回答");
 });
+
+test("free allowance refreshes on foreground and UTC rollover from observed server usage", async ({ page }) => {
+  let used = 3;
+  const periods: string[] = [];
+  await page.route("**/rest/v1/wendao_entitlements**", (route) => route.fulfill({ json: null }));
+  await page.route("**/rest/v1/wendao_usage_periods**", (route) => {
+    periods.push(new URL(route.request().url()).searchParams.get("period_start")!);
+    return route.fulfill({ json: { question_allowance: 3, used_questions: used } });
+  });
+  await page.clock.install({ time: new Date("2026-10-13T23:59:59Z") });
+  await page.clock.pauseAt(new Date("2026-10-13T23:59:59.100Z"));
+  await page.goto("/tests/companion-fixture.html");
+  await expect(page.locator(".companion-free-usage")).toContainText("还剩 0 条");
+  used = 1;
+  await page.evaluate(() => window.dispatchEvent(new Event("focus")));
+  await expect(page.locator(".companion-free-usage")).toContainText("还剩 2 条");
+  used = 0;
+  await page.clock.fastForward(1_200);
+  await expect(page.locator(".companion-free-usage")).toContainText("还剩 3 条");
+  expect(periods).toContain("eq.2026-10-14");
+  await expect(page.getByLabel("此刻，你真正想问什么？")).toBeEnabled();
+});
+
+test("failed AI reservation restores allowance only after server readback", async ({ page }) => {
+  let used = 2;
+  await page.route("**/rest/v1/wendao_entitlements**", (route) => route.fulfill({ json: null }));
+  await page.route("**/rest/v1/wendao_usage_periods**", (route) => route.fulfill({ json: { question_allowance: 3, used_questions: used } }));
+  await page.goto("/tests/companion-fixture.html");
+  await expect(page.locator(".companion-free-usage")).toContainText("还剩 1 条");
+  await page.getByLabel("此刻，你真正想问什么？").fill("重试额度测试");
+  await page.getByRole("button", { name: "发送问题" }).click();
+  await expect.poll(() => page.evaluate(() => (window as any).askRequests.length)).toBe(1);
+  used = 3;
+  await page.evaluate(() => (window as any).emitAnswer("meta", { remainingFreeQuestions: 0 }));
+  await expect(page.locator(".companion-free-usage")).toContainText("还剩 0 条");
+  used = 2;
+  await page.evaluate(() => (window as any).emitAnswer("error", { code: "ai_unavailable" }));
+  await expect(page.locator(".companion-free-usage")).toContainText("还剩 1 条");
+  await expect(page.getByLabel("此刻，你真正想问什么？")).toBeEnabled();
+});
+
+test("H5 membership check reports actual active, inactive and failed observations", async ({ page }) => {
+  let result: "active" | "none" | "error" = "active";
+  await page.route("**/rest/v1/wendao_entitlements**", (route) => result === "error"
+    ? route.fulfill({ status: 503, json: { message: "test network failure" } })
+    : route.fulfill({ json: result === "active" ? { status: "active", source: "apple", expires_at: null } : null }));
+  await page.goto("/tests/companion-fixture.html?view=subscription");
+  await page.getByRole("button", { name: "我已订阅，重新检查" }).click();
+  await expect(page.locator(".companion-subscription")).toContainText("会员已生效");
+  result = "none";
+  await page.getByRole("button", { name: "我已订阅，重新检查" }).click();
+  await expect(page.locator(".companion-subscription")).toContainText("暂未检测到有效问道会员");
+  result = "error";
+  await page.getByRole("button", { name: "我已订阅，重新检查" }).click();
+  await expect(page.locator(".companion-error")).toContainText("检查未完成", { timeout: 15_000 });
+  await expect(page.locator(".companion-subscription")).not.toContainText("暂未检测到有效问道会员");
+});
+
+test("anonymous native purchase shows StoreKit prices, then sign-in keeps the selected plan", async ({ page }) => {
+  await page.addInitScript(() => {
+    (window as any).Capacitor = {
+      PluginHeaders: [{ name: "WendaoStoreKit", methods: [{ name: "products", rtype: "promise" }] }],
+      nativePromise: async (plugin: string, method: string) => {
+        if (plugin === "WendaoStoreKit" && method === "products") return { products: [
+          { id: "com.yonge6.wendao.companion.annual", displayPrice: "¥159.00" },
+          { id: "com.yonge6.wendao.companion.monthly", displayPrice: "¥19.90" },
+          { id: "com.yonge6.wendao.reading.lifetime", displayPrice: "¥19.90" },
+        ] };
+        throw new Error("Unexpected native call");
+      },
+    };
+    Object.defineProperty(window, "webkit", { configurable: true, value: { messageHandlers: { bridge: { postMessage: () => undefined } } } });
+  });
+  await page.goto("/tests/companion-fixture.html?anon=1&view=subscription&plan=lifetime");
+  await expect(page.getByRole("button", { name: /永久解锁 81 章 ¥19.90/ })).toHaveClass(/is-selected/);
+  await page.getByRole("button", { name: /月付 ¥19.90/ }).click();
+  await page.getByRole("button", { name: "登录后继续" }).click();
+  await expect(page.locator(".companion-auth")).toContainText("继续月付问道同行");
+  await page.getByRole("button", { name: "← 返回方案" }).click();
+  await expect(page.getByRole("button", { name: /月付 ¥19.90/ })).toHaveClass(/is-selected/);
+});

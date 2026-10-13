@@ -16,3 +16,24 @@ test('consent controls the real UI transport and updated Buer link',async({page}
  await toggle.click();await page.evaluate(()=>window.dispatchEvent(new CustomEvent('wendao:usage',{detail:{event:'chat_success'}})));expect(events.length).toBe(2);
  await page.reload();await page.getByRole('button',{name:'打开更多功能'}).click();await expect(toggle).toHaveAttribute('aria-checked','false');
 });
+test('real work/contact clicks and header search retain safe entry metadata',async({page})=>{
+ const events:any[]=[];
+ await page.addInitScript(()=>Object.defineProperty(navigator,'webdriver',{get:()=>false}));
+ await page.route('**/__usage/event',async route=>{events.push(route.request().postDataJSON());await route.fulfill({status:204});});
+ await page.route('**/v1/events',route=>route.fulfill({json:{saved:true}}));
+ await page.route('https://www.googletagmanager.com/**',route=>route.fulfill({body:''}));
+ await page.goto('/?lang=zh');
+ await page.evaluate(()=>window.dispatchEvent(new CustomEvent('wendao:usage-ready',{detail:{production:true,surface:'h5',version:'test'}})));
+ await page.getByRole('button',{name:'打开更多功能'}).click();
+ await page.getByRole('switch',{name:'分享匿名使用统计'}).click();
+ const buer=page.getByRole('link',{name:/不二见己/});
+ await buer.evaluate(link=>link.addEventListener('click',event=>event.preventDefault()));await buer.click();
+ await expect.poll(()=>events.find(event=>event.event==='related_product_click')?.metadata.target).toBe('buer');
+ await page.getByRole('button',{name:/联系我们/}).click();
+ const email=page.locator('.contact-list a[href^="mailto:"]');
+ await email.evaluate(link=>link.addEventListener('click',event=>event.preventDefault()));await email.click();
+ await expect.poll(()=>events.find(event=>event.event==='contact_click')?.metadata.target).toBe('email');
+ await page.locator('.drawer-close').click();await page.getByRole('button',{name:'搜索章节',exact:true}).click();
+ await expect.poll(()=>events.find(event=>event.event==='directory_open')?.metadata.source).toBe('header_search');
+ expect(JSON.stringify(events)).not.toContain('hustyy986');expect(JSON.stringify(events)).not.toContain('https://buer');
+});

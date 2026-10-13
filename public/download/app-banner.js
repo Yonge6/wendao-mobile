@@ -10,6 +10,8 @@
     try { sessionStorage.setItem(key, '1'); } catch { /* Keep dismissal for this page. */ }
     banner.remove();
     document.body.classList.remove('has-app-banner');
+    document.body.classList.remove('is-reading-scrolled');
+    window.removeEventListener('scroll', compactOnScroll);
   });
   const download = banner.querySelector('a');
   if (english) {
@@ -26,4 +28,11 @@
   }
   document.body.prepend(banner);
   document.body.classList.add('has-app-banner');
+  function compactOnScroll() {
+    const compact = window.scrollY > 100;
+    banner.classList.toggle('is-compact', compact);
+    document.body.classList.toggle('is-reading-scrolled', compact);
+  }
+  window.addEventListener('scroll', compactOnScroll, { passive: true });
+  compactOnScroll();
 })();

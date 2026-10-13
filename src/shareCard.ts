@@ -26,6 +26,9 @@ export type ShareCardContent = {
   shareText: string;
   filename: string;
   imageSource?: string;
+  previewImageSource?: string;
+  previewWidth?: number;
+  previewHeight?: number;
 };
 
 export const SHARE_CARD_KINDS: ShareCardKind[] = ["verse", "meaning", "inspiration", "manual"];
@@ -435,16 +438,8 @@ async function loadPaperTexture() {
 
 export async function renderShareCardDataUrl(content: ShareCardContent) {
   if (content.imageSource) {
-    const response = await fetch(content.imageSource);
-    if (!response.ok) throw new Error("COMIC_IMAGE_UNAVAILABLE");
-    const blob = await response.blob();
-    if (blob.type !== "image/png") throw new Error("COMIC_IMAGE_INVALID");
-    return new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(String(reader.result));
-      reader.onerror = () => reject(new Error("COMIC_IMAGE_READ_FAILED"));
-      reader.readAsDataURL(blob);
-    });
+    // Comic preview is a WebP. Its original PNG is loaded only after a save/share tap.
+    throw new Error("COMIC_ORIGINAL_REQUIRES_ACTION");
   }
   await document.fonts.ready;
   const canvas = document.createElement("canvas");

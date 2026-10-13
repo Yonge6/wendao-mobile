@@ -3738,6 +3738,7 @@ textarea {
 }
 .drawer-story-detail p {
   margin: 24px 0;
+  color: var(--ink);
   font-size: max(17px, var(--reading-body-size));
   line-height: 2;
 }
@@ -3749,6 +3750,7 @@ textarea {
 }
 
 .drawer-story-detail blockquote p {
+  color: var(--ink-soft);
   font-size: max(20px, var(--reading-note-size));
 }
 
@@ -3762,6 +3764,82 @@ textarea {
 .drawer-story-practice {
   padding-top: 24px;
   border-top: 1px solid color-mix(in srgb, var(--gold) 28%, transparent);
+}
+
+.drawer-story-practice p { color: var(--ink); }
+
+/* Reading improvements reuse the paper, serif and quiet gold controls. */
+.collation-details { margin: 22px 0; }
+.collation-details summary {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 12px 0; color: var(--gold); cursor: pointer; list-style: none;
+  font: 400 13px/1.8 var(--serif); border-top: 1px solid var(--gold-light);
+}
+.collation-details summary::-webkit-details-marker { display: none; }
+.collation-details[open] summary svg { transform: rotate(90deg); }
+.collation-details .transcription-layer p,
+.collation-details .transcription-layer small,
+.collation-details .variant-note { font-size: 12px; line-height: 1.9; }
+.collation-details summary:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+
+.directory-order, .story-kind-control { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+.directory-order button, .story-kind-control button {
+  min-height: 36px; padding: 6px 14px; border: 1px solid var(--gold-light);
+  border-radius: 999px; background: transparent; color: var(--ink); font: 400 13px/1.5 var(--sans);
+}
+.directory-order button[aria-pressed="true"], .story-kind-control button[aria-pressed="true"] {
+  color: var(--paper); background: var(--ink); border-color: var(--ink);
+}
+.story-browse-controls { padding-bottom: 12px; }
+.story-search { display: flex; align-items: center; gap: 9px; padding: 9px 12px; border: 1px solid var(--gold-light); border-radius: 999px; color: var(--ink-soft); }
+.story-search input { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--ink); font: 400 16px/1.6 var(--sans); }
+.story-search input::placeholder { color: var(--ink-soft); }
+.story-search:focus-within { outline: 2px solid var(--gold); outline-offset: 2px; }
+.story-filter-row { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 12px; }
+.story-filter-row label { display: grid; min-width: 0; gap: 5px; color: var(--ink-soft); font: 400 12px/1.6 var(--sans); }
+.story-filter-row select { width: 100%; min-width: 0; padding: 8px; border: 1px solid var(--gold-light); border-radius: 8px; background: var(--card-surface); color: var(--ink); font: 400 16px/1.4 var(--sans); }
+.story-results { display: block; margin-top: 12px; color: var(--ink-soft); font: 400 12px/1.6 var(--sans); }
+.drawer-story-card.has-thumbnail { grid-template-columns: 88px minmax(0,1fr) 16px; }
+.drawer-story-thumbnail { width: 88px; height: 116px; object-fit: cover; object-position: center top; border: 1px solid var(--gold-light); border-radius: 6px; background: var(--paper); }
+.drawer-story-card.has-thumbnail .drawer-story-copy strong { font-size: 19px; }
+.drawer-story-card.has-thumbnail .drawer-story-copy > span { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.drawer-story-empty { color: var(--ink-soft); font: 400 15px/1.8 var(--sans); }
+.drawer-story-empty button { display: block; margin-top: 12px; border: 0; border-bottom: 1px solid var(--gold-light); padding: 6px 0; background: transparent; color: var(--gold); font: inherit; }
+.drawer-cache-controls { padding: 18px 0; border-top: 1px solid var(--gold-light); color: var(--ink); }
+.drawer-cache-controls > strong, .drawer-cache-controls > small { display: inline-block; margin-right: 12px; }
+.drawer-cache-controls > small, .drawer-cache-controls p, .drawer-cache-controls > span { color: var(--ink-soft); font: 400 12px/1.8 var(--sans); }
+.drawer-cache-controls p { margin: 8px 0; }
+.drawer-cache-controls button { padding: 6px 0; border: 0; border-bottom: 1px solid var(--gold-light); background: transparent; color: var(--gold); font: 400 13px/1.7 var(--sans); }
+.drawer-cache-controls button:disabled { opacity: .5; cursor: default; }
+.drawer-cache-controls > span { display: block; margin-top: 8px; }
+
+.comic-media { position: relative; width: 100%; }
+.comic-media-image { display: block; width: 100%; height: auto; }
+.comic-media-state { display: grid; place-items: center; min-height: 160px; padding: 24px; border: 1px solid var(--gold-light); border-radius: 8px; background: var(--card-surface); text-align: center; }
+.comic-media-state p, .drawer-story-detail .comic-media-state p { margin: 0; color: var(--ink-soft); font: 400 14px/1.8 var(--sans); }
+.comic-media.has-intrinsic-size.is-loading .comic-media-state { position: absolute; inset: 0 0 auto; min-height: 96px; }
+.comic-media.is-error .comic-media-image { display: none; }
+.comic-media-actions button, .share-download-state button, .share-permission-repair button, .share-card-rendering button {
+  margin-top: 10px; padding: 8px 14px; border: 1px solid var(--gold-light); border-radius: 999px; background: transparent; color: var(--ink); font: 400 13px/1.6 var(--sans);
+}
+.share-download-state { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; color: var(--ink); }
+.share-download-state p { margin: 0; color: var(--ink-soft); font: 400 13px/1.7 var(--sans); }
+.share-download-state button { flex: none; margin: 0; }
+.share-permission-repair { text-align: center; padding-bottom: 10px; }
+.companion-free-usage small { display: block; margin-top: 4px; color: var(--ink-soft); font: 400 12px/1.7 var(--sans); }
+.companion-plan-price { color: var(--ink-soft); font: 400 13px/1.6 var(--sans); }
+
+@media (min-width: 800px) {
+  .side-drawer.is-story-reading { width: min(92vw, 720px); }
+  .is-story-reading .drawer-scroll { padding-left: 34px; padding-right: 34px; }
+  .is-story-reading .drawer-story-card.has-thumbnail { grid-template-columns: 112px minmax(0,1fr) 16px; }
+  .is-story-reading .drawer-story-thumbnail { width: 112px; height: 146px; }
+}
+@media (max-width: 799px) {
+  .ai-composer.is-reading { min-height: 46px; opacity: .88; }
+  .ai-composer.is-reading .composer-placeholder { display: none; }
+  .ai-composer.is-reading .composer-expectation { font-size: 12px; line-height: 1.6; }
+  .ai-composer.is-reading .composer-submit { width: 32px; height: 32px; }
 }
 
 .drawer-story-continue {

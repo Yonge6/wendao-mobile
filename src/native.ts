@@ -4,10 +4,10 @@ import { Haptics, ImpactStyle } from "@capacitor/haptics";
 import { Share } from "@capacitor/share";
 import { SplashScreen } from "@capacitor/splash-screen";
 import { StatusBar, Style } from "@capacitor/status-bar";
-import { saveStoreKitImage } from "./companion/storekit";
+import { openStoreKitSettings, saveStoreKitImage } from "./companion/storekit";
 
 type NativeTheme = "light" | "dark";
-export type ShareOutcome = "shared" | "copied" | "downloaded" | "saved" | "cancelled" | "unavailable" | "preview";
+export type ShareOutcome = "shared" | "copied" | "downloaded" | "saved" | "cancelled" | "unavailable" | "preview" | "permission-denied" | "activation-required";
 
 const CANONICAL_URL = "https://wendao.wonderelian.com/";
 
@@ -80,6 +80,10 @@ function dataUrlFile(dataUrl: string, filename: string) {
   return new File([bytes], filename, { type: "image/png" });
 }
 
+export async function openPhotosSettings(): Promise<boolean> {
+  try { await openStoreKitSettings(); return true; } catch { return false; }
+}
+
 export async function shareCardImage(
   dataUrl: string,
   filename: string,
@@ -103,6 +107,7 @@ export async function shareCardImage(
 
     const file = dataUrlFile(dataUrl, filename);
     if (navigator.share && navigator.canShare?.({ files: [file] })) {
+      if (navigator.userActivation && !navigator.userActivation.isActive) return "activation-required";
       await navigator.share({ files: [file] });
       return "shared";
     }
@@ -110,6 +115,7 @@ export async function shareCardImage(
     downloadDataUrl(dataUrl, filename);
     return "downloaded";
   } catch (error) {
+    if (error instanceof DOMException && error.name === "NotAllowedError") return "activation-required";
     return error instanceof DOMException && error.name === "AbortError" ? "cancelled" : "unavailable";
   }
 }
@@ -136,6 +142,7 @@ export async function saveCardImage(dataUrl: string, filename: string, title: st
     downloadDataUrl(dataUrl, filename);
     return "downloaded";
   } catch (error) {
+    if (error && typeof error === "object" && "code" in error && error.code === "PHOTOS_PERMISSION_DENIED") return "permission-denied";
     return error instanceof DOMException && error.name === "AbortError" ? "cancelled" : "unavailable";
   }
 }

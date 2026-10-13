@@ -38,6 +38,7 @@ type StoreKitPlugin = {
   manage(): Promise<void>;
   review(): Promise<void>;
   saveImageToPhotos(input: { data: string; filename: string }): Promise<{ saved: boolean }>;
+  openSettings(): Promise<void>;
 };
 
 const nativeStoreKit = registerPlugin<StoreKitPlugin>("WendaoStoreKit");
@@ -51,6 +52,11 @@ function requireNative() {
 export async function saveStoreKitImage(input: { data: string; filename: string }) {
   requireNative();
   return nativeStoreKit.saveImageToPhotos(input);
+}
+
+export async function openStoreKitSettings() {
+  requireNative();
+  return nativeStoreKit.openSettings();
 }
 
 export async function loadStoreKitProducts(plugin: StoreKitPlugin = nativeStoreKit) {

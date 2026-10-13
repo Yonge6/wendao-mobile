@@ -80,3 +80,70 @@ test("native conversation delivers text before completion and forwards cancellat
     assert.equal((await settled).name, "AbortError");
   } finally { globalThis.fetch = originalFetch; globalThis.window = originalWindow; }
 });
+
+const requestInput = { apiUrl: "https://test.invalid", accessToken: "test", requestId: "older-webkit", chapterId: 31, locale: "zh", question: "继续", handlers: {} };
+
+test("older WebKit completes SSE without newer static AbortSignal APIs and removes its listener", async (context) => {
+  context.mock.method(AbortSignal, "any", () => { throw new Error("Not available in older WebKit"); });
+  context.mock.method(AbortSignal, "timeout", () => { throw new Error("Not available in older WebKit"); });
+  context.mock.method(globalThis, "fetch", async () => new Response('event: delta\ndata: {"text":"完成"}\n\nevent: done\ndata: {}\n\n'));
+  const parent = new AbortController();
+  const remove = context.mock.method(parent.signal, "removeEventListener");
+  const seen = [];
+  await streamCompanionAnswer({ ...requestInput, signal: parent.signal, handlers: { delta: ({ text }) => seen.push(text) } });
+  assert.deepEqual(seen, ["完成"]);
+  assert.equal(remove.mock.calls.filter(({ arguments: args }) => args[0] === "abort").length, 1);
+});
+
+test("cancellation settles stalled response headers even when a transport ignores abort", async (context) => {
+  let requestSignal;
+  context.mock.method(globalThis, "fetch", (_url, init) => {
+    requestSignal = init.signal;
+    return new Promise(() => {});
+  });
+  const parent = new AbortController();
+  const result = streamCompanionAnswer({ ...requestInput, signal: parent.signal });
+  const reason = new DOMException("Reader closed", "AbortError");
+  const rejected = assert.rejects(result, (error) => error === reason);
+  parent.abort(reason);
+  await rejected;
+  assert.equal(requestSignal.aborted, true);
+});
+
+test("the 75-second deadline ends stalled headers and rejects a late response body", async (context) => {
+  context.mock.timers.enable({ apis: ["setTimeout"] });
+  let resolveFetch;
+  let requestSignal;
+  let cancelled = 0;
+  context.mock.method(globalThis, "fetch", (_url, init) => {
+    requestSignal = init.signal;
+    return new Promise((resolve) => { resolveFetch = resolve; });
+  });
+  const result = streamCompanionAnswer(requestInput);
+  const rejected = assert.rejects(result, (error) => error.name === "TimeoutError" && /timed out/.test(error.message));
+  context.mock.timers.tick(75_000);
+  await rejected;
+  assert.equal(requestSignal.aborted, true);
+  resolveFetch(new Response(new ReadableStream({ cancel() { cancelled += 1; } })));
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(cancelled, 1);
+});
+
+test("a deadline covers a stalled SSE body, cancels its reader and prevents later output", async (context) => {
+  context.mock.timers.enable({ apis: ["setTimeout"] });
+  const encoder = new TextEncoder();
+  let cancelReason;
+  context.mock.method(globalThis, "fetch", async () => new Response(new ReadableStream({
+    start(controller) { controller.enqueue(encoder.encode('event: delta\ndata: {"text":"已经收到的部分"}\n\n')); },
+    cancel(reason) { cancelReason = reason; },
+  })));
+  const seen = [];
+  const result = streamCompanionAnswer({ ...requestInput, handlers: { delta: ({ text }) => seen.push(text) } });
+  const rejected = assert.rejects(result, (error) => error.name === "TimeoutError");
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.deepEqual(seen, ["已经收到的部分"]);
+  context.mock.timers.tick(75_000);
+  await rejected;
+  assert.equal(cancelReason.name, "TimeoutError");
+  assert.deepEqual(seen, ["已经收到的部分"]);
+});

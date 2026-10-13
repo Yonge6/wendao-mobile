@@ -20,6 +20,7 @@ public class WendaoStoreKitPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "manage", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "review", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "saveImageToPhotos", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "openSettings", returnType: CAPPluginReturnPromise),
     ]
 
     private let productIdentifiers = [
@@ -213,6 +214,19 @@ public class WendaoStoreKitPlugin: CAPPlugin, CAPBridgedPlugin {
                 } else {
                     call.reject("App Store review page could not be opened", "REVIEW_OPEN_FAILED")
                 }
+            }
+        }
+    }
+
+    @objc func openSettings(_ call: CAPPluginCall) {
+        Task { @MainActor in
+            guard let url = URL(string: UIApplication.openSettingsURLString) else {
+                call.reject("Settings are unavailable", "SETTINGS_UNAVAILABLE")
+                return
+            }
+            UIApplication.shared.open(url, options: [:]) { opened in
+                if opened { call.resolve() }
+                else { call.reject("Settings could not be opened", "SETTINGS_OPEN_FAILED") }
             }
         }
     }

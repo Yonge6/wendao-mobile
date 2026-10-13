@@ -1,5 +1,6 @@
 import type { LifeStory } from "./lifeStoryShare";
 import { lifeStoryAssetUrl } from "./lifeStoryAssets";
+import ComicImage from "./ComicImage";
 
 export default function LifeStoryContent({ story, language, drawer = false, onOpenComic }: {
   story: LifeStory;
@@ -21,11 +22,9 @@ export default function LifeStoryContent({ story, language, drawer = false, onOp
   const comicImage = lifeStoryAssetUrl(story.comic.image);
   return <>
     <figure className="life-story-comic">
-      <button type="button" className="life-story-comic-open" onClick={onOpenComic}
-        aria-label={`${isZh ? "放大阅读漫画" : "Read comic in detail"}：${story.comic.title}`}>
-        <img src={comicImage} width={story.comic.width} height={story.comic.height}
-          alt={story.comic.alt} loading="lazy" decoding="async" draggable={false} />
-      </button>
+      <ComicImage src={comicImage} width={story.comic.width} height={story.comic.height}
+        alt={story.comic.alt} language={language} lazy onOpen={onOpenComic}
+        openLabel={`${isZh ? "放大阅读漫画" : "Read comic in detail"}：${story.comic.title}`} />
       <figcaption>
         {story.comic.style ? <span className="life-story-comic-style">
           <a href={story.comic.style.url} target="_blank" rel="noopener noreferrer"

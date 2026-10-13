@@ -28,3 +28,12 @@
 
 body.has-app-banner { padding-top: calc(80px + env(safe-area-inset-top, 0px)); }
 body.has-app-banner .app-download-banner { width: min(100%, 1080px); }
+
+/* Keep the download entry visible while giving a scrolling reader more room. */
+.wendao-workspace.has-app-banner.is-reading-scrolled { --app-banner-height: 48px; }
+.app-download-banner.is-compact { height: calc(48px + env(safe-area-inset-top, 0px)); padding-top: calc(3px + env(safe-area-inset-top, 0px)); padding-bottom: 3px; }
+.app-download-banner.is-compact > img { width: 32px; height: 32px; border-radius: 8px; }
+.app-download-banner.is-compact .app-download-banner-copy span { display: none; }
+.app-download-banner.is-compact .app-download-banner-action { padding-top: 6px; padding-bottom: 6px; }
+.app-download-banner.is-compact .app-download-banner-close { height: 40px; }
+body.has-app-banner.is-reading-scrolled { padding-top: calc(48px + env(safe-area-inset-top, 0px)); }

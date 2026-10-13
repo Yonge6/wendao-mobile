@@ -6,8 +6,14 @@ import math
 import re
 import time
 
-EVENTS=set('visit active_time reading_time chapter_view section_view directory_open chance_chapter free_chapter_kept companion_open language_change theme_change reading_size_change profile_saved chart_calculated daily_notification_change app_store_action contact_click related_product_click companion_answer_share comic_open reflection_open story_open share_request share_result save_request save_result copy_result link_result chat_request chat_success chat_error chat_cancel chat_latency paywall_view purchase_request purchase_result restore_result search'.split())
-VALUES=set('initial directory search chance continuation daily_notification reading_composer drawer reading verse meaning inspiration manual stories monthly annual lifetime purchased pending cancelled failed shared saved downloaded preview copied unavailable found empty download rate light dark small medium large zh en granted denied enabled disabled error transport quota auth other web ios contact human-design wonderelian yixiu xiazi style-atlas buer'.split())
+EVENTS=set('visit active_time reading_time chapter_view section_view directory_open directory_order_change chance_chapter free_chapter_kept companion_open language_change theme_change reading_size_change profile_saved chart_calculated daily_notification_change app_store_action contact_click related_product_click companion_answer_share comic_open comic_cache_clear reflection_open story_open story_filter share_request share_result save_request save_result copy_result link_result chat_request chat_success chat_error chat_cancel chat_latency paywall_view purchase_request purchase_result restore_result search'.split())
+VALUES=set('initial directory search chance continuation daily_notification reading_composer drawer reading verse meaning inspiration manual stories received silk comic essay all chapter theme cleared monthly annual lifetime purchased pending cancelled failed shared saved downloaded preview copied unavailable permission-denied activation-required found empty download rate light dark small medium large zh en granted denied enabled disabled error transport quota auth other web ios contact human-design wonderelian yixiu xiazi style-atlas buer'.split())
+SOURCES=set('initial daily directory search chance continuation link daily_notification reading_composer reading_access_gate drawer reading stories story_search story_filter directory_order cache_clear header header_search conversation web ios android contact'.split())
+TARGETS={
+    'contact_click':set('wonderelian email red douyin x tiktok wechat_channels'.split()),
+    'related_product_click':set('wonderelian yixiu xiazi buer style-atlas'.split()),
+    'companion_open':set('subscription lifetime'.split()),
+}
 UUID=re.compile(r'^[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}$')
 FIELDS={'schema','event_id','visitor','session','event','surface','chapter','language','version','metadata','test'}
 
@@ -18,10 +24,14 @@ def validate(data):
     if type(data['chapter']) is not int or not 0<=data['chapter']<=81 or type(data['test']) is not bool: raise ValueError('context')
     if not isinstance(data['version'],str) or not re.fullmatch(r'[a-zA-Z0-9._-]{1,32}',data['version']): raise ValueError('version')
     m=data['metadata']
-    if not isinstance(m,dict) or not set(m)<={'source','section','result','plan','value','action','error_code','seconds'}: raise ValueError('metadata')
+    if not isinstance(m,dict) or not set(m)<={'source','target','section','result','plan','value','action','error_code','seconds'}: raise ValueError('metadata')
     for k,v in m.items():
         if k=='seconds':
             if type(v) not in (int,float) or not math.isfinite(v) or not 0<=v<=600 or data['event'] not in ('active_time','reading_time','chat_latency'): raise ValueError('seconds')
+        elif k=='source':
+            if not isinstance(v,str) or v not in SOURCES: raise ValueError('source')
+        elif k=='target':
+            if not isinstance(v,str) or v not in TARGETS.get(data['event'],set()): raise ValueError('target')
         elif not isinstance(v,str) or v not in VALUES: raise ValueError('enum')
     return data
 
@@ -48,7 +58,7 @@ def report(db,now=None):
             visitor,session,event,chapter,lang,version,metadata,stamp=row;m=json.loads(metadata);item=(visitor,m)
             buckets[event].append(item);days[(str(dt.datetime.fromtimestamp(stamp,zone).date()),event)].append(item)
             if chapter:chapters[(chapter,event)].append(item)
-            for dimension in ('result','section','plan','error_code','source','action'):
+            for dimension in ('result','section','plan','error_code','source','target','action'):
                 if dimension in m:outcomes[(event,dimension,m[dimension])]+=1
             versions[version]+=1;languages[lang]+=1
         def metric(event,items):return {'event':'wendao_v1_'+event,'count':len(items),'users':len({x[0] for x in items}),'seconds':round(sum(x[1].get('seconds',0) for x in items),2) if event in ('active_time','reading_time','chat_latency') else None}

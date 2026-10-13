@@ -7,7 +7,10 @@ import {
   Link2Icon,
 } from "@radix-ui/react-icons";
 import type { Chapter } from "./data/chapters";
-import { saveCardImage, shareCardImage, shareLink } from "./native";
+import { openPhotosSettings, saveCardImage, shareCardImage, shareLink } from "./native";
+import ComicImage from "./ComicImage";
+import { loadComicOriginalDataUrl } from "./comicMedia";
+import { ComicMediaError, type ComicMediaFailure } from "./comicMediaCore";
 import {
   buildCompanionShareCardContent,
   buildShareCardContent,
@@ -50,7 +53,13 @@ export default function ShareCardPanel({
   const showFeedback = useCallback((message: string) => {
     setFeedback(message ? { message } : null);
   }, []);
-  const [saving, setSaving] = useState(false);
+  const [imageAction, setImageAction] = useState<"save" | "share" | null>(null);
+  const [transfer, setTransfer] = useState<{ action: "save" | "share"; failure?: ComicMediaFailure } | null>(null);
+  const [permissionDenied, setPermissionDenied] = useState(false);
+  const [renderAttempt, setRenderAttempt] = useState(0);
+  const originalRef = useRef("");
+  const transferController = useRef<AbortController | null>(null);
+  const mounted = useRef(true);
   const [comicZoomed, setComicZoomed] = useState(false);
   const [wechatAction, setWechatAction] = useState<"save" | "share" | null>(null);
   const previewScrollRef = useRef<HTMLDivElement>(null);
@@ -69,12 +78,18 @@ export default function ShareCardPanel({
 
   useEffect(() => {
     let cancelled = false;
+    mounted.current = true;
+    transferController.current?.abort();
+    originalRef.current = "";
     setWechatAction(null);
+    setTransfer(null);
+    setImageAction(null);
+    setPermissionDenied(false);
     setRendering(true);
     setImageUrl("");
-    if (needsManual) {
+    if (needsManual || content.imageSource) {
       setRendering(false);
-      return;
+      return () => { mounted.current = false; transferController.current?.abort(); };
     }
     void renderShareCardDataUrl(content)
       .then((url) => {
@@ -88,8 +103,10 @@ export default function ShareCardPanel({
       });
     return () => {
       cancelled = true;
+      mounted.current = false;
+      transferController.current?.abort();
     };
-  }, [content, isZh, needsManual, showFeedback]);
+  }, [content, isZh, needsManual, showFeedback, renderAttempt]);
 
   useEffect(() => {
     if (!feedback) return;
@@ -108,60 +125,62 @@ export default function ShareCardPanel({
     onAction?.("card_type", nextKind);
   };
 
-  const shareImage = async () => {
-    if (!imageUrl) return;
-    usageEvent("share_request", { chapter: chapter.id, section: kind });
-    const outcome = await shareCardImage(
-      imageUrl,
-      content.filename,
-      customContent ? content.chapterTitle : (isZh ? `三慢问道 · 第${chapter.id}章` : `Wendao · Chapter ${chapter.id}`),
-    );
-    usageEvent("share_result", { chapter: chapter.id, section: kind, result: outcome });
-    if (outcome === "preview") {
-      setFeedback(null);
-      setWechatAction("share");
-      onAction?.("image_preview", kind);
-      return;
-    }
-    if (outcome !== "cancelled") {
-      showFeedback(outcome === "shared"
-        ? (isZh ? "已打开系统分享" : "Share sheet opened")
-        : outcome === "downloaded"
-          ? (isZh ? "已发起图片下载" : "Image download requested")
-          : (isZh ? "暂时无法分享图片" : "Image sharing is unavailable"));
-    }
-    onAction?.(`image_${outcome}`, kind);
+  const cancelTransfer = () => {
+    transferController.current?.abort();
+    transferController.current = null;
+    setTransfer(null);
+    setImageAction(null);
   };
-
-  const saveImage = async () => {
-    if (!imageUrl || rendering || saving) return;
+  const performImageAction = async (action: "save" | "share") => {
+    if ((!imageUrl && !content.imageSource) || rendering || imageAction) return;
     setFeedback(null);
-    setSaving(true);
+    setPermissionDenied(false);
+    setImageAction(action);
+    const controller = new AbortController();
+    transferController.current = controller;
+    const stillCurrent = () => mounted.current && !controller.signal.aborted && transferController.current === controller;
     try {
-      usageEvent("save_request", { chapter: chapter.id, section: kind });
-      const outcome = await saveCardImage(
-        imageUrl,
-        content.filename,
-        isZh ? "保存三慢问道分享卡" : "Save Wendao share card",
-      );
-      usageEvent("save_result", { chapter: chapter.id, section: kind, result: outcome });
+      let png = imageUrl;
+      if (content.imageSource) {
+        png = originalRef.current;
+        if (!png) {
+          setTransfer({ action });
+          png = await loadComicOriginalDataUrl(content.imageSource, controller.signal);
+          if (!stillCurrent()) return;
+          originalRef.current = png;
+        }
+      }
+      if (!stillCurrent()) return;
+      setTransfer(null);
+      usageEvent(action === "save" ? "save_request" : "share_request", { chapter: chapter.id, section: kind });
+      const outcome = action === "save"
+        ? await saveCardImage(png, content.filename, isZh ? "保存三慢问道分享卡" : "Save Wendao share card")
+        : await shareCardImage(png, content.filename, customContent ? content.chapterTitle : (isZh ? `三慢问道 · 第${chapter.id}章` : `Wendao · Chapter ${chapter.id}`));
+      if (!stillCurrent()) return;
+      usageEvent(action === "save" ? "save_result" : "share_result", { chapter: chapter.id, section: kind, result: outcome });
       if (outcome === "preview") {
-        setWechatAction("save");
-        onAction?.("save_preview", kind);
+        setWechatAction(action);
+        onAction?.(action === "save" ? "save_preview" : "image_preview", kind);
         return;
       }
-      if (outcome !== "cancelled") {
-        showFeedback(outcome === "saved"
-          ? (isZh ? "已保存到相册" : "Saved to Photos")
-          : outcome === "downloaded"
-            ? (isZh ? "已发起图片下载" : "Image download requested")
-            : outcome === "shared"
-              ? (isZh ? "请在系统面板选择“存储图像”" : "Choose Save Image in the system sheet")
-              : (isZh ? "保存失败，请检查相册权限后重试" : "Could not save. Check Photos access and try again."));
+      if (outcome === "permission-denied") {
+        setPermissionDenied(true);
+        showFeedback(isZh ? "相册权限未开启，可在设置中允许保存图片。" : "Photos access is off. Allow saving images in Settings.");
+      } else if (outcome === "activation-required") {
+        showFeedback(isZh ? "原图已准备好，请再点一次“分享图片”。" : "The original is ready. Tap Share image again.");
       }
-      onAction?.(`save_${outcome}`, kind);
+      if (outcome !== "cancelled") {
+        if (outcome !== "permission-denied" && outcome !== "activation-required") showFeedback(outcome === "saved"
+          ? (isZh ? "已保存到相册" : "Saved to Photos") : outcome === "downloaded"
+            ? (isZh ? "已发起图片下载" : "Image download requested") : outcome === "shared"
+              ? (action === "save" ? (isZh ? "请在系统面板选择“存储图像”" : "Choose Save Image in the system sheet") : (isZh ? "已打开系统分享" : "Share sheet opened"))
+              : (isZh ? (action === "save" ? "图片保存失败，请重试。" : "暂时无法分享图片，请重试。") : (action === "save" ? "Could not save the image. Try again." : "Image sharing is unavailable. Try again.")));
+      }
+      onAction?.(`${action === "save" ? "save" : "image"}_${outcome}`, kind);
+    } catch (error) {
+      if (stillCurrent()) setTransfer({ action, failure: error instanceof ComicMediaError ? error.reason : "unavailable" });
     } finally {
-      setSaving(false);
+      if (stillCurrent()) { transferController.current = null; setImageAction(null); }
     }
   };
 
@@ -194,7 +213,8 @@ export default function ShareCardPanel({
     onAction?.(`link_${outcome}`, kind);
   };
 
-  if (wechatAction && imageUrl) return (
+  const pngImageUrl = originalRef.current || imageUrl;
+  if (wechatAction && pngImageUrl) return (
     <div className="share-card-panel wechat-image-panel">
       <div className="wechat-image-instructions" role="status">
         <strong>{wechatAction === "save"
@@ -206,9 +226,9 @@ export default function ShareCardPanel({
         <button type="button" onClick={() => setWechatAction(null)}>{isZh ? "返回操作" : "Back to actions"}</button>
       </div>
       <div className="wechat-image-scroll" key={`${kind}-${wechatAction}`}>
-        <img src={content.imageSource || imageUrl}
+        <img src={content.imageSource || pngImageUrl}
           alt={isZh ? `${content.label}完整图片，可长按保存或发送` : `${content.label} full image; press and hold to save or send`}
-          onError={(event) => { if (event.currentTarget.src !== imageUrl) event.currentTarget.src = imageUrl; }} />
+          onError={(event) => { if (event.currentTarget.src !== pngImageUrl) event.currentTarget.src = pngImageUrl; }} />
       </div>
     </div>
   );
@@ -257,7 +277,7 @@ export default function ShareCardPanel({
             className={`share-card-preview${comicZoomed ? " is-comic-zoomed" : ""}`}
             aria-label={`${content.primary} ${pinyinDescription} ${content.secondaryLabel} ${content.secondary}`.trim()}
           >
-            {imageUrl ? (
+            {content.previewImageSource ? <ComicImage src={content.previewImageSource} width={content.previewWidth} height={content.previewHeight} alt={isZh ? `${content.label}漫画预览` : `${content.label} comic preview`} language={language} /> : imageUrl ? (
               <img
                 src={imageUrl}
                 alt={isZh ? `${content.label}分享卡预览` : `${content.label} share-card preview`}
@@ -268,12 +288,24 @@ export default function ShareCardPanel({
                 {rendering
                   ? (isZh ? "正在生成阅读卡" : "Creating your reading card")
                   : (isZh ? "等待重新生成" : "Waiting to retry")}
+                {!rendering ? <button type="button" onClick={() => setRenderAttempt(value => value + 1)}>{isZh ? "重新生成" : "Retry image"}</button> : null}
               </div>
             )}
           </figure>}
         </div>
 
         <div className="share-card-controls">
+          {transfer ? <div className={`share-download-state${transfer.failure ? " is-error" : ""}`} role="status" aria-live="polite">
+            <p>{!transfer.failure ? (isZh ? "正在准备完整原图，可继续阅读…" : "Preparing the complete original. You can keep reading…")
+              : transfer.failure === "offline" ? (isZh ? "当前离线，保存和分享原图需要联网。" : "You are offline. Connect to save or share the original.")
+                : transfer.failure === "timeout" ? (isZh ? "原图下载较慢，已停止等待，请重试。" : "The original took too long to download. Try again.")
+                  : (isZh ? "原图暂时未能下载，请重试。" : "The original could not download. Try again.")}</p>
+            {transfer.failure ? <button type="button" onClick={() => void performImageAction(transfer.action)}>{isZh ? "重试" : "Retry"}</button>
+              : <button type="button" onClick={cancelTransfer}>{isZh ? "取消下载" : "Cancel download"}</button>}
+          </div> : null}
+          {permissionDenied ? <div className="share-permission-repair"><button type="button" onClick={() => void openPhotosSettings().then(opened => {
+            if (!opened) showFeedback(isZh ? "请打开系统设置，允许三慢问道添加照片。" : "Open system Settings and allow Wendao to add photos.");
+          })}>{isZh ? "打开相册权限设置" : "Open Photos settings"}</button></div> : null}
           {needsManual ? (
             <button type="button" className="share-action-primary" onClick={onCreateManual}>
               {isZh ? "录入出生信息" : "Enter birth details"}
@@ -283,21 +315,21 @@ export default function ShareCardPanel({
           <button
             type="button"
             className="share-action-primary"
-            onClick={() => void shareImage()}
-            disabled={!imageUrl || rendering}
+            onClick={() => void performImageAction("share")}
+            disabled={(!imageUrl && !content.imageSource) || rendering || !!imageAction}
           >
             <ImageIcon />
-            {isZh ? "分享图片" : "Share image"}
+            {imageAction === "share" ? (isZh ? "正在准备…" : "Preparing…") : (isZh ? "分享图片" : "Share image")}
           </button>
           <div className="share-action-grid">
             <button
               type="button"
-              onClick={() => void saveImage()}
-              disabled={!imageUrl || rendering || saving}
-              aria-busy={saving}
+              onClick={() => void performImageAction("save")}
+              disabled={(!imageUrl && !content.imageSource) || rendering || !!imageAction}
+              aria-busy={imageAction === "save"}
             >
               <DownloadIcon />
-              {saving ? (isZh ? "正在保存…" : "Saving…") : (isZh ? "保存图片" : "Save image")}
+              {imageAction === "save" ? (isZh ? "正在保存…" : "Saving…") : (isZh ? "保存图片" : "Save image")}
             </button>
             <button type="button" onClick={() => void copyText()}>
               <CopyIcon />
